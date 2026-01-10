@@ -35,8 +35,8 @@ def _tab_label(row: pd.Series, index: int) -> str:
 def render_player_info_report() -> None:
     """Render the player info report with tabs per player."""
     st.markdown(
-        "Player Info shows the player combat cards for each participant in the battle log "
-        "(excluding the NPC row)."
+        "Player Info shows the combat cards for each participant in the battle log, "
+        "including the NPC entry when available."
     )
 
     df = render_sidebar_combat_log_upload(
@@ -52,33 +52,37 @@ def render_player_info_report() -> None:
     fleets_df = df.attrs.get("fleets_df")
     number_format = get_number_format()
 
-    no_info = False
     if not isinstance(players_df, pd.DataFrame):
-        no_info = True
         st.info("No player metadata found in this file.")
         return
-    elif players_df.empty:
-        no_info = True
+    if players_df.empty:
         st.info("Player metadata is empty in this file.")
-    elif len(players_df) <= 1:
-        no_info = True
-
-    if no_info:
-        st.warning(
-            "STFC omits detailed player information in their logs for some types of battles, like such as Outposts and Armadas.  This log had no detailed player information."
-        )
         return
 
     total_shots = total_shots_by_attacker(df)
 
+    npc_index = len(players_df) - 1
+    npc_row = players_df.iloc[npc_index]
     player_rows = players_df.iloc[:-1]
-    tab_labels = [
+    tab_labels = ["NPC"]
+    tab_labels.extend(
         _tab_label(row, position)
         for position, (_, row) in enumerate(player_rows.iterrows())
-    ]
+    )
     tabs = st.tabs(tab_labels)
 
-    for position, ((index, row), tab) in enumerate(zip(player_rows.iterrows(), tabs)):
+    with tabs[0]:
+        fleet_row = None
+        if isinstance(fleets_df, pd.DataFrame) and npc_index < len(fleets_df):
+            fleet_row = fleets_df.iloc[npc_index]
+        render_player_card(
+            npc_row,
+            number_format,
+            fleet_row=fleet_row,
+            total_shots=total_shots.get(npc_row.get("Player Name")),
+        )
+
+    for position, ((index, row), tab) in enumerate(zip(player_rows.iterrows(), tabs[1:])):
         with tab:
             fleet_row = None
             if isinstance(fleets_df, pd.DataFrame) and position < len(fleets_df):

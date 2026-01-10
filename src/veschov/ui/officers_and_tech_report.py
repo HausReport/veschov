@@ -222,7 +222,7 @@ def style_heatmap(df: pd.DataFrame, heat_cap: int) -> pd.io.formats.style.Styler
         intensity = min(count, heat_cap) / heat_cap
         return f"background-color: rgba(255, 140, 0, {intensity:.2f});"
 
-    return df.style.applymap(_style_cell).format("{:.0f}")
+    return df.style.map(_style_cell).format("{:.0f}")
 
 
 def render_officers_and_tech_report() -> None:
