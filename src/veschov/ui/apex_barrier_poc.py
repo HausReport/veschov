@@ -213,7 +213,7 @@ def _fallback_players_df(
     if not required_columns.issubset(combat_df.columns):
         return pd.DataFrame()
 
-    unique_combos_df = (
+    fallback_df = (
         combat_df.loc[:, ["attacker_name", "attacker_ship"]]
         .dropna(how="all")
         .fillna("")
@@ -224,14 +224,19 @@ def _fallback_players_df(
 
     if npc_name:
         npc_name = str(npc_name).strip()
-        unique_combos_df = unique_combos_df[
-            unique_combos_df["attacker_name"].str.strip() != npc_name
+        fallback_df = fallback_df[
+            fallback_df["attacker_name"].str.strip() != npc_name
         ]
+
+    fallback_df = fallback_df[
+        (fallback_df["attacker_name"].str.strip() != "")
+        | (fallback_df["attacker_ship"].str.strip() != "")
+    ]
 
     return pd.DataFrame(
         {
-            "Player Name": unique_combos_df["attacker_name"].replace("", pd.NA),
-            "Ship Name": unique_combos_df["attacker_ship"].replace("", pd.NA),
+            "Player Name": fallback_df["attacker_name"].replace("", pd.NA),
+            "Ship Name": fallback_df["attacker_ship"].replace("", pd.NA),
         }
     )
 
