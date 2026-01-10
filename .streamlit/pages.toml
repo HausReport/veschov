@@ -14,9 +14,9 @@ name = "Apex Barrier Analysis"
 icon = "🛡️"
 
 [[pages]]
-path = "pages/3_Player_Info.py"
+path = "pages/3_Combatant_Info.py"
 name = "Player Info"
-icon = "🧑‍🚀"
+icon = "⚔️"
 
 [[pages]]
 path = "pages/4_Actual_Damage_Pools.py"

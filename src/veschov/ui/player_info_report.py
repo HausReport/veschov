@@ -52,17 +52,20 @@ def render_player_info_report() -> None:
     fleets_df = df.attrs.get("fleets_df")
     number_format = get_number_format()
 
+    no_info = False
     if not isinstance(players_df, pd.DataFrame):
+        no_info = True
         st.info("No player metadata found in this file.")
         return
-
-    if players_df.empty:
+    elif players_df.empty:
+        no_info = True
         st.info("Player metadata is empty in this file.")
-        return
+    elif len(players_df) <= 1:
+        no_info = True
 
-    if len(players_df) <= 1:
+    if no_info:
         st.warning(
-            "No player rows were found in the metadata. The log file may be missing player rows."
+            "STFC omits detailed player information in their logs for some types of battles, like such as Outposts and Armadas.  This log had no detailed player information."
         )
         return
 
