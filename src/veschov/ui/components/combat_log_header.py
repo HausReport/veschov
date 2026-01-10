@@ -90,7 +90,7 @@ def render_sidebar_combat_log_upload(
     st.session_state["players_df"] = df.attrs.get("players_df")
     st.session_state["fleets_df"] = df.attrs.get("fleets_df")
     st.session_state["session_info"] = SessionInfo(df)
-    st.rerun()
+    # st.rerun()
     return df
 
 
