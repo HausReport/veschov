@@ -1,8 +1,10 @@
+from __future__ import annotations
 
 import streamlit as st
 
-# st.title("🏠 Home")
-st.caption("Welcome to STFC Reports. Use the left navigation to explore sessions and combat logs.")
+from veschov.ui.home_report import render_home_report
 
-st.subheader("Status")
-st.success("✅ App loaded successfully.")
+st.set_page_config(page_title="STFC Reports", layout="wide")
+# st.title("🏠 Home")
+
+render_home_report()
