@@ -9,6 +9,7 @@ class ShipSpecifier:
     name: Optional[str]
     alliance: Optional[str]
     ship: Optional[str]
+    # touch
 
     def __str__(self) -> str:
         ret = self.name
