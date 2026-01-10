@@ -1,21 +1,18 @@
 from pathlib import Path
-from typing import Set
 
 import pandas as pd
 
 from veschov.io.SessionInfo import SessionInfo
 from veschov.io.parser_stub import parse_battle_log
-from dataclasses import dataclass
 
 def get_battle_log(fname) -> pd.DataFrame:
-    path = Path("tests/tests/logs") / fname
+    path = Path(__file__).resolve().parent / "logs" / fname
     assert path.exists(), f"Missing test fixture file: {path.resolve()}"
     file_bytes = path.read_bytes()
     combat_df = parse_battle_log(file_bytes, fname)
     return combat_df
 
 def get_session_info(fname) -> SessionInfo:
-    fname = "1.csv"
     combat_df = get_battle_log(fname)
     return SessionInfo(combat_df)
 
@@ -49,8 +46,5 @@ def test_officer_names():
     fname = "1.csv"
     session = get_session_info(fname)
     officers = session.all_officer_names("XanOfHanoi", "BORG CUBE")
-    print(officers)
-    assert False, "Too many officers"
-    # assert "ThunderDome" in alliances, f"Missing alliances: {alliances}"
-    # assert "--" in alliances, f"Missing alliances: {alliances}"
-    # assert len(alliances) == 1, "Too many alliances"
+    assert "Kathryn Janeway" in officers, f"Missing officers: {officers}"
+    assert "Harry Kim" in officers, f"Missing officers: {officers}"
