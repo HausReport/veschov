@@ -14,4 +14,3 @@ st.set_page_config(page_title="STFC Reports", layout="wide")
 # st.title("🖖 Apex Barrier Analysis")
 
 render_apex_barrier_poc()
-apply_combat_lens()
