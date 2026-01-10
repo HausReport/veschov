@@ -40,11 +40,16 @@ def test_ship_names():
     assert len(ships) == 1, "Too many ships"
 
 
-
+def test_bridge_officer_names():
+    fname = "1.csv"
+    session = get_session_info(fname)
+    officers = session.get_bridge_crew("XanOfHanoi", "BORG CUBE")
+    for officer in ['The Doctor', 'Kathryn Janeway', 'Annorax']:
+        assert officer in officers, f"Missing officers: {officers}"
 
 def test_officer_names():
     fname = "1.csv"
     session = get_session_info(fname)
     officers = session.all_officer_names("XanOfHanoi", "BORG CUBE")
-    assert "Kathryn Janeway" in officers, f"Missing officers: {officers}"
-    assert "Harry Kim" in officers, f"Missing officers: {officers}"
+    for officer in {'Kathryn Janeway', 'Harry Kim', 'The Doctor', 'Annorax', 'PIC Hugh', 'Masriad Vael', 'Seska'}:
+        assert officer in officers, f"Missing officers: {officers}"

@@ -14,7 +14,7 @@ add_page_title(pg)
 pg.run()
 
 # Common sidebar UI that should appear on EVERY page
-st.sidebar.header("Filters")
+# st.sidebar.header("Filters")
 # date_range = st.sidebar.date_input(
 #   "Date range",
 #    value=(),

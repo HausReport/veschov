@@ -374,4 +374,4 @@ def render_combat_summary(
             fleet_row=_fleet_row_for(0),
             total_shots=total_shots.get(players_df.iloc[0].get("Player Name")),
         )
-        st.caption("Enemy row missing in player metadata.")
+        st.caption("Some combatant metadata is missing from the log file.")
