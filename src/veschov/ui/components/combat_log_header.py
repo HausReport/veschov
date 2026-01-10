@@ -18,6 +18,20 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_UPLOAD_TYPES: Iterable[str] = ("tsv", "csv", "txt")
 
+NUMBER_FORMAT_SESSION_KEY = "number_format"
+NUMBER_FORMAT_OPTIONS: tuple[str, ...] = ("Human", "Exact")
+NUMBER_FORMAT_DEFAULT = "Human"
+NUMBER_FORMAT_HELP = "Choose how numbers over 999,999 are formatted."
+
+
+def get_number_format() -> str:
+    """Return the configured large-number formatting preference."""
+    stored_value = st.session_state.get(NUMBER_FORMAT_SESSION_KEY, NUMBER_FORMAT_DEFAULT)
+    if stored_value not in NUMBER_FORMAT_OPTIONS:
+        stored_value = NUMBER_FORMAT_DEFAULT
+    st.session_state[NUMBER_FORMAT_SESSION_KEY] = stored_value
+    return stored_value
+
 def render_combat_log_upload(
     title: str,
     description: str,
@@ -86,17 +100,10 @@ def render_combat_log_header(
     battle_df: pd.DataFrame | None,
     *,
     lens_key: str,
-    number_format_label: str = "Large Number Display",
-    number_format_options: Iterable[str] = ("Human", "Exact"),
-    number_format_help: str = "Choose how numbers over 999,999 are formatted.",
     session_info: SessionInfo | Set[ShipSpecifier] | None = None,
 ) -> tuple[str, Lens | None]:
     """Render the standard header controls for combat-log reports."""
-    number_format = st.selectbox(
-        number_format_label,
-        list(number_format_options),
-        help=number_format_help,
-    )
+    number_format = get_number_format()
 
     resolved_session_info = session_info or st.session_state.get("session_info")
     if resolved_session_info is None and battle_df is not None:

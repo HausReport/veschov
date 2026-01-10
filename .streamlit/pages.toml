@@ -37,3 +37,8 @@ icon = "🎯"
 path = "pages/6_Officers_and_Tech.py"
 name = "Officer & Tech Procs"
 icon = "🧑"
+
+[[pages]]
+path = "pages/9_Settings.py"
+name = "Settings"
+icon = "⚙️"
