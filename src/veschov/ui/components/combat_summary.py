@@ -406,15 +406,6 @@ def render_combat_summary(
         st.info("No player metadata found in this file.")
         return
 
-    total_shots = {}
-    if isinstance(battle_df, pd.DataFrame) and not battle_df.empty:
-        total_shots = total_shots_by_attacker(battle_df)
-
-    def _fleet_row_for(index: int) -> pd.Series | None:
-        if isinstance(fleets_df, pd.DataFrame) and index < len(fleets_df):
-            return fleets_df.iloc[index]
-        return None
-
     context_lines = _format_context(players_df, battle_df)
     if context_lines:
         context_text = " • ".join(context_lines)
@@ -435,11 +426,3 @@ def render_combat_summary(
         _render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
     with list_cols[1]:
         _render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
-
-    npc_index = len(players_df) - 1
-    render_player_card(
-        players_df.iloc[npc_index],
-        number_format,
-        fleet_row=_fleet_row_for(npc_index),
-        total_shots=total_shots.get(players_df.iloc[npc_index].get("Player Name")),
-    )
