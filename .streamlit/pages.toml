@@ -1,0 +1,39 @@
+[[pages]]
+path = "pages/0_Home.py"
+name = "Home"
+icon = "🏠"
+
+[[pages]]
+name = "Combat Log Parser"
+is_section = true
+icon = "📜"
+
+[[pages]]
+path = "pages/2_Apex_Barrier_Analysis.py"
+name = "Apex Barrier Analysis"
+icon = "🛡️"
+
+[[pages]]
+path = "pages/4_Actual_Damage_Pools.py"
+name = "Damage Flow by Round"
+icon = "🔀"
+
+[[pages]]
+path = "pages/7_Damage_Flow_Sankey.py"
+name = "Damage Flow by Battle"
+icon = "🌊"
+
+[[pages]]
+path = "pages/5_Raw_Damage_Analysis.py"
+name = "Raw Damage by Type"
+icon = "💥"
+
+[[pages]]
+path = "pages/8_Critical_Hit_Analysis.py"
+name = "Hits and Crits"
+icon = "🎯"
+
+[[pages]]
+path = "pages/6_Officers_and_Tech.py"
+name = "Officer & Tech Procs"
+icon = "🧑"

@@ -1,0 +1,21 @@
+[project]
+name = "veschov"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "streamlit>=1.40",
+  "pandas>=2.2",
+  "plotly>=5.20",
+  "st-pages>=1.0.1",
+  "humanize>=4.15.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pdoc]
+output_directory = "docs"
+exclude = []
