@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# PyCharm / IDE
+.idea/
+*.iml
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Streamlit secrets / local config
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints/
