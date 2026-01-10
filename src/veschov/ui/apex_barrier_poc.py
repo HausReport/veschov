@@ -298,7 +298,7 @@ def render_metadata_header(df: pd.DataFrame, number_format: str) -> None:
                     )
                 if column in PERCENT_FIELDS:
                     formatted_fleets[column] = formatted_fleets[column].apply(_format_percent)
-            st.dataframe(formatted_fleets, use_container_width=True)
+            st.dataframe(formatted_fleets, width="stretch")
         else:
             st.caption("Fleet stats are present but no expected columns were found.")
 
@@ -342,7 +342,7 @@ def render_apex_barrier_poc() -> None:
     st.caption("Per-shot Apex Barrier values come from combat log mitigation fields.")
     title = f"Apex Barrier per Shot — {battle_filename}"
     fig = px.line(plot_df, x="shot_index", y="apex_barrier_hit", markers=True, title=title)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     total_mitigation = _total_apex_barrier_mitigation(
         display_df,
@@ -357,4 +357,4 @@ def render_apex_barrier_poc() -> None:
     preview_cols.extend(col for col in OPTIONAL_PREVIEW_COLUMNS if col in display_df.columns)
     preview_df = display_df.loc[:, preview_cols]
     st.caption("Preview of shot-level Apex values and optional combat log metadata.")
-    st.dataframe(preview_df.head(200), use_container_width=True)
+    st.dataframe(preview_df.head(200), width="stretch")

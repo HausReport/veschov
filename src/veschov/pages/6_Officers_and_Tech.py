@@ -311,7 +311,7 @@ if matrix_df.empty:
 
 st.subheader("Proc Frequency by Round")
 st.caption("Heatmap counts how often each officer/tech ability fired per round.")
-st.dataframe(style_heatmap(matrix_df, heat_cap), use_container_width=True)
+st.dataframe(style_heatmap(matrix_df, heat_cap), width="stretch")
 
 summary_df = build_proc_summary(display_df, include_forbidden_tech, owner_filter)
 if summary_df.empty:
@@ -320,4 +320,4 @@ if summary_df.empty:
 
 st.subheader("Proc Summary")
 st.caption("Summary table aggregates total fires, active rounds, and first activation.")
-st.dataframe(summary_df, use_container_width=True)
+st.dataframe(summary_df, width="stretch")

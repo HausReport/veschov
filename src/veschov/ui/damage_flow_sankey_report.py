@@ -203,7 +203,7 @@ def render_damage_flow_sankey_report() -> None:
     )
     fig.update_layout(title=f"Damage Flow by Battle — {battle_filename}")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     st.caption("All links represent summed totals across the selected battle log.")
 
     totals = {
@@ -232,7 +232,7 @@ def render_damage_flow_sankey_report() -> None:
                     "value": totals.values(),
                 }
             ),
-            use_container_width=True,
+            width="stretch",
         )
         st.write(
             {

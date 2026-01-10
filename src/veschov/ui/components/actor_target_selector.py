@@ -85,7 +85,7 @@ def render_actor_target_selector(
             help="Swap attacker and target selections.",
             key="swap_attacker_target_specs",
             on_click=_swap_selected_specs,
-            use_container_width=True,
+            width="stretch",
         )
     with selector_right:
         selected_targets = st.multiselect(

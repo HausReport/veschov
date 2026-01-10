@@ -289,7 +289,7 @@ def render_actual_damage_report() -> None:
     max_value = long_df[x_axis].max()
     if pd.notna(max_value):
         fig.update_xaxes(range=[1, int(max_value)])
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     show_table = st.checkbox("Show raw table", value=False)
     if show_table:
@@ -306,7 +306,7 @@ def render_actual_damage_report() -> None:
                 .reset_index()
                 .rename_axis(None, axis=1)
             )
-            st.dataframe(summary, use_container_width=True)
+            st.dataframe(summary, width="stretch")
         else:
             preview_cols = [
                 "shot_index",
@@ -321,4 +321,4 @@ def render_actual_damage_report() -> None:
                 col for col in OPTIONAL_PREVIEW_COLUMNS if col in shot_df.columns
             )
             preview_cols = list(dict.fromkeys(preview_cols))
-            st.dataframe(shot_df.loc[:, preview_cols], use_container_width=True)
+            st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
