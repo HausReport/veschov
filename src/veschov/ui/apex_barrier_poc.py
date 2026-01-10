@@ -205,6 +205,37 @@ def _format_battle_context(players_df: pd.DataFrame) -> list[str]:
     return lines
 
 
+def _fallback_players_df(
+    combat_df: pd.DataFrame,
+    npc_name: str | None,
+) -> pd.DataFrame:
+    required_columns = {"attacker_name", "attacker_ship"}
+    if not required_columns.issubset(combat_df.columns):
+        return pd.DataFrame()
+
+    unique_combos_df = (
+        combat_df.loc[:, ["attacker_name", "attacker_ship"]]
+        .dropna(how="all")
+        .fillna("")
+        .astype(str)
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
+
+    if npc_name:
+        npc_name = str(npc_name).strip()
+        unique_combos_df = unique_combos_df[
+            unique_combos_df["attacker_name"].str.strip() != npc_name
+        ]
+
+    return pd.DataFrame(
+        {
+            "Player Name": unique_combos_df["attacker_name"].replace("", pd.NA),
+            "Ship Name": unique_combos_df["attacker_ship"].replace("", pd.NA),
+        }
+    )
+
+
 def render_metadata_header(df: pd.DataFrame, number_format: str) -> None:
     """Render player and fleet metadata tables for a battle log."""
     players_df = df.attrs.get("players_df")
@@ -212,6 +243,15 @@ def render_metadata_header(df: pd.DataFrame, number_format: str) -> None:
 
     has_players = isinstance(players_df, pd.DataFrame) and not players_df.empty
     has_fleets = isinstance(fleets_df, pd.DataFrame) and not fleets_df.empty
+
+    npc_name = None
+    if isinstance(players_df, pd.DataFrame) and not players_df.empty:
+        npc_name = players_df.iloc[-1].get("Player Name")
+    if not has_players:
+        fallback_players_df = _fallback_players_df(df, npc_name)
+        if not fallback_players_df.empty:
+            players_df = fallback_players_df
+            has_players = True
 
     if not has_players and not has_fleets:
         st.info("No player/fleet metadata found in this file.")
