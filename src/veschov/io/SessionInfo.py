@@ -12,10 +12,10 @@ class ShipSpecifier:
     # touch
 
     def __str__(self) -> str:
-        ret = self.name
+        ret = self.name or ""
         if self.alliance is not None:
             ret += f" [{self.alliance}]"
-        if self.ship is not self.name:
+        if self.ship != self.name:
             ret += f" — {self.ship}"
         return ret
 
@@ -25,8 +25,6 @@ class SessionInfo:
         self.combat_df = combat_df
         self.players_df = combat_df.attrs["players_df"]
         self.fleets_df = combat_df.attrs["fleets_df"]
-
-    import pandas as pd
 
     def get_combat_df_filtered_by_attacker(self, spec: ShipSpecifier) -> pd.DataFrame:
         df = self.combat_df
@@ -82,10 +80,10 @@ class SessionInfo:
     #def get_captain_name(self):
     def get_ships(self, combatant_name):
         df = self.combat_df
-        print( set( df["event_type"].dropna().astype(str).unique() ) )
-        mask = (df["event_type"] == "Attack") & (df["attacker_name"] == combatant_name)
-        officers = set(df.loc[mask,"attacker_ship"].dropna().astype(str).unique())
-        return officers
+        event_type = df["event_type"].astype(str).str.lower()
+        mask = (event_type == "attack") & (df["attacker_name"] == combatant_name)
+        ships = set(df.loc[mask, "attacker_ship"].dropna().astype(str).unique())
+        return ships
 
     def get_captain_name(self, combatant_name, ship_name):
         df = self.players_df
@@ -113,15 +111,19 @@ class SessionInfo:
         return bc
 
     def get_below_deck_officers(self, combatant_name, ship_name):
-        set1 = self.all_officer_names()
+        set1 = self.all_officer_names(combatant_name, ship_name)
         set2 = self.get_bridge_crew(combatant_name, ship_name)
         return set1 - set2
 
     def all_officer_names(self, combatant_name, ship_name) -> Set[str]:
         df = self.combat_df
-        print( set( df["event_type"].dropna().astype(str).unique() ) )
-        mask = (df["event_type"] == "Officer") & (df["attacker_ship"] == ship_name) & (df["attacker_name"] == combatant_name)
-        officers = set(df.loc[mask,"ability_owner_name"].dropna().astype(str).unique())
+        event_type = df["event_type"].astype(str).str.lower()
+        mask = (
+            (event_type == "officer")
+            & (df["attacker_ship"] == ship_name)
+            & (df["attacker_name"] == combatant_name)
+        )
+        officers = set(df.loc[mask, "ability_owner_name"].dropna().astype(str).unique())
         return officers
 
     def combatant_names(self) -> Set[str]:
