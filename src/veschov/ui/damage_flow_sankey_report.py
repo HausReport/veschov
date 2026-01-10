@@ -37,6 +37,17 @@ def _build_damage_mask(df: pd.DataFrame) -> pd.Series:
 def render_damage_flow_sankey_report() -> None:
     """Render the damage flow Sankey report."""
     st.markdown(
+        """
+        <style>
+        /* Plotly Sankey label shadow/halo can look blurry in Streamlit on desktop */
+        .js-plotly-plot .sankey text {
+            text-shadow: none !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
         "Damage Flow by Battle aggregates the entire combat log to show how isolytic/regular damage "
         "moves through mitigation and Apex into shield vs hull."
     )
