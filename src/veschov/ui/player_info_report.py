@@ -52,8 +52,12 @@ def render_player_info_report() -> None:
     fleets_df = df.attrs.get("fleets_df")
     number_format = get_number_format()
 
-    if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+    if not isinstance(players_df, pd.DataFrame):
         st.info("No player metadata found in this file.")
+        return
+
+    if players_df.empty:
+        st.info("Player metadata is empty in this file.")
         return
 
     if len(players_df) <= 1:
