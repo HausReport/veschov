@@ -14,6 +14,11 @@ name = "Apex Barrier Analysis"
 icon = "🛡️"
 
 [[pages]]
+path = "pages/3_Player_Info.py"
+name = "Player Info"
+icon = "🧑‍🚀"
+
+[[pages]]
 path = "pages/4_Actual_Damage_Pools.py"
 name = "Damage Flow by Round"
 icon = "🔀"

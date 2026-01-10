@@ -13,6 +13,8 @@ import humanize
 import pandas as pd
 import streamlit as st
 
+from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
     TARGET_COLUMN_CANDIDATES,
@@ -111,6 +113,15 @@ def _format_outcome_title(row: pd.Series, number_format: str) -> str:
             label, emoji = label_emoji
             return f"{name} {label}: {emoji}"
     return f"{name} Outcome: ❔"
+
+
+def _outcome_emoji(outcome: object) -> str:
+    if isinstance(outcome, str):
+        normalized = outcome.strip().upper().replace("_", " ")
+        label_emoji = OUTCOME_ICONS.get(normalized)
+        if label_emoji:
+            return label_emoji[1]
+    return "❔"
 
 
 def _ship_power_text(row: pd.Series, number_format: str) -> str:
@@ -214,7 +225,7 @@ def _format_context(players_df: pd.DataFrame, battle_df: pd.DataFrame | None) ->
     return lines
 
 
-def _total_shots_by_attacker(battle_df: pd.DataFrame) -> dict[str, int]:
+def total_shots_by_attacker(battle_df: pd.DataFrame) -> dict[str, int]:
     attacker_column = resolve_column(battle_df, ATTACKER_COLUMN_CANDIDATES)
     target_column = resolve_column(battle_df, TARGET_COLUMN_CANDIDATES)
     if not attacker_column:
@@ -252,13 +263,14 @@ def _combatant_stats_table(
     return pd.DataFrame(rows, columns=["Field", "Value"])
 
 
-def _render_player_card(
+def render_player_card(
     row: pd.Series,
     number_format: str,
     *,
     fleet_row: pd.Series | None,
     total_shots: int | None,
 ) -> None:
+    """Render a single player/NPC card for the summary header."""
     st.markdown(
         f"<h2 style='text-align:center; margin-bottom:0.4rem;'>"
         f"{_format_outcome_title(row, number_format)}</h2>",
@@ -321,6 +333,67 @@ def _render_player_card(
         st.table(combatant_table)
 
 
+def _normalize_text(value: object) -> str:
+    if pd.isna(value) or value is None:
+        return ""
+    return str(value).strip()
+
+
+def _alliance_lookup(
+    session_info: SessionInfo | None,
+) -> tuple[dict[str, str], dict[tuple[str, str], str]]:
+    name_lookup: dict[str, str] = {}
+    ship_lookup: dict[tuple[str, str], str] = {}
+    if not isinstance(session_info, SessionInfo):
+        return name_lookup, ship_lookup
+
+    for spec in session_info.get_every_ship():
+        if not isinstance(spec, ShipSpecifier):
+            continue
+        name = _normalize_text(spec.name)
+        ship = _normalize_text(spec.ship)
+        alliance = _normalize_text(spec.alliance)
+        if name and alliance and name not in name_lookup:
+            name_lookup[name] = alliance
+        if name and ship and alliance:
+            ship_lookup[(name, ship)] = alliance
+    return name_lookup, ship_lookup
+
+
+def _format_combatant_label(
+    row: pd.Series,
+    name_lookup: dict[str, str],
+    ship_lookup: dict[tuple[str, str], str],
+) -> str:
+    name = _normalize_text(row.get("Player Name"))
+    ship = _normalize_text(row.get("Ship Name"))
+    alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
+    label = name or "Unknown"
+    if alliance:
+        label = f"{label} [{alliance}]"
+    if ship and ship != name:
+        label = f"{label} — {ship}"
+    return label
+
+
+def _render_combatant_list(
+    title: str,
+    rows: pd.DataFrame,
+    name_lookup: dict[str, str],
+    ship_lookup: dict[tuple[str, str], str],
+) -> None:
+    st.markdown(f"**{title}**")
+    if rows.empty:
+        st.caption("None listed in the current log.")
+        return
+    lines = []
+    for _, row in rows.iterrows():
+        emoji = _outcome_emoji(row.get("Outcome"))
+        label = _format_combatant_label(row, name_lookup, ship_lookup)
+        lines.append(f"- {emoji} {label}")
+    st.markdown("\n".join(lines))
+
+
 def render_combat_summary(
     players_df: pd.DataFrame | None,
     fleets_df: pd.DataFrame | None = None,
@@ -335,7 +408,7 @@ def render_combat_summary(
 
     total_shots = {}
     if isinstance(battle_df, pd.DataFrame) and not battle_df.empty:
-        total_shots = _total_shots_by_attacker(battle_df)
+        total_shots = total_shots_by_attacker(battle_df)
 
     def _fleet_row_for(index: int) -> pd.Series | None:
         if isinstance(fleets_df, pd.DataFrame) and index < len(fleets_df):
@@ -351,27 +424,22 @@ def render_combat_summary(
             unsafe_allow_html=True,
         )
 
-    if len(players_df) > 1:
-        player_col, enemy_col = st.columns(2)
-        with player_col:
-            _render_player_card(
-                players_df.iloc[0],
-                number_format,
-                fleet_row=_fleet_row_for(0),
-                total_shots=total_shots.get(players_df.iloc[0].get("Player Name")),
-            )
-        with enemy_col:
-            _render_player_card(
-                players_df.iloc[1],
-                number_format,
-                fleet_row=_fleet_row_for(1),
-                total_shots=total_shots.get(players_df.iloc[1].get("Player Name")),
-            )
-    else:
-        _render_player_card(
-            players_df.iloc[0],
-            number_format,
-            fleet_row=_fleet_row_for(0),
-            total_shots=total_shots.get(players_df.iloc[0].get("Player Name")),
-        )
-        st.caption("Some combatant metadata is missing from the log file.")
+    session_info = st.session_state.get("session_info")
+    name_lookup, ship_lookup = _alliance_lookup(session_info)
+
+    players_rows = players_df.iloc[:-1] if len(players_df) > 1 else players_df.iloc[0:0]
+    npc_row = players_df.iloc[-1:]
+
+    list_cols = st.columns(2)
+    with list_cols[0]:
+        _render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
+    with list_cols[1]:
+        _render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
+
+    npc_index = len(players_df) - 1
+    render_player_card(
+        players_df.iloc[npc_index],
+        number_format,
+        fleet_row=_fleet_row_for(npc_index),
+        total_shots=total_shots.get(players_df.iloc[npc_index].get("Player Name")),
+    )
