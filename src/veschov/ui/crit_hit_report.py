@@ -182,18 +182,18 @@ def render_crit_hit_report() -> None:
     max_value = long_df[x_axis].max()
     if pd.notna(max_value):
         fig.update_xaxes(range=[1, int(max_value)])
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     st.caption("Stacked areas show how many shots landed each round, with crits highlighted.")
 
     show_table = st.checkbox("Show raw table", value=False)
     if show_table:
         st.caption("Raw rows include crit flags and round identifiers for each shot.")
         if view_by == "Round":
-            st.dataframe(series_df, use_container_width=True)
+            st.dataframe(series_df, width="stretch")
         else:
             preview_cols = ["shot_index", "is_crit"]
             if "battle_event" in shot_df.columns:
                 preview_cols.append("battle_event")
             if "round" in shot_df.columns:
                 preview_cols.append("round")
-            st.dataframe(shot_df.loc[:, preview_cols], use_container_width=True)
+            st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
