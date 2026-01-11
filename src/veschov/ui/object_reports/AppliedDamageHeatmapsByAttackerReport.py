@@ -169,8 +169,11 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         filtered_df = dfs[0]
-        all_rounds = sorted(filtered_df["round"].unique())
-
+        # all_rounds = sorted(filtered_df["round"].unique())
+        # all integers between min and max - want to see holes
+        rmin = int(filtered_df["round"].min())
+        rmax = int(filtered_df["round"].max())
+        all_rounds = list(range(rmin, rmax + 1))
         for attacker in self.selected_attackers:
             attacker_label = self._format_ship_spec_label(attacker, self.outcome_lookup)
             st.subheader(attacker_label)
