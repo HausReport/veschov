@@ -16,10 +16,10 @@ DAMAGE_ALIASES: dict[str, str] = {
 
 
 def resolve_event_type(
-        df: pd.DataFrame,
-        *,
-        event_type_column: str = "event_type",
-        ability_type_column: str = "ability_type",
+    df: pd.DataFrame,
+    *,
+    event_type_column: str = "event_type",
+    ability_type_column: str = "ability_type",
 ) -> pd.Series | None:
     """
     Resolve the authoritative event_type column.
@@ -39,9 +39,9 @@ def resolve_event_type(
 
 
 def add_alias_columns(
-        df: pd.DataFrame,
-        *,
-        aliases: dict[str, str] | None = None,
+    df: pd.DataFrame,
+    *,
+    aliases: dict[str, str] | None = None,
 ) -> pd.DataFrame:
     """Add alias columns for canonical sources (does not drop originals)."""
     updated = df.copy()
