@@ -4,3 +4,4 @@
 4. Page navigation is in [root]/.streamlit/pages.toml.
 5. Pytests are in [root]/tests.
 6. Docstrings should be widely used and clear.
+7. Codex, please feel free to add an "observations" section below to communicate to future visits.
