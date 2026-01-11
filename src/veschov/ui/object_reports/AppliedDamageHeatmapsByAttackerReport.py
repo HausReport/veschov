@@ -103,19 +103,26 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         required_columns = ("round", "shot_index", "applied_damage")
         missing_columns = [col for col in required_columns if col not in display_df.columns]
         if missing_columns:
+            logger.warning(
+                "Applied damage heatmaps missing required columns: %s",
+                missing_columns,
+            )
             st.error(f"Missing required columns: {', '.join(missing_columns)}")
             return None
 
         attacker_column = resolve_column(display_df, ATTACKER_COLUMN_CANDIDATES)
         target_column = resolve_column(display_df, TARGET_COLUMN_CANDIDATES)
         if attacker_column is None:
+            logger.warning("Applied damage heatmaps missing attacker column candidates.")
             st.error("Missing attacker column for filtering.")
             return None
         if target_column is None:
+            logger.warning("Applied damage heatmaps missing target column candidates.")
             st.error("Missing target column for filtering.")
             return None
 
         if not self.selected_attackers:
+            logger.warning("Applied damage heatmaps has no selected attackers.")
             st.info("No attackers selected.")
             return None
 
@@ -146,11 +153,13 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                 filtered_df = filtered_df.loc[filtered_df[target_column].isin(target_names)]
 
         if filtered_df.empty:
+            logger.warning("Applied damage heatmaps filtered to empty dataframe.")
             st.warning("No matching damage events found for this selection.")
             return None
 
         damage_values = filtered_df["applied_damage"].dropna()
         if damage_values.empty:
+            logger.warning("Applied damage heatmaps has no applied_damage values after filtering.")
             st.warning("No applied damage values found for this selection.")
             return None
 
