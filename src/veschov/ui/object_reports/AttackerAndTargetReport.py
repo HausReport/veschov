@@ -269,7 +269,7 @@ class AttackerAndTargetReport(AbstractReport):
     @staticmethod
     def _gather_specs(
             session_info: SessionInfo | Set[ShipSpecifier] | None,
-    ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
+    ) -> Sequence[ShipSpecifier]:
         if isinstance(session_info, SessionInfo):
             specs = session_info.get_every_ship()
         elif isinstance(session_info, set):
@@ -278,8 +278,7 @@ class AttackerAndTargetReport(AbstractReport):
             specs = set()
 
         options = sorted(specs, key=lambda spec: str(spec))
-        raw_specs = list(specs)
-        return options, raw_specs
+        return options
 
     def _resolve_player_alliance(self, row: pd.Series) -> str:
         for column in ("Alliance", "Player Alliance"):
@@ -316,13 +315,12 @@ class AttackerAndTargetReport(AbstractReport):
             self,
             players_df: pd.DataFrame | None,
             options: Sequence[ShipSpecifier],
-            raw_specs: Sequence[ShipSpecifier],
     ) -> list[ShipSpecifier]:
         matched = self._match_enemy_spec(players_df, options)
         if matched is not None:
             return [matched]
-        if raw_specs:
-            return [raw_specs[-1]]
+        if options:
+            return [options[-1]]
         return []
 
     @staticmethod
@@ -474,7 +472,7 @@ class AttackerAndTargetReport(AbstractReport):
             session_info: SessionInfo | Set[ShipSpecifier] | None,
             players_df: pd.DataFrame | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
-        options, raw_specs = self._gather_specs(session_info)
+        options = self._gather_specs(session_info)
         if not options:
             logger.warning(
                 "Actor/target selector has no ship options; session_info=%s.",
@@ -485,7 +483,7 @@ class AttackerAndTargetReport(AbstractReport):
 
         spec_lookup = {self._serialize_spec(spec): spec for spec in options}
         available_specs = [self._serialize_spec(spec) for spec in options]
-        target_fallback = self._default_target_from_players(players_df, options, raw_specs)
+        target_fallback = self._default_target_from_players(players_df, options)
         if not target_fallback:
             target_fallback = list(options[-1:])
         attacker_fallback = [spec for spec in options if spec not in target_fallback]
