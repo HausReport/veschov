@@ -367,20 +367,37 @@ class AttackerAndTargetReport(AbstractReport):
             *,
             spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
             roster_specs: Sequence[SerializedShipSpec],
+            checkbox_prefix: str,
+            sync_checkboxes: bool,
     ) -> None:
         """Log why stored selections were filtered out."""
+        checkbox_key_prefix = f"{checkbox_prefix}_"
+        checkbox_count = sum(
+            1 for key in st.session_state.keys()
+            if isinstance(key, str) and key.startswith(checkbox_key_prefix)
+        )
         if stored_specs is None:
             if not selected_specs and roster_specs:
                 logger.warning(
-                    "No stored %s selections in session state; defaulting to roster defaults.",
+                    "No stored %s selections in session state; defaulting to roster defaults. "
+                    "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
                     role,
+                    len(spec_lookup),
+                    len(roster_specs),
+                    checkbox_count,
+                    sync_checkboxes,
                 )
             return
         if not stored_specs:
             if not selected_specs and roster_specs:
                 logger.warning(
-                    "Stored %s selections are empty; defaulting to roster defaults.",
+                    "Stored %s selections are empty; defaulting to roster defaults. "
+                    "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
                     role,
+                    len(spec_lookup),
+                    len(roster_specs),
+                    checkbox_count,
+                    sync_checkboxes,
                 )
             return
         deduped = cls._dedupe_specs(stored_specs)
@@ -393,21 +410,36 @@ class AttackerAndTargetReport(AbstractReport):
             return
         if missing_in_options:
             logger.warning(
-                "Stored %s selections dropped because they are missing from current ship options: %s",
+                "Stored %s selections dropped because they are missing from current ship options: %s "
+                "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
                 role,
                 missing_in_options,
+                len(spec_lookup),
+                len(roster_specs),
+                checkbox_count,
+                sync_checkboxes,
             )
         if missing_in_roster:
             logger.warning(
-                "Stored %s selections dropped because they are not in the current roster: %s",
+                "Stored %s selections dropped because they are not in the current roster: %s "
+                "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
                 role,
                 missing_in_roster,
+                len(spec_lookup),
+                len(roster_specs),
+                checkbox_count,
+                sync_checkboxes,
             )
         if len(deduped) > len(selected_specs) and not missing_in_options and not missing_in_roster:
             logger.warning(
-                "Stored %s selections contained duplicates; reduced to %s.",
+                "Stored %s selections contained duplicates; reduced to %s. "
+                "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
                 role,
                 selected_specs,
+                len(spec_lookup),
+                len(roster_specs),
+                checkbox_count,
+                sync_checkboxes,
             )
 
     def _render_role_panel(
@@ -523,6 +555,8 @@ class AttackerAndTargetReport(AbstractReport):
             selected_attacker_specs,
             spec_lookup=spec_lookup,
             roster_specs=attacker_roster_specs,
+            checkbox_prefix="attacker_include",
+            sync_checkboxes=sync_checkboxes,
         )
         self._log_filtered_selection(
             "target",
@@ -530,6 +564,8 @@ class AttackerAndTargetReport(AbstractReport):
             selected_target_specs,
             spec_lookup=spec_lookup,
             roster_specs=target_roster_specs,
+            checkbox_prefix="target_include",
+            sync_checkboxes=sync_checkboxes,
         )
         if not selected_attacker_specs:
             logger.warning("No selected attacker specs remained after filtering; using roster defaults.")
