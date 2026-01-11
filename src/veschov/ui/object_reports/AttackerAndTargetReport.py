@@ -346,7 +346,16 @@ class AttackerAndTargetReport(AbstractReport):
         """Filter a serialized roster to specs that still exist in the lookup."""
         if not roster:
             return []
-        return [spec for spec in cls._dedupe_specs(roster) if spec in spec_lookup]
+        deduped = cls._dedupe_specs(roster)
+        filtered = [spec for spec in deduped if spec in spec_lookup]
+        if len(filtered) < len(deduped):
+            dropped = [spec for spec in deduped if spec not in spec_lookup]
+            logger.warning(
+                "Dropped %d roster spec(s) missing from current ship options: %s",
+                len(dropped),
+                dropped,
+            )
+        return filtered
 
     def _render_role_panel(
             self,
@@ -360,12 +369,18 @@ class AttackerAndTargetReport(AbstractReport):
         """Render a checkbox list for a role roster and return selected specs."""
         st.markdown(f"**{title}**")
         if not roster_specs:
+            logger.warning("No roster specs available for %s selection.", title)
             st.caption("None listed in the current log.")
             return []
         resolved: list[SerializedShipSpec] = []
         for spec_key in roster_specs:
             spec = spec_lookup.get(spec_key)
             if spec is None:
+                logger.warning(
+                    "Roster spec %s missing from lookup during %s selection.",
+                    spec_key,
+                    title,
+                )
                 continue
             label = self._format_ship_spec_label(spec, outcome_lookup)
             checkbox_key = f"{key_prefix}_{spec_key[0]}_{spec_key[1]}_{spec_key[2]}"
@@ -384,6 +399,10 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
         options, raw_specs = self._gather_specs(session_info)
         if not options:
+            logger.warning(
+                "Actor/target selector has no ship options; session_info=%s.",
+                type(session_info).__name__,
+            )
             st.warning("No ship data available to select attacker/target.")
             return (), ()
 
@@ -439,12 +458,14 @@ class AttackerAndTargetReport(AbstractReport):
             spec_lookup,
         )
         if not selected_attacker_specs:
+            logger.warning("No selected attacker specs remained after filtering; using roster defaults.")
             selected_attacker_specs = list(attacker_roster_specs)
         else:
             selected_attacker_specs = [
                 spec for spec in selected_attacker_specs if spec in attacker_roster_specs
             ]
         if not selected_target_specs:
+            logger.warning("No selected target specs remained after filtering; using roster defaults.")
             selected_target_specs = list(target_roster_specs)
         else:
             selected_target_specs = [
