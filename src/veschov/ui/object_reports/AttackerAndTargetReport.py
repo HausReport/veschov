@@ -243,8 +243,12 @@ class AttackerAndTargetReport(AbstractReport):
     def _swap_selected_specs() -> None:
         attackers = st.session_state.get("selected_attacker_specs", [])
         targets = st.session_state.get("selected_target_specs", [])
+        attacker_roster = st.session_state.get("attacker_roster_specs", [])
+        target_roster = st.session_state.get("target_roster_specs", [])
         st.session_state["selected_attacker_specs"] = targets
         st.session_state["selected_target_specs"] = attackers
+        st.session_state["attacker_roster_specs"] = target_roster
+        st.session_state["target_roster_specs"] = attacker_roster
 
     @staticmethod
     def _normalize_specs(session_info: SessionInfo | Set[ShipSpecifier] | None) -> Sequence[ShipSpecifier]:
@@ -317,16 +321,55 @@ class AttackerAndTargetReport(AbstractReport):
         return []
 
     @staticmethod
-    def _resolve_defaults(
-        serialized: Iterable[SerializedShipSpec] | None,
+    def _dedupe_specs(specs: Iterable[SerializedShipSpec]) -> list[SerializedShipSpec]:
+        """Remove duplicate serialized specs while preserving order."""
+        seen: set[SerializedShipSpec] = set()
+        deduped: list[SerializedShipSpec] = []
+        for spec in specs:
+            if spec in seen:
+                continue
+            seen.add(spec)
+            deduped.append(spec)
+        return deduped
+
+    @classmethod
+    def _filter_roster(
+        cls,
+        roster: Iterable[SerializedShipSpec] | None,
         spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
-        fallback: Sequence[ShipSpecifier],
-    ) -> list[ShipSpecifier]:
-        if serialized:
-            resolved = [spec_lookup[item] for item in serialized if item in spec_lookup]
-            if resolved:
-                return resolved
-        return list(fallback)
+    ) -> list[SerializedShipSpec]:
+        """Filter a serialized roster to specs that still exist in the lookup."""
+        if not roster:
+            return []
+        return [spec for spec in cls._dedupe_specs(roster) if spec in spec_lookup]
+
+    def _render_role_panel(
+        self,
+        title: str,
+        roster_specs: Sequence[SerializedShipSpec],
+        selected_specs: set[SerializedShipSpec],
+        spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+        key_prefix: str,
+    ) -> list[SerializedShipSpec]:
+        """Render a checkbox list for a role roster and return selected specs."""
+        st.markdown(f"**{title}**")
+        if not roster_specs:
+            st.caption("None listed in the current log.")
+            return []
+        resolved: list[SerializedShipSpec] = []
+        for spec_key in roster_specs:
+            spec = spec_lookup.get(spec_key)
+            if spec is None:
+                continue
+            label = self._format_ship_spec_label(spec)
+            checkbox_key = f"{key_prefix}_{spec_key[0]}_{spec_key[1]}_{spec_key[2]}"
+            desired_value = spec_key in selected_specs
+            if st.session_state.get(checkbox_key) != desired_value:
+                st.session_state[checkbox_key] = desired_value
+            checked = st.checkbox(label, key=checkbox_key)
+            if checked:
+                resolved.append(spec_key)
+        return resolved
 
     def render_actor_target_selector(
         self,
@@ -339,46 +382,77 @@ class AttackerAndTargetReport(AbstractReport):
             return (), ()
 
         spec_lookup = {self._serialize_spec(spec): spec for spec in options}
+        available_specs = [self._serialize_spec(spec) for spec in options]
         target_fallback = self._default_target_from_players(players_df, options, raw_specs)
         if not target_fallback:
             target_fallback = list(options[-1:])
         attacker_fallback = [spec for spec in options if spec not in target_fallback]
         if not attacker_fallback:
             attacker_fallback = list(options[:1])
-        if "target_roster_specs" not in st.session_state:
-            st.session_state["target_roster_specs"] = [
-                self._serialize_spec(spec) for spec in target_fallback
+        default_target_specs = [self._serialize_spec(spec) for spec in target_fallback]
+        default_attacker_specs = [self._serialize_spec(spec) for spec in attacker_fallback]
+
+        attacker_roster_specs = self._filter_roster(
+            st.session_state.get("attacker_roster_specs"),
+            spec_lookup,
+        )
+        target_roster_specs = self._filter_roster(
+            st.session_state.get("target_roster_specs"),
+            spec_lookup,
+        )
+        if not attacker_roster_specs and not target_roster_specs:
+            attacker_roster_specs = list(default_attacker_specs)
+            target_roster_specs = list(default_target_specs)
+        else:
+            target_roster_specs = [spec for spec in target_roster_specs if spec not in attacker_roster_specs]
+            missing_specs = [
+                spec for spec in available_specs
+                if spec not in attacker_roster_specs and spec not in target_roster_specs
             ]
-        if "attacker_roster_specs" not in st.session_state:
-            st.session_state["attacker_roster_specs"] = [
-                self._serialize_spec(spec) for spec in attacker_fallback
-            ]
-        if "selected_attacker_specs" not in st.session_state:
-            st.session_state["selected_attacker_specs"] = list(
-                st.session_state.get("attacker_roster_specs", [])
-            )
-        if "selected_target_specs" not in st.session_state:
-            st.session_state["selected_target_specs"] = list(
-                st.session_state.get("target_roster_specs", [])
-            )
-        default_attacker = self._resolve_defaults(
+            for spec in missing_specs:
+                if spec in default_target_specs:
+                    target_roster_specs.append(spec)
+                else:
+                    attacker_roster_specs.append(spec)
+            if not target_roster_specs:
+                target_roster_specs = list(default_target_specs)
+                attacker_roster_specs = [spec for spec in available_specs if spec not in target_roster_specs]
+            if not attacker_roster_specs:
+                attacker_roster_specs = list(default_attacker_specs)
+                target_roster_specs = [spec for spec in available_specs if spec not in attacker_roster_specs]
+
+        st.session_state["attacker_roster_specs"] = attacker_roster_specs
+        st.session_state["target_roster_specs"] = target_roster_specs
+
+        selected_attacker_specs = self._filter_roster(
             st.session_state.get("selected_attacker_specs"),
             spec_lookup,
-            attacker_fallback,
         )
-        default_target = self._resolve_defaults(
+        selected_target_specs = self._filter_roster(
             st.session_state.get("selected_target_specs"),
             spec_lookup,
-            target_fallback,
         )
+        if not selected_attacker_specs:
+            selected_attacker_specs = list(attacker_roster_specs)
+        else:
+            selected_attacker_specs = [
+                spec for spec in selected_attacker_specs if spec in attacker_roster_specs
+            ]
+        if not selected_target_specs:
+            selected_target_specs = list(target_roster_specs)
+        else:
+            selected_target_specs = [
+                spec for spec in selected_target_specs if spec in target_roster_specs
+            ]
 
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
         with selector_left:
-            selected_attackers = st.multiselect(
-                "Attacker",
-                options,
-                default=default_attacker,
-                format_func=str,
+            selected_attacker_specs = self._render_role_panel(
+                "Attackers",
+                attacker_roster_specs,
+                set(selected_attacker_specs),
+                spec_lookup,
+                "attacker_include",
             )
         with selector_swap:
             st.button(
@@ -389,16 +463,19 @@ class AttackerAndTargetReport(AbstractReport):
                 width="stretch",
             )
         with selector_right:
-            selected_targets = st.multiselect(
-                "Target",
-                options,
-                default=default_target,
-                format_func=str,
+            selected_target_specs = self._render_role_panel(
+                "Targets",
+                target_roster_specs,
+                set(selected_target_specs),
+                spec_lookup,
+                "target_include",
             )
 
-        st.session_state["selected_attacker_specs"] = [self._serialize_spec(spec) for spec in selected_attackers]
-        st.session_state["selected_target_specs"] = [self._serialize_spec(spec) for spec in selected_targets]
+        st.session_state["selected_attacker_specs"] = list(selected_attacker_specs)
+        st.session_state["selected_target_specs"] = list(selected_target_specs)
 
+        selected_attackers = [spec_lookup[item] for item in selected_attacker_specs if item in spec_lookup]
+        selected_targets = [spec_lookup[item] for item in selected_target_specs if item in spec_lookup]
         return selected_attackers, selected_targets
 
     def _outcome_emoji(self, outcome: object) -> str:
