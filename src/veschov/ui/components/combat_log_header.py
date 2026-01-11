@@ -41,8 +41,8 @@ def render_combat_log_upload(
     uploader_help: str = "Upload a battle log export to compute Apex Barrier per shot.",
 ) -> st.runtime.uploaded_file_manager.UploadedFile | None:
     """Render the shared upload widget for combat-log-driven reports."""
-    st.subheader(title)
-    st.caption(description)
+    # st.subheader(title)
+    # st.caption(description)
     return st.file_uploader(
         uploader_label,
         type=list(uploader_types),
@@ -60,8 +60,8 @@ def render_sidebar_combat_log_upload(
     uploader_help: str = "Upload a battle log export to compute Apex Barrier per shot.",
 ) -> pd.DataFrame | None:
     """Render a shared sidebar upload widget and hydrate battle session data."""
-    st.subheader(title)
-    st.caption(description)
+    # st.subheader(title)
+    # st.caption(description)
     uploaded = st.sidebar.file_uploader(
         uploader_label,
         type=list(uploader_types),

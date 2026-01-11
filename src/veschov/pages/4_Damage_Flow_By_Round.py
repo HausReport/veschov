@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from veschov.ui.actual_damage_report import render_actual_damage_report
+from veschov.ui.damage_flow_by_round import render_actual_damage_report
 
 logger = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ name = "Combatant Info"
 icon = "⚔️"
 
 [[pages]]
-path = "pages/4_Actual_Damage_Pools.py"
+path = "pages/4_Damage_Flow_By_Round.py"
 name = "Damage Flow by Round"
 icon = "🔀"
 

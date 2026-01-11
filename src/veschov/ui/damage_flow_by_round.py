@@ -156,12 +156,18 @@ def _resolve_hover_columns(df: pd.DataFrame) -> list[str]:
 
 def render_actual_damage_report() -> None:
     """Render the actual damage (post-mitigation) report."""
+    #
+    # Under-title text
+    #
     st.markdown(
         "Damage Flow by Round highlights what damage actually landed on shields and hull after all "
         "mitigation (iso-defense, Apex, and other reductions). It is not the same as “Total Damage” "
         "in the log."
     )
 
+    #
+    # Determine if log is present
+    #
     df = render_sidebar_combat_log_upload(
         "Damage Flow by Round",
         "Upload a battle log to visualize post-mitigation damage applied to shields and hull.",
@@ -171,6 +177,9 @@ def render_actual_damage_report() -> None:
         st.info("No battle data loaded yet.")
         return
 
+    #
+    # Make the data
+    #
     battle_filename = st.session_state.get("battle_filename") or "Session battle data"
 
     players_df = df.attrs.get("players_df")
@@ -230,50 +239,58 @@ def render_actual_damage_report() -> None:
             "sum"
         )
 
-        with st.expander("Debug stats", expanded=False):
-            pool_nonzero = (
-                long_df.loc[long_df["amount"] > 0].groupby("segment")["amount"]
-                .size()
-                .to_dict()
-            )
-            st.write(
-                {
-                    "shot_rows": int(len(shot_df)),
-                    "long_rows": int(len(long_df)),
-                    "shot_index_min": (
-                        int(long_df["shot_index"].min()) if not long_df.empty else None
-                    ),
-                    "shot_index_max": (
-                        int(long_df["shot_index"].max()) if not long_df.empty else None
-                    ),
-                    "damage_min": float(long_df["amount"].min())
-                    if not long_df.empty
-                    else None,
-                    "damage_max": float(long_df["amount"].max())
-                    if not long_df.empty
-                    else None,
-                    "nonzero_damage_rows": int((long_df["amount"] > 0).sum()),
-                    "nonzero_rows_by_pool": pool_nonzero,
-                    "accounted_total_min": (
-                        float(long_df["accounted_total"].min())
-                        if not long_df.empty
-                        else None
-                    ),
-                    "accounted_total_max": (
-                        float(long_df["accounted_total"].max())
-                        if not long_df.empty
-                        else None
-                    ),
-                }
-            )
+        # with st.expander("Debug stats", expanded=False):
+        #     pool_nonzero = (
+        #         long_df.loc[long_df["amount"] > 0].groupby("segment")["amount"]
+        #         .size()
+        #         .to_dict()
+        #     )
+        #     st.write(
+        #         {
+        #             "shot_rows": int(len(shot_df)),
+        #             "long_rows": int(len(long_df)),
+        #             "shot_index_min": (
+        #                 int(long_df["shot_index"].min()) if not long_df.empty else None
+        #             ),
+        #             "shot_index_max": (
+        #                 int(long_df["shot_index"].max()) if not long_df.empty else None
+        #             ),
+        #             "damage_min": float(long_df["amount"].min())
+        #             if not long_df.empty
+        #             else None,
+        #             "damage_max": float(long_df["amount"].max())
+        #             if not long_df.empty
+        #             else None,
+        #             "nonzero_damage_rows": int((long_df["amount"] > 0).sum()),
+        #             "nonzero_rows_by_pool": pool_nonzero,
+        #             "accounted_total_min": (
+        #                 float(long_df["accounted_total"].min())
+        #                 if not long_df.empty
+        #                 else None
+        #             ),
+        #             "accounted_total_max": (
+        #                 float(long_df["accounted_total"].max())
+        #                 if not long_df.empty
+        #                 else None
+        #             ),
+        #         }
+        #     )
 
         x_axis = "shot_index"
         title = f"Damage Flow by Shot — {battle_filename}"
+
+    #
+    # Another explainer
+    #
     st.markdown(
         "This chart stacks disjoint components of a hit. "
         "Blue/red are damage taken (shield/hull). Greens are damage prevented by mitigation "
         "(normal/isolytic) and Apex Barrier."
     )
+
+    #
+    # Generate the plot
+    #
     fig = px.area(
         long_df,
         x=x_axis,
@@ -291,6 +308,10 @@ def render_actual_damage_report() -> None:
         fig.update_xaxes(range=[1, int(max_value)])
     st.plotly_chart(fig, width="stretch")
 
+
+    #
+    # Show the table
+    #
     show_table = st.checkbox("Show raw table", value=False)
     if show_table:
         st.caption("Raw rows include per-shot pools and mitigation columns from the combat log.")
