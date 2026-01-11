@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Sequence
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -28,12 +31,27 @@ class SessionInfo:
 
     def __init__(self, combat_df: pd.DataFrame) -> None:
         self.combat_df = combat_df
-        self.players_df = combat_df.attrs["players_df"]
-        self.fleets_df = combat_df.attrs["fleets_df"]
+        players_df = combat_df.attrs.get("players_df")
+        if not isinstance(players_df, pd.DataFrame):
+            logger.warning("SessionInfo missing players_df in combat_df attrs.")
+            players_df = pd.DataFrame()
+        fleets_df = combat_df.attrs.get("fleets_df")
+        if not isinstance(fleets_df, pd.DataFrame):
+            logger.warning("SessionInfo missing fleets_df in combat_df attrs.")
+            fleets_df = pd.DataFrame()
+        self.players_df = players_df
+        self.fleets_df = fleets_df
 
     def get_combat_df_filtered_by_attacker(self, spec: ShipSpecifier) -> pd.DataFrame:
         """Return combat rows matching a single attacker spec."""
         df = self.combat_df
+        for column in ("attacker_name", "attacker_alliance", "attacker_ship"):
+            if column not in df.columns:
+                logger.warning(
+                    "Combat df missing %s column; cannot filter by attacker.",
+                    column,
+                )
+                return df.iloc[0:0]
 
         mask = pd.Series(True, index=df.index)
 
@@ -65,6 +83,13 @@ class SessionInfo:
         """Return unique attacker combinations across the combat log."""
         df = self.combat_df
         cols = ["attacker_name", "attacker_alliance", "attacker_ship"]
+        missing = [column for column in cols if column not in df.columns]
+        if missing:
+            logger.warning(
+                "Combat df missing attacker columns for ship roster: %s",
+                missing,
+            )
+            return set()
 
         unique_combos_df = (
             df.loc[:, cols]
