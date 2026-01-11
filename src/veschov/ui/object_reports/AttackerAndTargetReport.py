@@ -539,6 +539,22 @@ class AttackerAndTargetReport(AbstractReport):
         should_sync_checkboxes = sync_checkboxes
         stored_attacker_specs = st.session_state.get("selected_attacker_specs")
         stored_target_specs = st.session_state.get("selected_target_specs")
+        if stored_attacker_specs is None:
+            stored_attacker_specs = list(attacker_roster_specs)
+            st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
+            should_sync_checkboxes = True
+        if stored_target_specs is None:
+            stored_target_specs = list(target_roster_specs)
+            st.session_state["selected_target_specs"] = list(stored_target_specs)
+            should_sync_checkboxes = True
+        if stored_attacker_specs == [] and attacker_roster_specs:
+            stored_attacker_specs = list(attacker_roster_specs)
+            st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
+            should_sync_checkboxes = True
+        if stored_target_specs == [] and target_roster_specs:
+            stored_target_specs = list(target_roster_specs)
+            st.session_state["selected_target_specs"] = list(stored_target_specs)
+            should_sync_checkboxes = True
         selected_attacker_specs = self._filter_roster(
             stored_attacker_specs,
             spec_lookup,
@@ -585,6 +601,16 @@ class AttackerAndTargetReport(AbstractReport):
             initial_attacker_specs != list(selected_attacker_specs)
             or initial_target_specs != list(selected_target_specs)
         ):
+            should_sync_checkboxes = True
+        attacker_checkbox_count = sum(
+            1 for key in st.session_state.keys()
+            if isinstance(key, str) and key.startswith("attacker_include_")
+        )
+        target_checkbox_count = sum(
+            1 for key in st.session_state.keys()
+            if isinstance(key, str) and key.startswith("target_include_")
+        )
+        if attacker_checkbox_count == 0 or target_checkbox_count == 0:
             should_sync_checkboxes = True
 
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
