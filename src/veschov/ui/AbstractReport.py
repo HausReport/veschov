@@ -1,22 +1,24 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import pandas as pd
 import streamlit as st
+
 from veschov.io.parser_stub import parse_battle_log
 from veschov.ui.components.combat_log_header import render_sidebar_combat_log_upload
-from typing import Iterable, Optional
-import pandas as pd
-import plotly.express as px
 
 class AbstractReport(ABC):
 
 
-    def render(self) ->None:
+    def render(self) -> None:
         utt = self.get_under_title_text()
         if utt is not None:
             st.markdown(utt, unsafe_allow_html=True)
-        df = self.add_log_uploader()
+        df = self.add_log_uploader(
+            title=self.get_log_title(),
+            description=self.get_log_description(),
+        )
         if df is None:
             return
         dfs = self.get_derived_dataframes(df)
@@ -38,7 +40,15 @@ class AbstractReport(ABC):
     def get_under_chart_text(self) -> Optional[str]:
         return None
 
-    def add_log_uploader(self, title, description) -> Optional[pd.DataFrame]:
+    @abstractmethod
+    def get_log_title(self) -> str:
+        return ""
+
+    @abstractmethod
+    def get_log_description(self) -> str:
+        return ""
+
+    def add_log_uploader(self, *, title: str, description: str) -> Optional[pd.DataFrame]:
         df = render_sidebar_combat_log_upload(
             title=title,
             description=description,

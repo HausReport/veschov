@@ -1,13 +1,11 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from typing import Optional
 
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 from veschov.ui.AbstractReport import AbstractReport
-from veschov.ui.components.combat_log_header import render_sidebar_combat_log_upload, render_combat_log_header, \
-    apply_combat_lens
-from typing import Iterable, Optional
+from veschov.ui.components.combat_log_header import render_combat_log_header, apply_combat_lens
 
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
@@ -35,10 +33,13 @@ class DamageFlowByRoundReport(AbstractReport):
         Blue/red are damage taken (shield/hull). Greens are damage prevented by mitigation 
         (normal/isolytic) and Apex Barrier."""
 
-    @abstractmethod
-    def get_derived_dataframes(self, df: pd.DataFrame) -> Optional[list[pd.DataFrame]]:
-        battle_filename = st.session_state.get("battle_filename") or "Session battle data"
+    def get_log_title(self) -> str:
+        return "Damage Flow by Round"
 
+    def get_log_description(self) -> str:
+        return "Upload a battle log to visualize post-mitigation damage applied to shields and hull."
+
+    def get_derived_dataframes(self, df: pd.DataFrame) -> Optional[list[pd.DataFrame]]:
         players_df = df.attrs.get("players_df")
         fleets_df = df.attrs.get("fleets_df")
         _, lens = render_combat_log_header(
@@ -88,13 +89,13 @@ class DamageFlowByRoundReport(AbstractReport):
             )
             self.x_axis = "round"
             self.hover_columns = [column for column in hover_columns if column in long_df.columns]
-            title = f"Damage Flow by Round — {battle_filename}"
         else:
             long_df = _build_long_df(shot_df, hover_columns, include_shot_index=True)
             self.hover_columns = [column for column in hover_columns if column in long_df.columns]
             long_df["accounted_total"] = long_df.groupby("shot_index")["amount"].transform(
                 "sum"
             )
+            self.x_axis = "shot_index"
         return [long_df, shot_df]
 
     def display_plots(self, dfs: list[pd.DataFrame] ) -> None:
