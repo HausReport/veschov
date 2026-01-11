@@ -9,10 +9,19 @@ from veschov.ui.components.combat_log_header import render_combat_log_header, ap
 
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
-from veschov.ui.view_by import select_view_by, prepare_round_view
+from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by, prepare_round_view
 
 
 class DamageFlowByRoundReport(AbstractReport):
+    VIEW_BY_KEY = "actual_damage_view_by"
+    VIEW_BY_DEFAULT = "Round"
+
+    def _resolve_view_by(self) -> str:
+        view_by = st.session_state.get(self.VIEW_BY_KEY)
+        if view_by not in VIEW_BY_OPTIONS:
+            view_by = self.VIEW_BY_DEFAULT
+            st.session_state[self.VIEW_BY_KEY] = view_by
+        return view_by
 
     def get_x_axis_text(self) -> Optional[str]:
         return "Shot or Round Number"
@@ -74,7 +83,7 @@ class DamageFlowByRoundReport(AbstractReport):
             st.warning("No matching damage events found for this selection.")
             return None
 
-        self.view_by = select_view_by("actual_damage_view_by")
+        self.view_by = self._resolve_view_by()
         hover_columns = _resolve_hover_columns(shot_df)
 
         if self.view_by == "Round":
@@ -152,5 +161,8 @@ class DamageFlowByRoundReport(AbstractReport):
                 )
                 preview_cols = list(dict.fromkeys(preview_cols))
                 st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
+        self._resolve_view_by()
+        default_index = VIEW_BY_OPTIONS.index(self.VIEW_BY_DEFAULT)
+        select_view_by(self.VIEW_BY_KEY, default_index=default_index)
     # def get_debug_info(self, df: pd.DataFrame) -> None:
     #     pass
