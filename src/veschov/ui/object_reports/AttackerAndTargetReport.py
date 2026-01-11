@@ -52,9 +52,7 @@ class AttackerAndTargetReport(AbstractReport):
         #
         # Adds the actor/target selector
         #
-        selected_attackers, selected_targets = self.render_actor_target_selector(
-            st.session_state.get("session_info")
-        )
+        selected_attackers, selected_targets = self.render_actor_target_selector(resolved_session_info)
 
         #
         # Adds the lens indicator
@@ -79,7 +77,7 @@ class AttackerAndTargetReport(AbstractReport):
         #
         if isinstance(players_df, pd.DataFrame) or players_df.empty:
             self._render_system_time_and_rounds(players_df, battle_df)
-            self.render_combatants(players_df)
+            self.render_combatants(resolved_session_info, battle_df)
         else:
             st.info("No player metadata found in this file.")
 
@@ -128,35 +126,45 @@ class AttackerAndTargetReport(AbstractReport):
                 lines.append(f"Battle Rounds: {int(max_round)}")
         return lines
 
-    def render_combatants(self, players_df):
-        session_info = st.session_state.get("session_info")
-        name_lookup, ship_lookup = self._alliance_lookup(session_info)
+    def render_combatants(
+        self,
+        session_info: SessionInfo | Set[ShipSpecifier] | None,
+        battle_df: pd.DataFrame | None,
+    ) -> None:
+        if not isinstance(session_info, SessionInfo) and isinstance(battle_df, pd.DataFrame):
+            session_info = SessionInfo(battle_df)
 
-        players_rows = players_df.iloc[:-1] if len(players_df) > 1 else players_df.iloc[0:0]
-        npc_row = players_df.iloc[-1:]
+        combatant_specs = self._normalize_specs(session_info)
+        if not combatant_specs:
+            st.info("No combatant data found in this file.")
+            return
+
+        players_specs = [
+            spec for spec in combatant_specs if self._normalize_text(spec.alliance)
+        ]
+        npc_specs = [
+            spec for spec in combatant_specs if not self._normalize_text(spec.alliance)
+        ]
 
         list_cols = st.columns(2)
         with list_cols[0]:
-            self._render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
+            self._render_combatant_list("Players", players_specs)
         with list_cols[1]:
-            self._render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
+            self._render_combatant_list("NPC", npc_specs)
 
     def _render_combatant_list(
         self,
         title: str,
-        rows: pd.DataFrame,
-        name_lookup: dict[str, str],
-        ship_lookup: dict[tuple[str, str], str],
+        specs: Sequence[ShipSpecifier],
     ) -> None:
         st.markdown(f"**{title}**")
-        if rows.empty:
+        if not specs:
             st.caption("None listed in the current log.")
             return
         lines = []
-        for _, row in rows.iterrows():
-            emoji = self._outcome_emoji(row.get("Outcome"))
-            label = self._format_combatant_label(row, name_lookup, ship_lookup)
-            lines.append(f"- {emoji} {label}")
+        for spec in specs:
+            label = self._format_ship_spec_label(spec)
+            lines.append(f"- {label}")
         st.markdown("\n".join(lines))
 
         # ########################################################################################################
@@ -308,33 +316,6 @@ class AttackerAndTargetReport(AbstractReport):
 
         return selected_attackers, selected_targets
 
-
-
-
-
-    def _alliance_lookup(
-        self,
-        session_info: SessionInfo | None,
-    ) -> tuple[dict[str, str], dict[tuple[str, str], str]]:
-        name_lookup: dict[str, str] = {}
-        ship_lookup: dict[tuple[str, str], str] = {}
-        if not isinstance(session_info, SessionInfo):
-            return name_lookup, ship_lookup
-
-        for spec in session_info.get_every_ship():
-            if not isinstance(spec, ShipSpecifier):
-                continue
-            name = self._normalize_text(spec.name)
-            ship = self._normalize_text(spec.ship)
-            alliance = self._normalize_text(spec.alliance)
-            if name and alliance and name not in name_lookup:
-                name_lookup[name] = alliance
-            if name and ship and alliance:
-                ship_lookup[(name, ship)] = alliance
-        return name_lookup, ship_lookup
-
-
-
     def _outcome_emoji(self, outcome: object) -> str:
         if isinstance(outcome, str):
             normalized = outcome.strip().upper().replace("_", " ")
@@ -357,6 +338,17 @@ class AttackerAndTargetReport(AbstractReport):
         name = self._normalize_text(row.get("Player Name"))
         ship = self._normalize_text(row.get("Ship Name"))
         alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
+        label = name or "Unknown"
+        if alliance:
+            label = f"{label} [{alliance}]"
+        if ship and ship != name:
+            label = f"{label} — {ship}"
+        return label
+
+    def _format_ship_spec_label(self, spec: ShipSpecifier) -> str:
+        name = self._normalize_text(spec.name)
+        ship = self._normalize_text(spec.ship)
+        alliance = self._normalize_text(spec.alliance)
         label = name or "Unknown"
         if alliance:
             label = f"{label} [{alliance}]"
