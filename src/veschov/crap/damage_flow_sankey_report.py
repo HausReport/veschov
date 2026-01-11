@@ -6,20 +6,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-import pandas as pd
-import plotly.graph_objects as go
-import streamlit as st
-
-from veschov.io.parser_stub import parse_battle_log
-from veschov.transforms.columns import get_series
-from veschov.ui.components.combat_log_header import (
-    apply_combat_lens,
-    render_combat_log_header,
-    render_sidebar_combat_log_upload,
-)
-from veschov.utils.series import coerce_numeric
-
-
 # def _build_damage_mask(df: pd.DataFrame) -> pd.Series:
 #     if "event_type" not in df.columns:
 #         raise KeyError("event_type")
