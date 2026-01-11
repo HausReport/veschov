@@ -149,16 +149,21 @@ class AttackerAndTargetReport(AbstractReport):
             spec for spec in combatant_specs if not self._normalize_text(spec.alliance)
         ]
 
+        outcome_lookup = {}
+        if isinstance(session_info, SessionInfo):
+            outcome_lookup = self._build_outcome_lookup(session_info.players_df)
+
         list_cols = st.columns(2)
         with list_cols[0]:
-            self._render_combatant_list("Players", players_specs)
+            self._render_combatant_list("Players", players_specs, outcome_lookup)
         with list_cols[1]:
-            self._render_combatant_list("NPC", npc_specs)
+            self._render_combatant_list("NPC", npc_specs, outcome_lookup)
 
     def _render_combatant_list(
         self,
         title: str,
         specs: Sequence[ShipSpecifier],
+        outcome_lookup: dict[SerializedShipSpec, object],
     ) -> None:
         st.markdown(f"**{title}**")
         if not specs:
@@ -166,7 +171,7 @@ class AttackerAndTargetReport(AbstractReport):
             return
         lines = []
         for spec in specs:
-            label = self._format_ship_spec_label(spec)
+            label = self._format_ship_spec_label(spec, outcome_lookup)
             lines.append(f"- {label}")
         st.markdown("\n".join(lines))
 
@@ -350,6 +355,7 @@ class AttackerAndTargetReport(AbstractReport):
         selected_specs: set[SerializedShipSpec],
         spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
         key_prefix: str,
+        outcome_lookup: dict[SerializedShipSpec, object],
     ) -> list[SerializedShipSpec]:
         """Render a checkbox list for a role roster and return selected specs."""
         st.markdown(f"**{title}**")
@@ -361,7 +367,7 @@ class AttackerAndTargetReport(AbstractReport):
             spec = spec_lookup.get(spec_key)
             if spec is None:
                 continue
-            label = self._format_ship_spec_label(spec)
+            label = self._format_ship_spec_label(spec, outcome_lookup)
             checkbox_key = f"{key_prefix}_{spec_key[0]}_{spec_key[1]}_{spec_key[2]}"
             desired_value = spec_key in selected_specs
             if st.session_state.get(checkbox_key) != desired_value:
@@ -446,6 +452,7 @@ class AttackerAndTargetReport(AbstractReport):
             ]
 
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
+        outcome_lookup = self._build_outcome_lookup(players_df)
         with selector_left:
             selected_attacker_specs = self._render_role_panel(
                 "Attackers",
@@ -453,6 +460,7 @@ class AttackerAndTargetReport(AbstractReport):
                 set(selected_attacker_specs),
                 spec_lookup,
                 "attacker_include",
+                outcome_lookup,
             )
         with selector_swap:
             st.button(
@@ -469,6 +477,7 @@ class AttackerAndTargetReport(AbstractReport):
                 set(selected_target_specs),
                 spec_lookup,
                 "target_include",
+                outcome_lookup,
             )
 
         st.session_state["selected_attacker_specs"] = list(selected_attacker_specs)
@@ -486,10 +495,35 @@ class AttackerAndTargetReport(AbstractReport):
                 return label_emoji[1]
         return "❔"
 
+    def _build_outcome_lookup(self, players_df: pd.DataFrame | None) -> dict[SerializedShipSpec, object]:
+        if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            return {}
+        if "Outcome" not in players_df.columns:
+            return {}
+        outcome_lookup: dict[SerializedShipSpec, object] = {}
+        for _, row in players_df.iterrows():
+            name = self._normalize_text(row.get("Player Name"))
+            ship = self._normalize_text(row.get("Ship Name"))
+            alliance = self._resolve_player_alliance(row)
+            if not any([name, ship, alliance]):
+                continue
+            key = self._normalize_spec_key(name, alliance, ship)
+            if key in outcome_lookup:
+                continue
+            outcome_lookup[key] = row.get("Outcome")
+        return outcome_lookup
+
     def _normalize_text(self, value: object) -> str:
         if pd.isna(value) or value is None:
             return ""
         return str(value).strip()
+
+    def _normalize_spec_key(self, name: object, alliance: object, ship: object) -> SerializedShipSpec:
+        return (
+            self._normalize_text(name),
+            self._normalize_text(alliance),
+            self._normalize_text(ship),
+        )
 
     def _format_combatant_label(
         self,
@@ -507,13 +541,21 @@ class AttackerAndTargetReport(AbstractReport):
             label = f"{label} — {ship}"
         return label
 
-    def _format_ship_spec_label(self, spec: ShipSpecifier) -> str:
+    def _format_ship_spec_label(
+        self,
+        spec: ShipSpecifier,
+        outcome_lookup: dict[SerializedShipSpec, object] | None = None,
+    ) -> str:
         name = self._normalize_text(spec.name)
         ship = self._normalize_text(spec.ship)
         alliance = self._normalize_text(spec.alliance)
+        outcome = None
+        if outcome_lookup is not None:
+            outcome = outcome_lookup.get(self._normalize_spec_key(name, alliance, ship))
+        emoji = self._outcome_emoji(outcome)
         label = name or "Unknown"
         if alliance:
             label = f"{label} [{alliance}]"
         if ship and ship != name:
             label = f"{label} — {ship}"
-        return label
+        return f"{emoji} {label}"
