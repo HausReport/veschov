@@ -22,20 +22,20 @@ def _coerce_numeric(series: pd.Series) -> pd.Series:
     return coerce_numeric(series)
 
 
-def add_apex_barrier_hit(df: pd.DataFrame, apex_s: int = 10_000) -> pd.DataFrame:
-    """Add apex_barrier_hit to the dataframe."""
-    updated = df.copy()
-    updated.attrs = df.attrs.copy()
-    mitigated = _coerce_numeric(get_series(updated, "mitigated_apex"))
-    total_damage = _coerce_numeric(get_series(updated, "damage_after_apex"))
-
-    mask = (mitigated > 0) & (total_damage > 0)
-    apex_hit = pd.Series(pd.NA, index=updated.index, dtype="Int64")
-    apex_values = (apex_s * mitigated[mask] / total_damage[mask]).round()
-    apex_hit.loc[mask] = apex_values.astype("Int64")
-
-    updated["apex_barrier_hit"] = apex_hit
-    return updated
+# def add_apex_barrier_hit(df: pd.DataFrame, apex_s: int = 10_000) -> pd.DataFrame:
+#     """Add apex_barrier_hit to the dataframe."""
+#     updated = df.copy()
+#     updated.attrs = df.attrs.copy()
+#     mitigated = _coerce_numeric(get_series(updated, "mitigated_apex"))
+#     total_damage = _coerce_numeric(get_series(updated, "damage_after_apex"))
+#
+#     mask = (mitigated > 0) & (total_damage > 0)
+#     apex_hit = pd.Series(pd.NA, index=updated.index, dtype="Int64")
+#     apex_values = (apex_s * mitigated[mask] / total_damage[mask]).round()
+#     apex_hit.loc[mask] = apex_values.astype("Int64")
+#
+#     updated["apex_barrier_hit"] = apex_hit
+#     return updated
 
 
 def add_shot_index(df: pd.DataFrame) -> pd.DataFrame:

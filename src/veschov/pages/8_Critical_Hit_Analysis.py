@@ -1,9 +1,4 @@
 from __future__ import annotations
-
-import logging
-
-logger = logging.getLogger(__name__)
-
 import streamlit as st
 
 from veschov.ui.object_reports.CritHitReport import CritHitReport
