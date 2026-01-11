@@ -594,6 +594,16 @@ class AttackerAndTargetReport(AbstractReport):
             or initial_target_specs != list(selected_target_specs)
         ):
             should_sync_checkboxes = True
+        attacker_checkbox_count = sum(
+            1 for key in st.session_state.keys()
+            if isinstance(key, str) and key.startswith("attacker_include_")
+        )
+        target_checkbox_count = sum(
+            1 for key in st.session_state.keys()
+            if isinstance(key, str) and key.startswith("target_include_")
+        )
+        if attacker_checkbox_count == 0 or target_checkbox_count == 0:
+            should_sync_checkboxes = True
 
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
         outcome_lookup = self._build_outcome_lookup(players_df)
