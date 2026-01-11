@@ -220,6 +220,17 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         return [shot_df, totals_df, debug_df]
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
+        st.markdown(
+            """
+            <style>
+            /* Plotly Sankey label shadow/halo can look blurry in Streamlit on desktop */
+            .js-plotly-plot .sankey text {
+                text-shadow: none !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
         node_index = {label: idx for idx, label in enumerate(self.nodes)}
 
         sources = []

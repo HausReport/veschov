@@ -31,6 +31,7 @@ class AbstractReport(ABC):
         self.display_plots(dfs)
         self.display_under_chart()
         self.display_tables(dfs)
+        self.render_debug_info(dfs)
 
     def display_under_chart(self) -> None:
         utt = self.get_under_chart_text()
@@ -77,7 +78,7 @@ class AbstractReport(ABC):
         pass
 
     @abstractmethod
-    def get_debug_info(self, df: pd.DataFrame) -> None:
+    def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
         pass
 
     @abstractmethod

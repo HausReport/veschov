@@ -149,5 +149,5 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
                 st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
 
     @override
-    def get_debug_info(self, df: pd.DataFrame) -> None:
+    def render_debug_info(self, df: pd.DataFrame) -> None:
         return None

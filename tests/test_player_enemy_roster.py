@@ -31,7 +31,7 @@ class _TestReport(AttackerAndTargetReport):
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         pass
 
-    def get_debug_info(self, df: pd.DataFrame) -> None:
+    def render_debug_info(self, df: pd.DataFrame) -> None:
         pass
 
     def get_x_axis_text(self) -> Optional[str]:

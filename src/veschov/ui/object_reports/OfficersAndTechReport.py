@@ -327,3 +327,6 @@ class OfficersAndTechReport(AttackerAndTargetReport):
     @override
     def get_debug_info(self, df: pd.DataFrame) -> None:
         return None
+    @override
+    def render_debug_info(self, df: pd.DataFrame) -> None:
+        pass
