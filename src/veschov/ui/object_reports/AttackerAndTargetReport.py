@@ -469,7 +469,7 @@ class AttackerAndTargetReport(AbstractReport):
                 )
                 continue
             label = self._format_ship_spec_label(spec, outcome_lookup)
-            checkbox_key = f"{key_prefix}_{spec_key[0]}_{spec_key[1]}_{spec_key[2]}"
+            checkbox_key = f"{key_prefix}_{spec_key}"
             desired_value = spec_key in selected_specs
             if sync_checkboxes or checkbox_key not in st.session_state:
                 st.session_state[checkbox_key] = desired_value
