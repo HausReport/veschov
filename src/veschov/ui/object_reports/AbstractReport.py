@@ -15,6 +15,7 @@ class AbstractReport(ABC):
 
     def render(self) -> None:
         utt = self.get_under_title_text()
+        st.warning("This page is using the new system.")
         if utt is not None:
             st.markdown(utt, unsafe_allow_html=True)
         df = self.add_log_uploader(

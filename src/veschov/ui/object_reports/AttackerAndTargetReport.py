@@ -80,7 +80,7 @@ class AttackerAndTargetReport(AbstractReport):
         #
         if isinstance(players_df, pd.DataFrame) and not players_df.empty:
             self._render_system_time_and_rounds(players_df, battle_df)
-            self.render_combatants(resolved_session_info, battle_df)
+            # self.render_combatants(resolved_session_info, battle_df)
         else:
             st.info("No player metadata found in this file.")
 
