@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import io
 import logging
-from typing import Dict, IO, Optional
+from typing import IO
 
 import pandas as pd
 
@@ -16,13 +18,11 @@ SECTION_HEADERS = {
 }
 
 
-def extract_sections(
-        text: str, headers: Dict[str, str] | None = None
-) -> Dict[str, str]:
+def extract_sections(text: str, headers: dict[str, str] | None = None) -> dict[str, str]:
     """Extract labeled sections from a battle log export."""
     headers = headers or SECTION_HEADERS
-    found: Dict[str, str] = {}
-    current_key: Optional[str] = None
+    found: dict[str, str] = {}
+    current_key: str | None = None
     buffer: list[str] = []
 
     for line in text.splitlines():
@@ -53,9 +53,7 @@ def extract_sections(
     return found
 
 
-def section_to_dataframe(
-        section_text: Optional[str], header_prefix: str
-) -> pd.DataFrame:
+def section_to_dataframe(section_text: str | None, header_prefix: str) -> pd.DataFrame:
     """Parse a tab-delimited section into a dataframe."""
     columns = header_prefix.split("\t")
     if not section_text:

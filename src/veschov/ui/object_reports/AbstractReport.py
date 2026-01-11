@@ -7,10 +7,12 @@ import pandas as pd
 import streamlit as st
 
 from veschov.io.parser_stub import parse_battle_log
+from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_log_header import render_sidebar_combat_log_upload
 
 
 class AbstractReport(ABC):
+    lens: Lens | None
 
     def render(self) -> None:
         utt = self.get_under_title_text()
@@ -62,6 +64,10 @@ class AbstractReport(ABC):
         if df is None:
             st.info("No battle data loaded yet.")
         return df
+
+    @abstractmethod
+    def render_header(self, df: pd.DataFrame) -> Lens | None:
+        pass
 
     @abstractmethod
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:

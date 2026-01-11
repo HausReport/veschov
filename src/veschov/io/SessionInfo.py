@@ -1,52 +1,56 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Set, Optional, Sequence
+from typing import Sequence
 
 import pandas as pd
 
 
 @dataclass(frozen=True)
 class ShipSpecifier:
-    name: Optional[str]
-    alliance: Optional[str]
-    ship: Optional[str]
+    """Identify a combatant by name, alliance, and ship."""
 
-    # touch
+    name: str | None
+    alliance: str | None
+    ship: str | None
 
     def __str__(self) -> str:
-        ret = self.name or ""
+        label = self.name or ""
         if self.alliance is not None:
-            ret += f" [{self.alliance}]"
-        if self.ship != self.name:
-            ret += f" — {self.ship}"
-        return ret
+            label += f" [{self.alliance}]"
+        if self.ship and self.ship != self.name:
+            label += f" — {self.ship}"
+        return label
 
 
 class SessionInfo:
+    """Expose filtered views and helpers for combat session data."""
 
-    def __init__(self, combat_df):
+    def __init__(self, combat_df: pd.DataFrame) -> None:
         self.combat_df = combat_df
         self.players_df = combat_df.attrs["players_df"]
         self.fleets_df = combat_df.attrs["fleets_df"]
 
     def get_combat_df_filtered_by_attacker(self, spec: ShipSpecifier) -> pd.DataFrame:
+        """Return combat rows matching a single attacker spec."""
         df = self.combat_df
 
         mask = pd.Series(True, index=df.index)
 
-        # If you use "" as “unspecified”
         if spec.name:
-            mask &= (df["attacker_name"] == spec.name)
+            mask &= df["attacker_name"] == spec.name
         if spec.alliance:
-            mask &= (df["attacker_alliance"] == spec.alliance)
+            mask &= df["attacker_alliance"] == spec.alliance
         if spec.ship:
-            mask &= (df["attacker_ship"] == spec.ship)
+            mask &= df["attacker_ship"] == spec.ship
 
         return df.loc[mask]
 
     def get_combat_df_filtered_by_attackers(
-            self,
-            specs: Sequence[ShipSpecifier],
+        self,
+        specs: Sequence[ShipSpecifier],
     ) -> pd.DataFrame:
+        """Return combat rows for any of the provided attacker specs."""
         if not specs:
             return self.combat_df
 
@@ -57,7 +61,8 @@ class SessionInfo:
 
         return self.combat_df.loc[mask]
 
-    def get_every_ship(self) -> Set[ShipSpecifier]:
+    def get_every_ship(self) -> set[ShipSpecifier]:
+        """Return unique attacker combinations across the combat log."""
         df = self.combat_df
         cols = ["attacker_name", "attacker_alliance", "attacker_ship"]
 
@@ -79,82 +84,65 @@ class SessionInfo:
             for row in unique_combos_df.to_dict(orient="records")
         }
 
-    # def get_captain_name(self):
-    def get_ships(self, combatant_name):
+    def get_ships(self, combatant_name: str) -> set[str]:
+        """Return all ships used by a combatant in attack events."""
         df = self.combat_df
         event_type = df["event_type"].astype(str).str.lower()
         mask = (event_type == "attack") & (df["attacker_name"] == combatant_name)
-        ships = set(df.loc[mask, "attacker_ship"].dropna().astype(str).unique())
-        return ships
+        return set(df.loc[mask, "attacker_ship"].dropna().astype(str).unique())
 
-    def get_captain_name(self, combatant_name, ship_name):
+    def get_captain_name(self, combatant_name: str, ship_name: str) -> set[str]:
+        """Return the captain officer name(s) for a combatant and ship."""
         df = self.players_df
         mask = (df["Ship Name"] == ship_name) & (df["Player Name"] == combatant_name)
-        officer = df.loc[mask, "Officer One"].dropna().astype(str).unique()
-        return officer
+        return set(df.loc[mask, "Officer One"].dropna().astype(str).unique())
 
-    def get_1st_officer_name(self, combatant_name, ship_name):
+    def get_1st_officer_name(self, combatant_name: str, ship_name: str) -> set[str]:
+        """Return the first officer name(s) for a combatant and ship."""
         df = self.players_df
         mask = (df["Ship Name"] == ship_name) & (df["Player Name"] == combatant_name)
-        officer = df.loc[mask, "Officer Two"].dropna().astype(str).unique()
-        return officer
+        return set(df.loc[mask, "Officer Two"].dropna().astype(str).unique())
 
-    def get_2nd_officer_name(self, combatant_name, ship_name):
+    def get_2nd_officer_name(self, combatant_name: str, ship_name: str) -> set[str]:
+        """Return the second officer name(s) for a combatant and ship."""
         df = self.players_df
         mask = (df["Ship Name"] == ship_name) & (df["Player Name"] == combatant_name)
-        officer = df.loc[mask, "Officer Three"].dropna().astype(str).unique()
-        return officer
+        return set(df.loc[mask, "Officer Three"].dropna().astype(str).unique())
 
-    def get_bridge_crew(self, combatant_name, ship_name):
-        bc = set()
-        bc.update(self.get_captain_name(combatant_name, ship_name))
-        bc.update(self.get_1st_officer_name(combatant_name, ship_name))
-        bc.update(self.get_2nd_officer_name(combatant_name, ship_name))
-        return bc
+    def get_bridge_crew(self, combatant_name: str, ship_name: str) -> set[str]:
+        """Return the bridge crew officer names for a combatant and ship."""
+        bridge_crew: set[str] = set()
+        bridge_crew.update(self.get_captain_name(combatant_name, ship_name))
+        bridge_crew.update(self.get_1st_officer_name(combatant_name, ship_name))
+        bridge_crew.update(self.get_2nd_officer_name(combatant_name, ship_name))
+        return bridge_crew
 
-    def get_below_deck_officers(self, combatant_name, ship_name):
-        set1 = self.all_officer_names(combatant_name, ship_name)
-        set2 = self.get_bridge_crew(combatant_name, ship_name)
-        return set1 - set2
+    def get_below_deck_officers(self, combatant_name: str, ship_name: str) -> set[str]:
+        """Return below-deck officer names for a combatant and ship."""
+        all_officers = self.all_officer_names(combatant_name, ship_name)
+        bridge_crew = self.get_bridge_crew(combatant_name, ship_name)
+        return all_officers - bridge_crew
 
-    def all_officer_names(self, combatant_name, ship_name) -> Set[str]:
+    def all_officer_names(self, combatant_name: str, ship_name: str) -> set[str]:
+        """Return all officer names activated by a combatant and ship."""
         df = self.combat_df
         event_type = df["event_type"].astype(str).str.lower()
         mask = (
-                (event_type == "officer")
-                & (df["attacker_ship"] == ship_name)
-                & (df["attacker_name"] == combatant_name)
+            (event_type == "officer")
+            & (df["attacker_ship"] == ship_name)
+            & (df["attacker_name"] == combatant_name)
         )
-        officers = set(df.loc[mask, "ability_owner_name"].dropna().astype(str).unique())
-        return officers
+        return set(df.loc[mask, "ability_owner_name"].dropna().astype(str).unique())
 
-    def combatant_names(self) -> Set[str]:
-        # mask = (df["Type"] == "Officer Ability") & (df["Attacker Name"] == "XanOfHanoi")
+    def combatant_names(self) -> set[str]:
+        """Return the union of player and attacker names."""
         df = self.players_df
-        # print(df.columns)
-        # ['Player Name', 'Player Level', 'Outcome', 'Ship Name', 'Ship Level',
-        #        'Ship Strength', 'Ship XP', 'Officer One', 'Officer Two',
-        #        'Officer Three', 'Hull Health', 'Hull Health Remaining',
-        #        'Shield Health', 'Shield Health Remaining', 'Location', 'Timestamp']
         combatants = set(df["Player Name"].dropna().astype(str).unique())
         df = self.combat_df
-        # print(df.columns)
-        # ['round', 'battle_event', 'event_type', 'is_crit', 'attacker_name',
-        #  'attacker_ship', 'attacker_alliance', 'attacker_is_armada',
-        #  'target_name', 'target_ship', 'target_alliance', 'target_is_armada',
-        #  'applied_damage', 'damage_after_apex', 'shield_damage', 'hull_damage',
-        #  'mitigated_apex', 'damage_before_apex', 'apex_r', 'apex_barrier_hit',
-        #  'total_iso', 'mitigated_iso', 'iso_remain', 'total_normal',
-        #  'mitigated_normal', 'normal_remain', 'remain_before_apex',
-        #  'accounting_delta', 'ability_type', 'ability_value', 'ability_name',
-        #  'ability_owner_name', 'target_defeated', 'target_destroyed',
-        #  'Hyperthermic Decay %', 'Hyperthermic Stablizer %',
-        #  # 'Charging Weapons %', 'shot_index']
         combatants.update(set(df["attacker_name"].dropna().astype(str).unique()))
         return combatants
 
-    def alliance_names(self) -> Set[str]:
-        # mask = (df["Type"] == "Officer Ability") & (df["Attacker Name"] == "XanOfHanoi")
+    def alliance_names(self) -> set[str]:
+        """Return all attacker alliance names in the combat log."""
         df = self.combat_df
-        combatants = set(df["attacker_alliance"].dropna().astype(str).unique())
-        return combatants
+        return set(df["attacker_alliance"].dropna().astype(str).unique())
