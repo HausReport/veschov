@@ -49,6 +49,11 @@ def _resolve_defaults(
 ) -> list[ShipSpecifier]:
     if serialized:
         resolved = [spec_lookup[item] for item in serialized if item in spec_lookup]
+        if not resolved:
+            logger.warning(
+                "No matching ship specs found for stored defaults; falling back to %s.",
+                [str(spec) for spec in fallback],
+            )
         if resolved:
             return resolved
     return list(fallback)
@@ -62,6 +67,12 @@ def _resolve_roster_specs(
     roster_specs = [spec_lookup[item] for item in (serialized or []) if item in spec_lookup]
     if roster_specs:
         return roster_specs
+    if serialized:
+        logger.warning(
+            "Roster specs were present but none matched current ship options; "
+            "falling back to %s.",
+            [str(spec) for spec in fallback],
+        )
     return list(fallback)
 
 
@@ -70,6 +81,10 @@ def render_actor_target_selector(
 ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
     options = _normalize_specs(session_info)
     if not options:
+        logger.warning(
+            "Actor/target selector has no ship options; session_info=%s.",
+            type(session_info).__name__,
+        )
         st.warning("No ship data available to select attacker/target.")
         return (), ()
 
