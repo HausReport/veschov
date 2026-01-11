@@ -148,9 +148,6 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
                 preview_cols = list(dict.fromkeys(preview_cols))
                 st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
 
-    # def get_debug_info(self, df: pd.DataFrame) -> None:
-    #     pass
-
     @override
     def get_debug_info(self, df: pd.DataFrame) -> None:
         return None
