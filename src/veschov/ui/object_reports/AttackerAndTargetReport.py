@@ -345,6 +345,22 @@ class AttackerAndTargetReport(AbstractReport):
         attacker_fallback = [spec for spec in options if spec not in target_fallback]
         if not attacker_fallback:
             attacker_fallback = list(options[:1])
+        if "target_roster_specs" not in st.session_state:
+            st.session_state["target_roster_specs"] = [
+                self._serialize_spec(spec) for spec in target_fallback
+            ]
+        if "attacker_roster_specs" not in st.session_state:
+            st.session_state["attacker_roster_specs"] = [
+                self._serialize_spec(spec) for spec in attacker_fallback
+            ]
+        if "selected_attacker_specs" not in st.session_state:
+            st.session_state["selected_attacker_specs"] = list(
+                st.session_state.get("attacker_roster_specs", [])
+            )
+        if "selected_target_specs" not in st.session_state:
+            st.session_state["selected_target_specs"] = list(
+                st.session_state.get("target_roster_specs", [])
+            )
         default_attacker = self._resolve_defaults(
             st.session_state.get("selected_attacker_specs"),
             spec_lookup,
