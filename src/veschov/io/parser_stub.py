@@ -131,7 +131,7 @@ def _normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     cleaned = df.copy()
     for column in cleaned.columns:
         if pd.api.types.is_object_dtype(cleaned[column]) or pd.api.types.is_string_dtype(
-            cleaned[column]
+                cleaned[column]
         ):
             cleaned[column] = cleaned[column].astype("string").str.strip()
     cleaned = cleaned.replace(list(NA_TOKENS), pd.NA)
@@ -159,7 +159,7 @@ def _coerce_yes_no_columns(df: pd.DataFrame, columns: tuple[str, ...]) -> pd.Dat
 
 
 def _fallback_players_df(
-    combat_df: pd.DataFrame, npc_name: str | None
+        combat_df: pd.DataFrame, npc_name: str | None
 ) -> pd.DataFrame:
     """Return player rows inferred from combat data when player metadata is missing."""
     required_columns = {
@@ -173,8 +173,8 @@ def _fallback_players_df(
 
     frames: list[pd.DataFrame] = []
     for name_col, ship_col in (
-        ("attacker_name", "attacker_ship"),
-        ("target_name", "target_ship"),
+            ("attacker_name", "attacker_ship"),
+            ("target_name", "target_ship"),
     ):
         subset = (
             combat_df.loc[:, [name_col, ship_col]]
@@ -192,7 +192,7 @@ def _fallback_players_df(
     combined = combined[
         (combined["Player Name"].str.strip() != "")
         | (combined["Ship Name"].str.strip() != "")
-    ]
+        ]
     combined = combined.replace({"": pd.NA})
     return combined.loc[:, ["Player Name", "Ship Name"]].reset_index(drop=True)
 
@@ -297,7 +297,7 @@ def _normalize_combat_df(df: pd.DataFrame) -> pd.DataFrame:
     # ≈ total_iso + total_normal
     raw_total = total_iso + total_normal
     accounted_total = (
-        mitigated_iso + mitigated_normal + mitigated_apex + shield_damage + hull_damage
+            mitigated_iso + mitigated_normal + mitigated_apex + shield_damage + hull_damage
     )
     # accounting_delta should be ~0 (rounding noise).
     renamed["accounting_delta"] = raw_total - accounted_total

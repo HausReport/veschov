@@ -12,8 +12,6 @@ from typing import Iterable, Sequence, Set
 
 import streamlit as st
 
-
-
 SerializedShipSpec = tuple[str, str, str]
 
 
@@ -45,9 +43,9 @@ def _normalize_specs(session_info: SessionInfo | Set[ShipSpecifier] | None) -> S
 
 
 def _resolve_defaults(
-    serialized: Iterable[SerializedShipSpec] | None,
-    spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
-    fallback: Sequence[ShipSpecifier],
+        serialized: Iterable[SerializedShipSpec] | None,
+        spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+        fallback: Sequence[ShipSpecifier],
 ) -> list[ShipSpecifier]:
     if serialized:
         resolved = [spec_lookup[item] for item in serialized if item in spec_lookup]
@@ -57,9 +55,9 @@ def _resolve_defaults(
 
 
 def _resolve_roster_specs(
-    serialized: Iterable[SerializedShipSpec] | None,
-    spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
-    fallback: Sequence[ShipSpecifier],
+        serialized: Iterable[SerializedShipSpec] | None,
+        spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+        fallback: Sequence[ShipSpecifier],
 ) -> list[ShipSpecifier]:
     roster_specs = [spec_lookup[item] for item in (serialized or []) if item in spec_lookup]
     if roster_specs:
@@ -68,7 +66,7 @@ def _resolve_roster_specs(
 
 
 def render_actor_target_selector(
-    session_info: SessionInfo | Set[ShipSpecifier] | None,
+        session_info: SessionInfo | Set[ShipSpecifier] | None,
 ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
     options = _normalize_specs(session_info)
     if not options:

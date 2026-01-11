@@ -16,7 +16,6 @@ from veschov.utils.series import coerce_numeric
 
 logger = logging.getLogger(__name__)
 
-
 NON_CRIT_LABEL = "Non-critical hits"
 CRIT_LABEL = "Critical hits"
 CRIT_COLOR = "#C62828"

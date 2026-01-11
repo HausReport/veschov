@@ -12,7 +12,6 @@ from veschov.ui.components.combat_log_header import render_sidebar_combat_log_up
 
 class AbstractReport(ABC):
 
-
     def render(self) -> None:
         utt = self.get_under_title_text()
         st.warning("This page is using the new system.")
@@ -68,9 +67,8 @@ class AbstractReport(ABC):
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         pass
 
-
     @abstractmethod
-    def display_plots(self, dfs: list[pd.DataFrame] ) -> None:
+    def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         pass
 
     @abstractmethod

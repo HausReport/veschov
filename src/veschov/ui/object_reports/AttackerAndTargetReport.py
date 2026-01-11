@@ -29,13 +29,13 @@ OUTCOME_ICONS = {
 class AttackerAndTargetReport(AbstractReport):
 
     def render_combat_log_header(
-        self,
-        players_df: pd.DataFrame | None,
-        fleets_df: pd.DataFrame | None,
-        battle_df: pd.DataFrame | None,
-        *,
-        lens_key: str,
-        session_info: SessionInfo | Set[ShipSpecifier] | None = None,
+            self,
+            players_df: pd.DataFrame | None,
+            fleets_df: pd.DataFrame | None,
+            battle_df: pd.DataFrame | None,
+            *,
+            lens_key: str,
+            session_info: SessionInfo | Set[ShipSpecifier] | None = None,
     ) -> tuple[str, Lens | None]:
         """Render the standard header controls for combat-log reports."""
         #
@@ -130,9 +130,9 @@ class AttackerAndTargetReport(AbstractReport):
         return lines
 
     def render_combatants(
-        self,
-        session_info: SessionInfo | Set[ShipSpecifier] | None,
-        battle_df: pd.DataFrame | None,
+            self,
+            session_info: SessionInfo | Set[ShipSpecifier] | None,
+            battle_df: pd.DataFrame | None,
     ) -> None:
         if not isinstance(session_info, SessionInfo) and isinstance(battle_df, pd.DataFrame):
             session_info = SessionInfo(battle_df)
@@ -160,10 +160,10 @@ class AttackerAndTargetReport(AbstractReport):
             self._render_combatant_list("NPC", npc_specs, outcome_lookup)
 
     def _render_combatant_list(
-        self,
-        title: str,
-        specs: Sequence[ShipSpecifier],
-        outcome_lookup: dict[SerializedShipSpec, object],
+            self,
+            title: str,
+            specs: Sequence[ShipSpecifier],
+            outcome_lookup: dict[SerializedShipSpec, object],
     ) -> None:
         st.markdown(f"**{title}**")
         if not specs:
@@ -180,14 +180,14 @@ class AttackerAndTargetReport(AbstractReport):
         # ########################################################################################################
 
     def apply_combat_lens(
-        self,
-        df: pd.DataFrame,
-        lens: Lens | None,
-        *,
-        attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
-        target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
-        include_nan_attackers: bool = False,
-        include_nan_targets: bool = False,
+            self,
+            df: pd.DataFrame,
+            lens: Lens | None,
+            *,
+            attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
+            target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
+            include_nan_attackers: bool = False,
+            include_nan_targets: bool = False,
     ) -> pd.DataFrame:
         """Filter combat data using the selected attacker specs and column-based targets."""
         if lens is None:
@@ -268,7 +268,7 @@ class AttackerAndTargetReport(AbstractReport):
 
     @staticmethod
     def _gather_specs(
-        session_info: SessionInfo | Set[ShipSpecifier] | None,
+            session_info: SessionInfo | Set[ShipSpecifier] | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
         if isinstance(session_info, SessionInfo):
             specs = session_info.get_every_ship()
@@ -290,9 +290,9 @@ class AttackerAndTargetReport(AbstractReport):
         return ""
 
     def _match_enemy_spec(
-        self,
-        players_df: pd.DataFrame | None,
-        options: Sequence[ShipSpecifier],
+            self,
+            players_df: pd.DataFrame | None,
+            options: Sequence[ShipSpecifier],
     ) -> ShipSpecifier | None:
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
             return None
@@ -305,18 +305,18 @@ class AttackerAndTargetReport(AbstractReport):
 
         for spec in options:
             if (
-                self._normalize_text(spec.name) == name
-                and self._normalize_text(spec.alliance) == alliance
-                and self._normalize_text(spec.ship) == ship
+                    self._normalize_text(spec.name) == name
+                    and self._normalize_text(spec.alliance) == alliance
+                    and self._normalize_text(spec.ship) == ship
             ):
                 return spec
         return None
 
     def _default_target_from_players(
-        self,
-        players_df: pd.DataFrame | None,
-        options: Sequence[ShipSpecifier],
-        raw_specs: Sequence[ShipSpecifier],
+            self,
+            players_df: pd.DataFrame | None,
+            options: Sequence[ShipSpecifier],
+            raw_specs: Sequence[ShipSpecifier],
     ) -> list[ShipSpecifier]:
         matched = self._match_enemy_spec(players_df, options)
         if matched is not None:
@@ -339,9 +339,9 @@ class AttackerAndTargetReport(AbstractReport):
 
     @classmethod
     def _filter_roster(
-        cls,
-        roster: Iterable[SerializedShipSpec] | None,
-        spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+            cls,
+            roster: Iterable[SerializedShipSpec] | None,
+            spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
     ) -> list[SerializedShipSpec]:
         """Filter a serialized roster to specs that still exist in the lookup."""
         if not roster:
@@ -349,13 +349,13 @@ class AttackerAndTargetReport(AbstractReport):
         return [spec for spec in cls._dedupe_specs(roster) if spec in spec_lookup]
 
     def _render_role_panel(
-        self,
-        title: str,
-        roster_specs: Sequence[SerializedShipSpec],
-        selected_specs: set[SerializedShipSpec],
-        spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
-        key_prefix: str,
-        outcome_lookup: dict[SerializedShipSpec, object],
+            self,
+            title: str,
+            roster_specs: Sequence[SerializedShipSpec],
+            selected_specs: set[SerializedShipSpec],
+            spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+            key_prefix: str,
+            outcome_lookup: dict[SerializedShipSpec, object],
     ) -> list[SerializedShipSpec]:
         """Render a checkbox list for a role roster and return selected specs."""
         st.markdown(f"**{title}**")
@@ -378,9 +378,9 @@ class AttackerAndTargetReport(AbstractReport):
         return resolved
 
     def render_actor_target_selector(
-        self,
-        session_info: SessionInfo | Set[ShipSpecifier] | None,
-        players_df: pd.DataFrame | None,
+            self,
+            session_info: SessionInfo | Set[ShipSpecifier] | None,
+            players_df: pd.DataFrame | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
         options, raw_specs = self._gather_specs(session_info)
         if not options:
@@ -526,10 +526,10 @@ class AttackerAndTargetReport(AbstractReport):
         )
 
     def _format_combatant_label(
-        self,
-        row: pd.Series,
-        name_lookup: dict[str, str],
-        ship_lookup: dict[tuple[str, str], str],
+            self,
+            row: pd.Series,
+            name_lookup: dict[str, str],
+            ship_lookup: dict[tuple[str, str], str],
     ) -> str:
         name = self._normalize_text(row.get("Player Name"))
         ship = self._normalize_text(row.get("Ship Name"))
@@ -542,9 +542,9 @@ class AttackerAndTargetReport(AbstractReport):
         return label
 
     def _format_ship_spec_label(
-        self,
-        spec: ShipSpecifier,
-        outcome_lookup: dict[SerializedShipSpec, object] | None = None,
+            self,
+            spec: ShipSpecifier,
+            outcome_lookup: dict[SerializedShipSpec, object] | None = None,
     ) -> str:
         name = self._normalize_text(spec.name)
         ship = self._normalize_text(spec.ship)

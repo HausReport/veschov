@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from typing import Callable, Iterable, Set
+
 import pandas as pd
 import streamlit as st
 
@@ -32,32 +33,33 @@ def get_number_format() -> str:
     st.session_state[NUMBER_FORMAT_SESSION_KEY] = stored_value
     return stored_value
 
-def render_combat_log_upload(
-    title: str,
-    description: str,
-    *,
-    uploader_label: str = "Battle log file",
-    uploader_types: Iterable[str] = DEFAULT_UPLOAD_TYPES,
-    uploader_help: str = "Upload a battle log export to compute Apex Barrier per shot.",
-) -> st.runtime.uploaded_file_manager.UploadedFile | None:
-    """Render the shared upload widget for combat-log-driven reports."""
-    # st.subheader(title)
-    # st.caption(description)
-    return st.file_uploader(
-        uploader_label,
-        type=list(uploader_types),
-        help=uploader_help,
-    )
+
+# def render_combat_log_upload(
+#         title: str,
+#         description: str,
+#         *,
+#         uploader_label: str = "Battle log file",
+#         uploader_types: Iterable[str] = DEFAULT_UPLOAD_TYPES,
+#         uploader_help: str = "Upload a battle log export to compute Apex Barrier per shot.",
+# ) -> st.runtime.uploaded_file_manager.UploadedFile | None:
+#     """Render the shared upload widget for combat-log-driven reports."""
+#     # st.subheader(title)
+#     # st.caption(description)
+#     return st.file_uploader(
+#         uploader_label,
+#         type=list(uploader_types),
+#         help=uploader_help,
+#     )
 
 
 def render_sidebar_combat_log_upload(
-    title: str,
-    description: str,
-    *,
-    parser: Callable[[bytes, str], pd.DataFrame],
-    uploader_label: str = "Battle log file",
-    uploader_types: Iterable[str] = DEFAULT_UPLOAD_TYPES,
-    uploader_help: str = "Upload a battle log export to compute Apex Barrier per shot.",
+        title: str,
+        description: str,
+        *,
+        parser: Callable[[bytes, str], pd.DataFrame],
+        uploader_label: str = "Battle log file",
+        uploader_types: Iterable[str] = DEFAULT_UPLOAD_TYPES,
+        uploader_help: str = "Upload a battle log export to compute Apex Barrier per shot.",
 ) -> pd.DataFrame | None:
     """Render a shared sidebar upload widget and hydrate battle session data."""
     # st.subheader(title)
@@ -95,12 +97,12 @@ def render_sidebar_combat_log_upload(
 
 
 def render_combat_log_header(
-    players_df: pd.DataFrame | None,
-    fleets_df: pd.DataFrame | None,
-    battle_df: pd.DataFrame | None,
-    *,
-    lens_key: str,
-    session_info: SessionInfo | Set[ShipSpecifier] | None = None,
+        players_df: pd.DataFrame | None,
+        fleets_df: pd.DataFrame | None,
+        battle_df: pd.DataFrame | None,
+        *,
+        lens_key: str,
+        session_info: SessionInfo | Set[ShipSpecifier] | None = None,
 ) -> tuple[str, Lens | None]:
     """Render the standard header controls for combat-log reports."""
     number_format = get_number_format()
@@ -132,13 +134,13 @@ def render_combat_log_header(
 
 
 def apply_combat_lens(
-    df: pd.DataFrame,
-    lens: Lens | None,
-    *,
-    attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
-    target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
-    include_nan_attackers: bool = False,
-    include_nan_targets: bool = False,
+        df: pd.DataFrame,
+        lens: Lens | None,
+        *,
+        attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
+        target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
+        include_nan_attackers: bool = False,
+        include_nan_targets: bool = False,
 ) -> pd.DataFrame:
     """Filter combat data using the selected attacker specs and column-based targets."""
     if lens is None:

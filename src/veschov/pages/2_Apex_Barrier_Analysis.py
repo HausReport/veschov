@@ -8,8 +8,6 @@ logger = logging.getLogger(__name__)
 
 import streamlit as st
 
-
-
 st.set_page_config(page_title="STFC Reports", layout="wide")
 # st.title("🖖 Apex Barrier Analysis")
 

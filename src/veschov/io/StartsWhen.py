@@ -17,7 +17,7 @@ SECTION_HEADERS = {
 
 
 def extract_sections(
-    text: str, headers: Dict[str, str] | None = None
+        text: str, headers: Dict[str, str] | None = None
 ) -> Dict[str, str]:
     """Extract labeled sections from a battle log export."""
     headers = headers or SECTION_HEADERS
@@ -54,7 +54,7 @@ def extract_sections(
 
 
 def section_to_dataframe(
-    section_text: Optional[str], header_prefix: str
+        section_text: Optional[str], header_prefix: str
 ) -> pd.DataFrame:
     """Parse a tab-delimited section into a dataframe."""
     columns = header_prefix.split("\t")

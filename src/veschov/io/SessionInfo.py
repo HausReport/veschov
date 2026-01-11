@@ -9,6 +9,7 @@ class ShipSpecifier:
     name: Optional[str]
     alliance: Optional[str]
     ship: Optional[str]
+
     # touch
 
     def __str__(self) -> str:
@@ -18,6 +19,7 @@ class ShipSpecifier:
         if self.ship != self.name:
             ret += f" — {self.ship}"
         return ret
+
 
 class SessionInfo:
 
@@ -42,8 +44,8 @@ class SessionInfo:
         return df.loc[mask]
 
     def get_combat_df_filtered_by_attackers(
-        self,
-        specs: Sequence[ShipSpecifier],
+            self,
+            specs: Sequence[ShipSpecifier],
     ) -> pd.DataFrame:
         if not specs:
             return self.combat_df
@@ -77,7 +79,7 @@ class SessionInfo:
             for row in unique_combos_df.to_dict(orient="records")
         }
 
-    #def get_captain_name(self):
+    # def get_captain_name(self):
     def get_ships(self, combatant_name):
         df = self.combat_df
         event_type = df["event_type"].astype(str).str.lower()
@@ -88,23 +90,23 @@ class SessionInfo:
     def get_captain_name(self, combatant_name, ship_name):
         df = self.players_df
         mask = (df["Ship Name"] == ship_name) & (df["Player Name"] == combatant_name)
-        officer = df.loc[mask,"Officer One"].dropna().astype(str).unique()
+        officer = df.loc[mask, "Officer One"].dropna().astype(str).unique()
         return officer
 
     def get_1st_officer_name(self, combatant_name, ship_name):
         df = self.players_df
         mask = (df["Ship Name"] == ship_name) & (df["Player Name"] == combatant_name)
-        officer = df.loc[mask,"Officer Two"].dropna().astype(str).unique()
+        officer = df.loc[mask, "Officer Two"].dropna().astype(str).unique()
         return officer
 
     def get_2nd_officer_name(self, combatant_name, ship_name):
         df = self.players_df
         mask = (df["Ship Name"] == ship_name) & (df["Player Name"] == combatant_name)
-        officer = df.loc[mask,"Officer Three"].dropna().astype(str).unique()
+        officer = df.loc[mask, "Officer Three"].dropna().astype(str).unique()
         return officer
 
     def get_bridge_crew(self, combatant_name, ship_name):
-        bc = set ()
+        bc = set()
         bc.update(self.get_captain_name(combatant_name, ship_name))
         bc.update(self.get_1st_officer_name(combatant_name, ship_name))
         bc.update(self.get_2nd_officer_name(combatant_name, ship_name))
@@ -119,9 +121,9 @@ class SessionInfo:
         df = self.combat_df
         event_type = df["event_type"].astype(str).str.lower()
         mask = (
-            (event_type == "officer")
-            & (df["attacker_ship"] == ship_name)
-            & (df["attacker_name"] == combatant_name)
+                (event_type == "officer")
+                & (df["attacker_ship"] == ship_name)
+                & (df["attacker_name"] == combatant_name)
         )
         officers = set(df.loc[mask, "ability_owner_name"].dropna().astype(str).unique())
         return officers

@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from veschov.ui.components.combat_log_header import render_combat_log_header, apply_combat_lens
+from veschov.ui.components.combat_log_header import apply_combat_lens
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
@@ -30,7 +30,7 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
         in the log."""
 
     def get_under_chart_text(self) -> Optional[str]:
-        return  """This chart stacks disjoint components of a hit. 
+        return """This chart stacks disjoint components of a hit. 
         Blue/red are damage taken (shield/hull). Greens are damage prevented by mitigation 
         (normal/isolytic) and Apex Barrier."""
 
@@ -93,7 +93,7 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
             self.x_axis = "shot_index"
         return [long_df, shot_df]
 
-    def display_plots(self, dfs: list[pd.DataFrame] ) -> None:
+    def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
         fig = px.area(
             long_df,

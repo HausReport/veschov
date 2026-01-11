@@ -92,10 +92,10 @@ class ApexBarrierReport(RoundOrShotsReport):
         return "apex_barrier"
 
     def _total_apex_barrier_mitigation(
-        self,
-        df: pd.DataFrame,
-        *,
-        lens,
+            self,
+            df: pd.DataFrame,
+            *,
+            lens,
     ) -> float | None:
         if "mitigated_apex" not in df.columns:
             return None

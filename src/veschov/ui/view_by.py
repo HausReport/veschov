@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
+
 from veschov.utils.series import coerce_numeric
 
 VIEW_BY_OPTIONS = ("Shot index", "Round")
 
 
 def select_view_by(
-    key: str,
-    *,
-    label: str = "View by",
-    default_index: int = 0,
+        key: str,
+        *,
+        label: str = "View by",
+        default_index: int = 0,
 ) -> str:
     """Render the view-by control and return the selected option."""
     return st.radio(
@@ -26,9 +27,9 @@ def select_view_by(
 
 
 def prepare_round_view(
-    df: pd.DataFrame,
-    *,
-    round_column: str = "round",
+        df: pd.DataFrame,
+        *,
+        round_column: str = "round",
 ) -> pd.DataFrame | None:
     """Coerce and validate round data, returning a filtered frame or None."""
     if round_column not in df.columns:

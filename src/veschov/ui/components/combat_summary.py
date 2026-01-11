@@ -156,12 +156,12 @@ def _render_officer_column(label: str, name: str) -> None:
 
 
 def render_ratio_bar(
-    label: str,
-    remaining: object,
-    total: object,
-    *,
-    height_px: int = 22,
-    number_format: str = "Human",
+        label: str,
+        remaining: object,
+        total: object,
+        *,
+        height_px: int = 22,
+        number_format: str = "Human",
 ) -> None:
     remaining_value = _parse_numeric_value(remaining)
     total_value = _parse_numeric_value(total)
@@ -242,10 +242,10 @@ def total_shots_by_attacker(battle_df: pd.DataFrame) -> dict[str, int]:
 
 
 def _combatant_stats_table(
-    *,
-    fleet_row: pd.Series | None,
-    total_shots: int | None,
-    number_format: str,
+        *,
+        fleet_row: pd.Series | None,
+        total_shots: int | None,
+        number_format: str,
 ) -> pd.DataFrame:
     rows: list[tuple[str, str]] = []
     seen_labels: set[str] = set()
@@ -264,11 +264,11 @@ def _combatant_stats_table(
 
 
 def render_player_card(
-    row: pd.Series,
-    number_format: str,
-    *,
-    fleet_row: pd.Series | None,
-    total_shots: int | None,
+        row: pd.Series,
+        number_format: str,
+        *,
+        fleet_row: pd.Series | None,
+        total_shots: int | None,
 ) -> None:
     """Render a single player/NPC card for the summary header."""
     st.markdown(
@@ -340,7 +340,7 @@ def _normalize_text(value: object) -> str:
 
 
 def _alliance_lookup(
-    session_info: SessionInfo | None,
+        session_info: SessionInfo | None,
 ) -> tuple[dict[str, str], dict[tuple[str, str], str]]:
     name_lookup: dict[str, str] = {}
     ship_lookup: dict[tuple[str, str], str] = {}
@@ -361,9 +361,9 @@ def _alliance_lookup(
 
 
 def _format_combatant_label(
-    row: pd.Series,
-    name_lookup: dict[str, str],
-    ship_lookup: dict[tuple[str, str], str],
+        row: pd.Series,
+        name_lookup: dict[str, str],
+        ship_lookup: dict[tuple[str, str], str],
 ) -> str:
     name = _normalize_text(row.get("Player Name"))
     ship = _normalize_text(row.get("Ship Name"))
@@ -377,10 +377,10 @@ def _format_combatant_label(
 
 
 def _render_combatant_list(
-    title: str,
-    rows: pd.DataFrame,
-    name_lookup: dict[str, str],
-    ship_lookup: dict[tuple[str, str], str],
+        title: str,
+        rows: pd.DataFrame,
+        name_lookup: dict[str, str],
+        ship_lookup: dict[tuple[str, str], str],
 ) -> None:
     st.markdown(f"**{title}**")
     if rows.empty:
@@ -395,11 +395,11 @@ def _render_combatant_list(
 
 
 def render_combat_summary(
-    players_df: pd.DataFrame | None,
-    fleets_df: pd.DataFrame | None = None,
-    battle_df: pd.DataFrame | None = None,
-    *,
-    number_format: str = "Human",
+        players_df: pd.DataFrame | None,
+        fleets_df: pd.DataFrame | None = None,
+        battle_df: pd.DataFrame | None = None,
+        *,
+        number_format: str = "Human",
 ) -> None:
     """Render a compact summary header for the uploaded combat log."""
     if not isinstance(players_df, pd.DataFrame) or players_df.empty:

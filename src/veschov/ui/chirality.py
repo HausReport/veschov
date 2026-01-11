@@ -42,9 +42,9 @@ class Lens:
 
 
 def resolve_lens(
-    page_id: str,
-    selected_attackers: Sequence[ShipSpecifier],
-    selected_targets: Sequence[ShipSpecifier],
+        page_id: str,
+        selected_attackers: Sequence[ShipSpecifier],
+        selected_targets: Sequence[ShipSpecifier],
 ) -> Lens:
     actor_name = selected_attackers[0].name if len(selected_attackers) == 1 else None
     target_name = selected_targets[0].name if len(selected_targets) == 1 else None

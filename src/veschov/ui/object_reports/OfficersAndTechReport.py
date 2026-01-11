@@ -130,11 +130,11 @@ def _get_proc_df(battle_df: pd.DataFrame, include_forbidden_tech: bool) -> pd.Da
 
 @st.cache_data(show_spinner=False)
 def build_proc_matrix(
-    battle_df: pd.DataFrame,
-    include_forbidden_tech: bool,
-    show_totals: bool,
-    show_distinct: bool,
-    owner_filter: tuple[str, ...] | None = None,
+        battle_df: pd.DataFrame,
+        include_forbidden_tech: bool,
+        show_totals: bool,
+        show_distinct: bool,
+        owner_filter: tuple[str, ...] | None = None,
 ) -> pd.DataFrame:
     """Build a round-by-owner matrix of proc counts."""
     proc_df = _get_proc_df(battle_df, include_forbidden_tech)
@@ -162,9 +162,9 @@ def build_proc_matrix(
 
 @st.cache_data(show_spinner=False)
 def build_proc_summary(
-    battle_df: pd.DataFrame,
-    include_forbidden_tech: bool,
-    owner_filter: tuple[str, ...] | None = None,
+        battle_df: pd.DataFrame,
+        include_forbidden_tech: bool,
+        owner_filter: tuple[str, ...] | None = None,
 ) -> pd.DataFrame:
     """Summarize proc totals and rounds active by owner/ability."""
     proc_df = _get_proc_df(battle_df, include_forbidden_tech)
@@ -327,6 +327,7 @@ class OfficersAndTechReport(AttackerAndTargetReport):
     @override
     def get_debug_info(self, df: pd.DataFrame) -> None:
         return None
+
     @override
     def render_debug_info(self, df: pd.DataFrame) -> None:
         pass

@@ -6,7 +6,6 @@ from st_pages import add_page_title, get_nav_from_toml
 
 st.set_page_config(page_title="STFC Reports", layout="wide")
 
-
 # Routing must happen after common frame setup
 nav = get_nav_from_toml()  # reads .streamlit/pages.toml
 pg = st.navigation(nav)
@@ -20,8 +19,8 @@ pg.run()
 #    value=(),
 #    help="Leave empty for all time",
 #    key="x_sidebar_date_range",
-#)
-#st.session_state["date_range"] = date_range
+# )
+# st.session_state["date_range"] = date_range
 
 # Prevent accidental fallthrough
 st.stop()
