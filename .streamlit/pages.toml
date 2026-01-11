@@ -24,6 +24,11 @@ name = "Damage Flow by Round"
 icon = "🔀"
 
 [[pages]]
+path = "pages/10_Attacker_Shot_Heatmaps.py"
+name = "Attacker Shot Heatmaps"
+icon = "🔥"
+
+[[pages]]
 path = "pages/7_Damage_Flow_Sankey.py"
 name = "Damage Flow by Battle"
 icon = "🌊"
