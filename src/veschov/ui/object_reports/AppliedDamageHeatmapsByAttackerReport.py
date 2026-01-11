@@ -160,6 +160,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         filtered_df = dfs[0]
+        all_rounds = sorted(filtered_df["round"].unique())
 
         for attacker in self.selected_attackers:
             attacker_label = self._format_ship_spec_label(attacker, self.outcome_lookup)
@@ -177,7 +178,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                 shot_in_round=attacker_df.groupby("round").cumcount()
             )
 
-            x_rounds = sorted(attacker_df["round"].unique())
+            x_rounds = all_rounds
             if not x_rounds:
                 st.caption("No rounds available for this attacker.")
                 continue
