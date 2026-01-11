@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import logging
-
-from veschov.ui.player_info_report import render_player_info_report
+from veschov.ui.flat_pages.player_info_report import render_player_info_report
 import streamlit as st
 
 
