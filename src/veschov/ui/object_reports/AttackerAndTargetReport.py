@@ -547,6 +547,14 @@ class AttackerAndTargetReport(AbstractReport):
             stored_target_specs = list(target_roster_specs)
             st.session_state["selected_target_specs"] = list(stored_target_specs)
             should_sync_checkboxes = True
+        if stored_attacker_specs == [] and attacker_roster_specs:
+            stored_attacker_specs = list(attacker_roster_specs)
+            st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
+            should_sync_checkboxes = True
+        if stored_target_specs == [] and target_roster_specs:
+            stored_target_specs = list(target_roster_specs)
+            st.session_state["selected_target_specs"] = list(stored_target_specs)
+            should_sync_checkboxes = True
         selected_attacker_specs = self._filter_roster(
             stored_attacker_specs,
             spec_lookup,
