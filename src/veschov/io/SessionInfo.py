@@ -16,7 +16,7 @@ class ShipSpecifier:
         ret = self.name or ""
         if self.alliance is not None:
             ret += f" [{self.alliance}]"
-        if self.ship != self.name:
+        if self.ship and self.ship != self.name:
             ret += f" — {self.ship}"
         return ret
 
