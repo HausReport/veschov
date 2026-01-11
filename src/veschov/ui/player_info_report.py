@@ -20,9 +20,16 @@ from veschov.ui.components.combat_summary import (
 )
 
 
+def _string_value(value: object) -> str:
+    """Return a trimmed string for display, treating missing values as empty."""
+    if value is None or pd.isna(value):
+        return ""
+    return str(value).strip()
+
+
 def _tab_label(row: pd.Series, index: int) -> str:
-    name = str(row.get("Player Name") or "").strip()
-    ship = str(row.get("Ship Name") or "").strip()
+    name = _string_value(row.get("Player Name"))
+    ship = _string_value(row.get("Ship Name"))
     if name and ship and ship != name:
         return f"{name} — {ship}"
     if name:
