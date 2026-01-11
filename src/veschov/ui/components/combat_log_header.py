@@ -12,7 +12,6 @@ import streamlit as st
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, TARGET_COLUMN_CANDIDATES, resolve_column
 from veschov.ui.chirality import Lens, resolve_lens
-from veschov.ui.components.actor_target_selector import render_actor_target_selector
 from veschov.ui.components.combat_summary import render_combat_summary
 
 logger = logging.getLogger(__name__)
@@ -75,43 +74,6 @@ def render_sidebar_combat_log_upload(
     st.session_state["session_info"] = SessionInfo(df)
     # st.rerun()
     return df
-
-
-# def render_combat_log_header(
-#         players_df: pd.DataFrame | None,
-#         fleets_df: pd.DataFrame | None,
-#         battle_df: pd.DataFrame | None,
-#         *,
-#         lens_key: str,
-#         session_info: SessionInfo | Set[ShipSpecifier] | None = None,
-# ) -> tuple[str, Lens | None]:
-#     """Render the standard header controls for combat-log reports."""
-#     number_format = get_number_format()
-#
-#     resolved_session_info = session_info or st.session_state.get("session_info")
-#     if resolved_session_info is None and battle_df is not None:
-#         resolved_session_info = SessionInfo(battle_df)
-#     if resolved_session_info is not None:
-#         st.session_state["session_info"] = resolved_session_info
-#
-#     selected_attackers, selected_targets = render_actor_target_selector(
-#         st.session_state.get("session_info")
-#     )
-#     lens = None
-#     if selected_attackers and selected_targets:
-#         lens = resolve_lens(lens_key, selected_attackers, selected_targets)
-#         if len(selected_attackers) == 1 and len(selected_targets) == 1:
-#             attacker_name = lens.actor_name or "Attacker"
-#             target_name = lens.target_name or "Target"
-#             st.caption(f"Lens: {lens.label} ({attacker_name} → {target_name})")
-#         else:
-#             attacker_label = "Attacker ships" if len(selected_attackers) != 1 else "Attacker ship"
-#             target_label = "Target ships" if len(selected_targets) != 1 else "Target ship"
-#             st.caption(f"Lens: {attacker_label} → {target_label}")
-#
-#     render_combat_summary(players_df, fleets_df, battle_df=battle_df, number_format=number_format)
-#     st.divider()
-#     return number_format, lens
 
 
 def apply_combat_lens(
