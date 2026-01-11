@@ -363,12 +363,25 @@ class AttackerAndTargetReport(AbstractReport):
             cls,
             role: str,
             stored_specs: Iterable[SerializedShipSpec] | None,
+            selected_specs: Sequence[SerializedShipSpec],
             *,
             spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
             roster_specs: Sequence[SerializedShipSpec],
     ) -> None:
         """Log why stored selections were filtered out."""
+        if stored_specs is None:
+            if not selected_specs and roster_specs:
+                logger.warning(
+                    "No stored %s selections in session state; defaulting to roster defaults.",
+                    role,
+                )
+            return
         if not stored_specs:
+            if not selected_specs and roster_specs:
+                logger.warning(
+                    "Stored %s selections are empty; defaulting to roster defaults.",
+                    role,
+                )
             return
         deduped = cls._dedupe_specs(stored_specs)
         missing_in_options = [spec for spec in deduped if spec not in spec_lookup]
@@ -376,7 +389,7 @@ class AttackerAndTargetReport(AbstractReport):
             spec for spec in deduped
             if spec in spec_lookup and spec not in roster_specs
         ]
-        if not missing_in_options and not missing_in_roster:
+        if not missing_in_options and not missing_in_roster and len(deduped) == len(selected_specs):
             return
         if missing_in_options:
             logger.warning(
@@ -389,6 +402,12 @@ class AttackerAndTargetReport(AbstractReport):
                 "Stored %s selections dropped because they are not in the current roster: %s",
                 role,
                 missing_in_roster,
+            )
+        if len(deduped) > len(selected_specs) and not missing_in_options and not missing_in_roster:
+            logger.warning(
+                "Stored %s selections contained duplicates; reduced to %s.",
+                role,
+                selected_specs,
             )
 
     def _render_role_panel(
@@ -501,12 +520,14 @@ class AttackerAndTargetReport(AbstractReport):
         self._log_filtered_selection(
             "attacker",
             stored_attacker_specs,
+            selected_attacker_specs,
             spec_lookup=spec_lookup,
             roster_specs=attacker_roster_specs,
         )
         self._log_filtered_selection(
             "target",
             stored_target_specs,
+            selected_target_specs,
             spec_lookup=spec_lookup,
             roster_specs=target_roster_specs,
         )
