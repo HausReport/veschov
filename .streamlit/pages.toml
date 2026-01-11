@@ -15,7 +15,7 @@ icon = "🛡️"
 
 [[pages]]
 path = "pages/3_Combatant_Info.py"
-name = "Player Info"
+name = "Combatant Info"
 icon = "⚔️"
 
 [[pages]]
