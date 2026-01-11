@@ -52,7 +52,10 @@ class AttackerAndTargetReport(AbstractReport):
         #
         # Adds the actor/target selector
         #
-        selected_attackers, selected_targets = self.render_actor_target_selector(resolved_session_info)
+        selected_attackers, selected_targets = self.render_actor_target_selector(
+            resolved_session_info,
+            players_df,
+        )
 
         #
         # Adds the lens indicator
@@ -255,6 +258,65 @@ class AttackerAndTargetReport(AbstractReport):
         return sorted(specs, key=lambda spec: str(spec))
 
     @staticmethod
+    def _gather_specs(
+        session_info: SessionInfo | Set[ShipSpecifier] | None,
+    ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
+        if isinstance(session_info, SessionInfo):
+            specs = session_info.get_every_ship()
+        elif isinstance(session_info, set):
+            specs = session_info
+        else:
+            specs = set()
+
+        options = sorted(specs, key=lambda spec: str(spec))
+        raw_specs = list(specs)
+        return options, raw_specs
+
+    def _resolve_player_alliance(self, row: pd.Series) -> str:
+        for column in ("Alliance", "Player Alliance"):
+            if column in row.index:
+                alliance = self._normalize_text(row.get(column))
+                if alliance:
+                    return alliance
+        return ""
+
+    def _match_enemy_spec(
+        self,
+        players_df: pd.DataFrame | None,
+        options: Sequence[ShipSpecifier],
+    ) -> ShipSpecifier | None:
+        if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            return None
+        row = players_df.iloc[-1]
+        name = self._normalize_text(row.get("Player Name"))
+        alliance = self._resolve_player_alliance(row)
+        ship = self._normalize_text(row.get("Ship Name"))
+        if not any([name, alliance, ship]):
+            return None
+
+        for spec in options:
+            if (
+                self._normalize_text(spec.name) == name
+                and self._normalize_text(spec.alliance) == alliance
+                and self._normalize_text(spec.ship) == ship
+            ):
+                return spec
+        return None
+
+    def _default_target_from_players(
+        self,
+        players_df: pd.DataFrame | None,
+        options: Sequence[ShipSpecifier],
+        raw_specs: Sequence[ShipSpecifier],
+    ) -> list[ShipSpecifier]:
+        matched = self._match_enemy_spec(players_df, options)
+        if matched is not None:
+            return [matched]
+        if raw_specs:
+            return [raw_specs[-1]]
+        return []
+
+    @staticmethod
     def _resolve_defaults(
         serialized: Iterable[SerializedShipSpec] | None,
         spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
@@ -269,22 +331,29 @@ class AttackerAndTargetReport(AbstractReport):
     def render_actor_target_selector(
         self,
         session_info: SessionInfo | Set[ShipSpecifier] | None,
+        players_df: pd.DataFrame | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
-        options = self._normalize_specs(session_info)
+        options, raw_specs = self._gather_specs(session_info)
         if not options:
             st.warning("No ship data available to select attacker/target.")
             return (), ()
 
         spec_lookup = {self._serialize_spec(spec): spec for spec in options}
+        target_fallback = self._default_target_from_players(players_df, options, raw_specs)
+        if not target_fallback:
+            target_fallback = list(options[-1:])
+        attacker_fallback = [spec for spec in options if spec not in target_fallback]
+        if not attacker_fallback:
+            attacker_fallback = list(options[:1])
         default_attacker = self._resolve_defaults(
             st.session_state.get("selected_attacker_specs"),
             spec_lookup,
-            options[:1],
+            attacker_fallback,
         )
         default_target = self._resolve_defaults(
             st.session_state.get("selected_target_specs"),
             spec_lookup,
-            options[-1:],
+            target_fallback,
         )
 
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
