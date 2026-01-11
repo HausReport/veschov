@@ -537,22 +537,12 @@ class AttackerAndTargetReport(AbstractReport):
 
         sync_checkboxes = st.session_state.get("sync_role_checkboxes", False)
         should_sync_checkboxes = sync_checkboxes
-        stored_attacker_specs = st.session_state.get("selected_attacker_specs")
-        stored_target_specs = st.session_state.get("selected_target_specs")
-        if stored_attacker_specs is None:
-            stored_attacker_specs = list(attacker_roster_specs)
+        stored_attacker_specs = st.session_state.get("selected_attacker_specs") or list(attacker_roster_specs)
+        stored_target_specs = st.session_state.get("selected_target_specs") or list(target_roster_specs)
+        if stored_attacker_specs != st.session_state.get("selected_attacker_specs"):
             st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
             should_sync_checkboxes = True
-        if stored_target_specs is None:
-            stored_target_specs = list(target_roster_specs)
-            st.session_state["selected_target_specs"] = list(stored_target_specs)
-            should_sync_checkboxes = True
-        if stored_attacker_specs == [] and attacker_roster_specs:
-            stored_attacker_specs = list(attacker_roster_specs)
-            st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
-            should_sync_checkboxes = True
-        if stored_target_specs == [] and target_roster_specs:
-            stored_target_specs = list(target_roster_specs)
+        if stored_target_specs != st.session_state.get("selected_target_specs"):
             st.session_state["selected_target_specs"] = list(stored_target_specs)
             should_sync_checkboxes = True
         selected_attacker_specs = self._filter_roster(
