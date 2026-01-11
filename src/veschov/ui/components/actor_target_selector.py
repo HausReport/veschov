@@ -21,7 +21,12 @@ def _serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
     return (spec.name or "", spec.alliance or "", spec.ship or "")
 
 
-def _swap_selected_specs() -> None:
+def _swap_roster_and_selected_specs() -> None:
+    attacker_roster = st.session_state.get("attacker_roster_specs", [])
+    target_roster = st.session_state.get("target_roster_specs", [])
+    st.session_state["attacker_roster_specs"] = target_roster
+    st.session_state["target_roster_specs"] = attacker_roster
+
     attackers = st.session_state.get("selected_attacker_specs", [])
     targets = st.session_state.get("selected_target_specs", [])
     st.session_state["selected_attacker_specs"] = targets
@@ -51,6 +56,17 @@ def _resolve_defaults(
     return list(fallback)
 
 
+def _resolve_roster_specs(
+    serialized: Iterable[SerializedShipSpec] | None,
+    spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+    fallback: Sequence[ShipSpecifier],
+) -> list[ShipSpecifier]:
+    roster_specs = [spec_lookup[item] for item in (serialized or []) if item in spec_lookup]
+    if roster_specs:
+        return roster_specs
+    return list(fallback)
+
+
 def render_actor_target_selector(
     session_info: SessionInfo | Set[ShipSpecifier] | None,
 ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
@@ -60,40 +76,67 @@ def render_actor_target_selector(
         return (), ()
 
     spec_lookup = {_serialize_spec(spec): spec for spec in options}
+    if "attacker_roster_specs" not in st.session_state:
+        st.session_state["attacker_roster_specs"] = [_serialize_spec(spec) for spec in options]
+    if "target_roster_specs" not in st.session_state:
+        st.session_state["target_roster_specs"] = [_serialize_spec(spec) for spec in options]
+    if "selected_attacker_specs" not in st.session_state:
+        st.session_state["selected_attacker_specs"] = list(
+            st.session_state.get("attacker_roster_specs", [])
+        )
+    if "selected_target_specs" not in st.session_state:
+        st.session_state["selected_target_specs"] = list(
+            st.session_state.get("target_roster_specs", [])
+        )
+
+    attacker_roster = _resolve_roster_specs(
+        st.session_state.get("attacker_roster_specs"),
+        spec_lookup,
+        options,
+    )
+    target_roster = _resolve_roster_specs(
+        st.session_state.get("target_roster_specs"),
+        spec_lookup,
+        options,
+    )
     default_attacker = _resolve_defaults(
         st.session_state.get("selected_attacker_specs"),
         spec_lookup,
-        options[:1],
+        attacker_roster[:1],
     )
     default_target = _resolve_defaults(
         st.session_state.get("selected_target_specs"),
         spec_lookup,
-        options[-1:],
+        target_roster[:1],
     )
 
     selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
     with selector_left:
-        selected_attackers = st.multiselect(
-            "Attacker",
-            options,
-            default=default_attacker,
-            format_func=str,
-        )
+        st.markdown("**Attacker**")
+        selected_attackers: list[ShipSpecifier] = []
+        selected_attacker_serialized = {_serialize_spec(spec) for spec in default_attacker}
+        for spec in attacker_roster:
+            serialized = _serialize_spec(spec)
+            is_checked = serialized in selected_attacker_serialized
+            if st.checkbox(str(spec), value=is_checked, key=f"attacker_spec_{serialized}"):
+                selected_attackers.append(spec)
     with selector_swap:
         st.button(
             "🔄",
             help="Swap attacker and target selections.",
             key="swap_attacker_target_specs",
-            on_click=_swap_selected_specs,
+            on_click=_swap_roster_and_selected_specs,
             width="stretch",
         )
     with selector_right:
-        selected_targets = st.multiselect(
-            "Target",
-            options,
-            default=default_target,
-            format_func=str,
-        )
+        st.markdown("**Target**")
+        selected_targets: list[ShipSpecifier] = []
+        selected_target_serialized = {_serialize_spec(spec) for spec in default_target}
+        for spec in target_roster:
+            serialized = _serialize_spec(spec)
+            is_checked = serialized in selected_target_serialized
+            if st.checkbox(str(spec), value=is_checked, key=f"target_spec_{serialized}"):
+                selected_targets.append(spec)
 
     st.session_state["selected_attacker_specs"] = [_serialize_spec(spec) for spec in selected_attackers]
     st.session_state["selected_target_specs"] = [_serialize_spec(spec) for spec in selected_targets]
