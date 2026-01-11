@@ -358,6 +358,39 @@ class AttackerAndTargetReport(AbstractReport):
             )
         return filtered
 
+    @classmethod
+    def _log_filtered_selection(
+            cls,
+            role: str,
+            stored_specs: Iterable[SerializedShipSpec] | None,
+            *,
+            spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+            roster_specs: Sequence[SerializedShipSpec],
+    ) -> None:
+        """Log why stored selections were filtered out."""
+        if not stored_specs:
+            return
+        deduped = cls._dedupe_specs(stored_specs)
+        missing_in_options = [spec for spec in deduped if spec not in spec_lookup]
+        missing_in_roster = [
+            spec for spec in deduped
+            if spec in spec_lookup and spec not in roster_specs
+        ]
+        if not missing_in_options and not missing_in_roster:
+            return
+        if missing_in_options:
+            logger.warning(
+                "Stored %s selections dropped because they are missing from current ship options: %s",
+                role,
+                missing_in_options,
+            )
+        if missing_in_roster:
+            logger.warning(
+                "Stored %s selections dropped because they are not in the current roster: %s",
+                role,
+                missing_in_roster,
+            )
+
     def _render_role_panel(
             self,
             title: str,
@@ -453,16 +486,30 @@ class AttackerAndTargetReport(AbstractReport):
 
         sync_checkboxes = st.session_state.get("sync_role_checkboxes", False)
         should_sync_checkboxes = sync_checkboxes
+        stored_attacker_specs = st.session_state.get("selected_attacker_specs")
+        stored_target_specs = st.session_state.get("selected_target_specs")
         selected_attacker_specs = self._filter_roster(
-            st.session_state.get("selected_attacker_specs"),
+            stored_attacker_specs,
             spec_lookup,
         )
         selected_target_specs = self._filter_roster(
-            st.session_state.get("selected_target_specs"),
+            stored_target_specs,
             spec_lookup,
         )
         initial_attacker_specs = list(selected_attacker_specs)
         initial_target_specs = list(selected_target_specs)
+        self._log_filtered_selection(
+            "attacker",
+            stored_attacker_specs,
+            spec_lookup=spec_lookup,
+            roster_specs=attacker_roster_specs,
+        )
+        self._log_filtered_selection(
+            "target",
+            stored_target_specs,
+            spec_lookup=spec_lookup,
+            roster_specs=target_roster_specs,
+        )
         if not selected_attacker_specs:
             logger.warning("No selected attacker specs remained after filtering; using roster defaults.")
             selected_attacker_specs = list(attacker_roster_specs)
