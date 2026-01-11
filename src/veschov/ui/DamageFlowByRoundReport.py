@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, override
 
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 from veschov.ui.AbstractReport import AbstractReport
+from veschov.ui.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.components.combat_log_header import render_combat_log_header, apply_combat_lens
 
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
@@ -12,16 +13,10 @@ from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_roun
 from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by, prepare_round_view
 
 
-class DamageFlowByRoundReport(AbstractReport):
-    VIEW_BY_KEY = "actual_damage_view_by"
-    VIEW_BY_DEFAULT = "Round"
 
-    def _resolve_view_by(self) -> str:
-        view_by = st.session_state.get(self.VIEW_BY_KEY)
-        if view_by not in VIEW_BY_OPTIONS:
-            view_by = self.VIEW_BY_DEFAULT
-            st.session_state[self.VIEW_BY_KEY] = view_by
-        return view_by
+
+
+class DamageFlowByRoundReport(RoundOrShotsReport):
 
     def get_x_axis_text(self) -> Optional[str]:
         return "Shot or Round Number"
@@ -161,8 +156,10 @@ class DamageFlowByRoundReport(AbstractReport):
                 )
                 preview_cols = list(dict.fromkeys(preview_cols))
                 st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
-        self._resolve_view_by()
-        default_index = VIEW_BY_OPTIONS.index(self.VIEW_BY_DEFAULT)
-        select_view_by(self.VIEW_BY_KEY, default_index=default_index)
+
     # def get_debug_info(self, df: pd.DataFrame) -> None:
     #     pass
+
+    @override
+    def get_debug_info(self, df: pd.DataFrame) -> None:
+        return None

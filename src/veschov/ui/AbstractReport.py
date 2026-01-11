@@ -25,12 +25,13 @@ class AbstractReport(ABC):
         if dfs is None:
             return
         self.display_plots(dfs)
+        self.display_under_chart()
+        self.display_tables(dfs)
+
+    def display_under_chart(self) -> None:
         utt = self.get_under_chart_text()
         if utt is not None:
             st.markdown(utt, unsafe_allow_html=True)
-        self.display_tables(dfs)
-
-
 
     @abstractmethod
     def get_under_title_text(self) -> Optional[str]:
