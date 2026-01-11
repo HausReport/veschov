@@ -28,13 +28,13 @@ OUTCOME_ICONS = {
 class AttackerAndTargetReport(AbstractReport):
 
     def render_combat_log_header(
-            self,
-            players_df: pd.DataFrame | None,
-            fleets_df: pd.DataFrame | None,
-            battle_df: pd.DataFrame | None,
-            *,
-            lens_key: str,
-            session_info: SessionInfo | Set[ShipSpecifier] | None = None,
+        self,
+        players_df: pd.DataFrame | None,
+        fleets_df: pd.DataFrame | None,
+        battle_df: pd.DataFrame | None,
+        *,
+        lens_key: str,
+        session_info: SessionInfo | Set[ShipSpecifier] | None = None,
     ) -> tuple[str, Lens | None]:
         """Render the standard header controls for combat-log reports."""
         number_format = get_number_format()
@@ -60,19 +60,19 @@ class AttackerAndTargetReport(AbstractReport):
                 target_label = "Target ships" if len(selected_targets) != 1 else "Target ship"
                 st.caption(f"Lens: {attacker_label} → {target_label}")
 
-        render_combat_summary(players_df, fleets_df, battle_df=battle_df, number_format=number_format)
+        self.render_combat_summary(players_df, fleets_df, battle_df=battle_df, number_format=number_format)
         st.divider()
         return number_format, lens
 
     def apply_combat_lens(
-            self,
-            df: pd.DataFrame,
-            lens: Lens | None,
-            *,
-            attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
-            target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
-            include_nan_attackers: bool = False,
-            include_nan_targets: bool = False,
+        self,
+        df: pd.DataFrame,
+        lens: Lens | None,
+        *,
+        attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
+        target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
+        include_nan_attackers: bool = False,
+        include_nan_targets: bool = False,
     ) -> pd.DataFrame:
         """Filter combat data using the selected attacker specs and column-based targets."""
         if lens is None:
@@ -134,9 +134,9 @@ class AttackerAndTargetReport(AbstractReport):
 
     @staticmethod
     def _resolve_defaults(
-            serialized: Iterable[SerializedShipSpec] | None,
-            spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
-            fallback: Sequence[ShipSpecifier],
+        serialized: Iterable[SerializedShipSpec] | None,
+        spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
+        fallback: Sequence[ShipSpecifier],
     ) -> list[ShipSpecifier]:
         if serialized:
             resolved = [spec_lookup[item] for item in serialized if item in spec_lookup]
@@ -145,8 +145,8 @@ class AttackerAndTargetReport(AbstractReport):
         return list(fallback)
 
     def render_actor_target_selector(
-            self,
-            session_info: SessionInfo | Set[ShipSpecifier] | None,
+        self,
+        session_info: SessionInfo | Set[ShipSpecifier] | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
         options = self._normalize_specs(session_info)
         if not options:
@@ -194,144 +194,137 @@ class AttackerAndTargetReport(AbstractReport):
 
         return selected_attackers, selected_targets
 
-
-def render_combat_summary(
+    def render_combat_summary(
         self,
         players_df: pd.DataFrame | None,
         fleets_df: pd.DataFrame | None = None,
         battle_df: pd.DataFrame | None = None,
         *,
         number_format: str = "Human",
-) -> None:
-    """Render a compact summary header for the uploaded combat log."""
-    if not isinstance(players_df, pd.DataFrame) or players_df.empty:
-        st.info("No player metadata found in this file.")
-        return
+    ) -> None:
+        """Render a compact summary header for the uploaded combat log."""
+        if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            st.info("No player metadata found in this file.")
+            return
 
-    context_lines = self._format_context(players_df, battle_df)
-    if context_lines:
-        context_text = " • ".join(context_lines)
-        st.markdown(
-            "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
-            f"{context_text}</div>",
-            unsafe_allow_html=True,
-        )
+        context_lines = self._format_context(players_df, battle_df)
+        if context_lines:
+            context_text = " • ".join(context_lines)
+            st.markdown(
+                "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
+                f"{context_text}</div>",
+                unsafe_allow_html=True,
+            )
 
-    session_info = st.session_state.get("session_info")
-    name_lookup, ship_lookup = self._alliance_lookup(session_info)
+        session_info = st.session_state.get("session_info")
+        name_lookup, ship_lookup = self._alliance_lookup(session_info)
 
-    players_rows = players_df.iloc[:-1] if len(players_df) > 1 else players_df.iloc[0:0]
-    npc_row = players_df.iloc[-1:]
+        players_rows = players_df.iloc[:-1] if len(players_df) > 1 else players_df.iloc[0:0]
+        npc_row = players_df.iloc[-1:]
 
-    list_cols = st.columns(2)
-    with list_cols[0]:
-        self._render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
-    with list_cols[1]:
-        self._render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
+        list_cols = st.columns(2)
+        with list_cols[0]:
+            self._render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
+        with list_cols[1]:
+            self._render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
 
+    def _format_context(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
+        location = players_df["Location"].iloc[0] if "Location" in players_df.columns else None
+        timestamp = players_df["Timestamp"].iloc[0] if "Timestamp" in players_df.columns else None
+        lines: list[str] = []
 
-def _format_context(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
-    location = players_df["Location"].iloc[0] if "Location" in players_df.columns else None
-    timestamp = players_df["Timestamp"].iloc[0] if "Timestamp" in players_df.columns else None
-    lines: list[str] = []
+        context_parts: list[str] = []
+        if pd.notna(location):
+            location_text = str(location).strip()
+            if location_text and "system" not in location_text.lower():
+                location_text = f"{location_text} System"
+            context_parts.append(location_text)
+        if pd.notna(timestamp):
+            parsed = pd.to_datetime(timestamp, errors="coerce")
+            if pd.notna(parsed):
+                parsed_dt = parsed.to_pydatetime()
+                today_year = datetime.now().year
+                date_part = f"{parsed_dt:%a} {parsed_dt.day} {parsed_dt:%b}"
+                if parsed_dt.year != today_year:
+                    date_part = f"{date_part} [{parsed_dt:%Y}]"
+                time_part = f"{parsed_dt:%H:%M}"
+                context_parts.append(f"on {date_part} at {time_part}")
+            else:
+                context_parts.append(str(timestamp))
+        if context_parts:
+            lines.append(" ".join(context_parts))
 
-    context_parts: list[str] = []
-    if pd.notna(location):
-        location_text = str(location).strip()
-        if location_text and "system" not in location_text.lower():
-            location_text = f"{location_text} System"
-        context_parts.append(location_text)
-    if pd.notna(timestamp):
-        parsed = pd.to_datetime(timestamp, errors="coerce")
-        if pd.notna(parsed):
-            parsed_dt = parsed.to_pydatetime()
-            today_year = datetime.now().year
-            date_part = f"{parsed_dt:%a} {parsed_dt.day} {parsed_dt:%b}"
-            if parsed_dt.year != today_year:
-                date_part = f"{date_part} [{parsed_dt:%Y}]"
-            time_part = f"{parsed_dt:%H:%M}"
-            context_parts.append(f"on {date_part} at {time_part}")
-        else:
-            context_parts.append(str(timestamp))
-    if context_parts:
-        lines.append(" ".join(context_parts))
+        if isinstance(battle_df, pd.DataFrame) and not battle_df.empty and "round" in battle_df.columns:
+            rounds = pd.to_numeric(battle_df["round"], errors="coerce")
+            max_round = rounds.max()
+            if pd.notna(max_round):
+                lines.append(f"Battle Rounds: {int(max_round)}")
+        return lines
 
-    if isinstance(battle_df, pd.DataFrame) and not battle_df.empty and "round" in battle_df.columns:
-        rounds = pd.to_numeric(battle_df["round"], errors="coerce")
-        max_round = rounds.max()
-        if pd.notna(max_round):
-            lines.append(f"Battle Rounds: {int(max_round)}")
-    return lines
-
-
-def _alliance_lookup(
+    def _alliance_lookup(
         self,
         session_info: SessionInfo | None,
-) -> tuple[dict[str, str], dict[tuple[str, str], str]]:
-    name_lookup: dict[str, str] = {}
-    ship_lookup: dict[tuple[str, str], str] = {}
-    if not isinstance(session_info, SessionInfo):
+    ) -> tuple[dict[str, str], dict[tuple[str, str], str]]:
+        name_lookup: dict[str, str] = {}
+        ship_lookup: dict[tuple[str, str], str] = {}
+        if not isinstance(session_info, SessionInfo):
+            return name_lookup, ship_lookup
+
+        for spec in session_info.get_every_ship():
+            if not isinstance(spec, ShipSpecifier):
+                continue
+            name = self._normalize_text(spec.name)
+            ship = self._normalize_text(spec.ship)
+            alliance = self._normalize_text(spec.alliance)
+            if name and alliance and name not in name_lookup:
+                name_lookup[name] = alliance
+            if name and ship and alliance:
+                ship_lookup[(name, ship)] = alliance
         return name_lookup, ship_lookup
 
-    for spec in session_info.get_every_ship():
-        if not isinstance(spec, ShipSpecifier):
-            continue
-        name = self._normalize_text(spec.name)
-        ship = self._normalize_text(spec.ship)
-        alliance = self._normalize_text(spec.alliance)
-        if name and alliance and name not in name_lookup:
-            name_lookup[name] = alliance
-        if name and ship and alliance:
-            ship_lookup[(name, ship)] = alliance
-    return name_lookup, ship_lookup
-
-
-def _render_combatant_list(
+    def _render_combatant_list(
         self,
         title: str,
         rows: pd.DataFrame,
         name_lookup: dict[str, str],
         ship_lookup: dict[tuple[str, str], str],
-) -> None:
-    st.markdown(f"**{title}**")
-    if rows.empty:
-        st.caption("None listed in the current log.")
-        return
-    lines = []
-    for _, row in rows.iterrows():
-        emoji = self._outcome_emoji(row.get("Outcome"))
-        label = self._format_combatant_label(row, name_lookup, ship_lookup)
-        lines.append(f"- {emoji} {label}")
-    st.markdown("\n".join(lines))
+    ) -> None:
+        st.markdown(f"**{title}**")
+        if rows.empty:
+            st.caption("None listed in the current log.")
+            return
+        lines = []
+        for _, row in rows.iterrows():
+            emoji = self._outcome_emoji(row.get("Outcome"))
+            label = self._format_combatant_label(row, name_lookup, ship_lookup)
+            lines.append(f"- {emoji} {label}")
+        st.markdown("\n".join(lines))
 
+    def _outcome_emoji(self, outcome: object) -> str:
+        if isinstance(outcome, str):
+            normalized = outcome.strip().upper().replace("_", " ")
+            label_emoji = OUTCOME_ICONS.get(normalized)
+            if label_emoji:
+                return label_emoji[1]
+        return "❔"
 
-def _outcome_emoji(self, outcome: object) -> str:
-    if isinstance(outcome, str):
-        normalized = outcome.strip().upper().replace("_", " ")
-        label_emoji = OUTCOME_ICONS.get(normalized)
-        if label_emoji:
-            return label_emoji[1]
-    return "❔"
+    def _normalize_text(self, value: object) -> str:
+        if pd.isna(value) or value is None:
+            return ""
+        return str(value).strip()
 
-
-def _normalize_text(self, value: object) -> str:
-    if pd.isna(value) or value is None:
-        return ""
-    return str(value).strip()
-
-
-def _format_combatant_label(
+    def _format_combatant_label(
         self,
         row: pd.Series,
         name_lookup: dict[str, str],
         ship_lookup: dict[tuple[str, str], str],
-) -> str:
-    name = self._normalize_text(row.get("Player Name"))
-    ship = self._normalize_text(row.get("Ship Name"))
-    alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
-    label = name or "Unknown"
-    if alliance:
-        label = f"{label} [{alliance}]"
-    if ship and ship != name:
-        label = f"{label} — {ship}"
-    return label
+    ) -> str:
+        name = self._normalize_text(row.get("Player Name"))
+        ship = self._normalize_text(row.get("Ship Name"))
+        alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
+        label = name or "Unknown"
+        if alliance:
+            label = f"{label} [{alliance}]"
+        if ship and ship != name:
+            label = f"{label} — {ship}"
+        return label
