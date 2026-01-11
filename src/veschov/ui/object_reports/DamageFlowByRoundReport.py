@@ -1,19 +1,16 @@
 from __future__ import annotations
+
 from typing import Optional, override
 
 import pandas as pd
-import streamlit as st
 import plotly.express as px
-from veschov.ui.AbstractReport import AbstractReport
-from veschov.ui.RoundOrShotsReport import RoundOrShotsReport
-from veschov.ui.components.combat_log_header import render_combat_log_header, apply_combat_lens
+import streamlit as st
 
+from veschov.ui.components.combat_log_header import render_combat_log_header, apply_combat_lens
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
-from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by, prepare_round_view
-
-
-
+from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
+from veschov.ui.view_by import prepare_round_view
 
 
 class DamageFlowByRoundReport(RoundOrShotsReport):

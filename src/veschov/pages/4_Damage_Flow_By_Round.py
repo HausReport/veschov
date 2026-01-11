@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from veschov.ui.DamageFlowByRoundReport import DamageFlowByRoundReport
-from veschov.ui.damage_flow_by_round import render_actual_damage_report
+from veschov.ui.object_reports.DamageFlowByRoundReport import DamageFlowByRoundReport
 
 logger = logging.getLogger(__name__)
 

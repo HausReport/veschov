@@ -1,9 +1,10 @@
-from veschov.ui.AbstractReport import AbstractReport
 import streamlit as st
-from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by, prepare_round_view
+
+from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
+from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by
 
 
-class RoundOrShotsReport(AbstractReport):
+class RoundOrShotsReport(AttackerAndTargetReport):
     VIEW_BY_DEFAULT = "Round"
     VIEW_BY_KEY = "actual_damage_view_by"
 

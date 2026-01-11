@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -7,6 +8,7 @@ import streamlit as st
 
 from veschov.io.parser_stub import parse_battle_log
 from veschov.ui.components.combat_log_header import render_sidebar_combat_log_upload
+
 
 class AbstractReport(ABC):
 
