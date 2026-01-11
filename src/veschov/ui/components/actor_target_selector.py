@@ -71,7 +71,7 @@ def render_actor_target_selector(
         options[-1:],
     )
 
-    selector_left, selector_swap, selector_right = st.columns([5, 1, 5])
+    selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
     with selector_left:
         selected_attackers = st.multiselect(
             "Attacker",
