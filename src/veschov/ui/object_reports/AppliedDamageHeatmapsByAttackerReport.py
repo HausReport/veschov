@@ -172,12 +172,17 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                 st.caption("No attacks match current filters.")
                 continue
 
+            attacker_df = attacker_df.sort_values(["round", "shot_index"])
+            attacker_df = attacker_df.assign(
+                shot_in_round=attacker_df.groupby("round").cumcount()
+            )
+
             x_rounds = sorted(attacker_df["round"].unique())
             if not x_rounds:
                 st.caption("No rounds available for this attacker.")
                 continue
 
-            max_shot = attacker_df["shot_index"].max()
+            max_shot = attacker_df["shot_in_round"].max()
             if pd.isna(max_shot):
                 st.caption("No shots available for this attacker.")
                 continue
@@ -192,7 +197,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
 
             for row in attacker_df.itertuples(index=False):
                 round_value = int(row.round)
-                shot_index = int(row.shot_index)
+                shot_index = int(row.shot_in_round)
                 if shot_index < 0:
                     continue
                 col_index = round_lookup.get(round_value)
