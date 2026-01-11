@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from abc import abstractmethod
 from datetime import datetime
 from typing import Iterable, Set
 from typing import Sequence
@@ -37,6 +38,9 @@ class AttackerAndTargetReport(AbstractReport):
         session_info: SessionInfo | Set[ShipSpecifier] | None = None,
     ) -> tuple[str, Lens | None]:
         """Render the standard header controls for combat-log reports."""
+        #
+        # This section just sets up variables
+        #
         number_format = get_number_format()
 
         resolved_session_info = session_info or st.session_state.get("session_info")
@@ -45,9 +49,16 @@ class AttackerAndTargetReport(AbstractReport):
         if resolved_session_info is not None:
             st.session_state["session_info"] = resolved_session_info
 
+        #
+        # Adds the actor/target selector
+        #
         selected_attackers, selected_targets = self.render_actor_target_selector(
             st.session_state.get("session_info")
         )
+
+        #
+        # Adds the lens indicator
+        #
         lens = None
         if selected_attackers and selected_targets:
             lens = resolve_lens(lens_key, selected_attackers, selected_targets)
@@ -60,9 +71,97 @@ class AttackerAndTargetReport(AbstractReport):
                 target_label = "Target ships" if len(selected_targets) != 1 else "Target ship"
                 st.caption(f"Lens: {attacker_label} → {target_label}")
 
-        self.render_combat_summary(players_df, fleets_df, battle_df=battle_df, number_format=number_format)
-        st.divider()
+        #
+        # Adds the system/time/and rounds line
+        #
+        #
+        # Adds the combatants lines
+        #
+        if isinstance(players_df, pd.DataFrame) or players_df.empty:
+            self._render_system_time_and_rounds(players_df, battle_df)
+            self.render_combatants(players_df)
+        else:
+            st.info("No player metadata found in this file.")
+
         return number_format, lens
+
+    def _render_system_time_and_rounds(self, players_df, battle_df):
+        context_lines = self._get_system_time_and_rounds(players_df, battle_df)
+        if context_lines:
+            context_text = " • ".join(context_lines)
+            st.markdown(
+                "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
+                f"{context_text}</div>",
+                unsafe_allow_html=True,
+            )
+
+    def _get_system_time_and_rounds(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
+        location = players_df["Location"].iloc[0] if "Location" in players_df.columns else None
+        timestamp = players_df["Timestamp"].iloc[0] if "Timestamp" in players_df.columns else None
+        lines: list[str] = []
+
+        context_parts: list[str] = []
+        if pd.notna(location):
+            location_text = str(location).strip()
+            if location_text and "system" not in location_text.lower():
+                location_text = f"{location_text} System"
+            context_parts.append(location_text)
+        if pd.notna(timestamp):
+            parsed = pd.to_datetime(timestamp, errors="coerce")
+            if pd.notna(parsed):
+                parsed_dt = parsed.to_pydatetime()
+                today_year = datetime.now().year
+                date_part = f"{parsed_dt:%a} {parsed_dt.day} {parsed_dt:%b}"
+                if parsed_dt.year != today_year:
+                    date_part = f"{date_part} [{parsed_dt:%Y}]"
+                time_part = f"{parsed_dt:%H:%M}"
+                context_parts.append(f"on {date_part} at {time_part}")
+            else:
+                context_parts.append(str(timestamp))
+        if context_parts:
+            lines.append(" ".join(context_parts))
+
+        if isinstance(battle_df, pd.DataFrame) and not battle_df.empty and "round" in battle_df.columns:
+            rounds = pd.to_numeric(battle_df["round"], errors="coerce")
+            max_round = rounds.max()
+            if pd.notna(max_round):
+                lines.append(f"Battle Rounds: {int(max_round)}")
+        return lines
+
+    def render_combatants(self, players_df):
+        session_info = st.session_state.get("session_info")
+        name_lookup, ship_lookup = self._alliance_lookup(session_info)
+
+        players_rows = players_df.iloc[:-1] if len(players_df) > 1 else players_df.iloc[0:0]
+        npc_row = players_df.iloc[-1:]
+
+        list_cols = st.columns(2)
+        with list_cols[0]:
+            self._render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
+        with list_cols[1]:
+            self._render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
+
+    def _render_combatant_list(
+        self,
+        title: str,
+        rows: pd.DataFrame,
+        name_lookup: dict[str, str],
+        ship_lookup: dict[tuple[str, str], str],
+    ) -> None:
+        st.markdown(f"**{title}**")
+        if rows.empty:
+            st.caption("None listed in the current log.")
+            return
+        lines = []
+        for _, row in rows.iterrows():
+            emoji = self._outcome_emoji(row.get("Outcome"))
+            label = self._format_combatant_label(row, name_lookup, ship_lookup)
+            lines.append(f"- {emoji} {label}")
+        st.markdown("\n".join(lines))
+
+        # ########################################################################################################
+        # ########################################################################################################
+        # ########################################################################################################
 
     def apply_combat_lens(
         self,
@@ -109,6 +208,21 @@ class AttackerAndTargetReport(AbstractReport):
                 filtered = filtered.loc[target_mask]
 
         return filtered
+
+    @abstractmethod
+    def get_lens_key(self) -> str:
+        pass
+
+    def render_header(self, df: pd.DataFrame):
+        players_df = df.attrs.get("players_df")
+        fleets_df = df.attrs.get("fleets_df")
+        _, lens = self.render_combat_log_header(
+            players_df,
+            fleets_df,
+            df,
+            lens_key=self.get_lens_key(),
+        )
+        return lens
 
     @staticmethod
     def _serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
@@ -194,72 +308,9 @@ class AttackerAndTargetReport(AbstractReport):
 
         return selected_attackers, selected_targets
 
-    def render_combat_summary(
-        self,
-        players_df: pd.DataFrame | None,
-        fleets_df: pd.DataFrame | None = None,
-        battle_df: pd.DataFrame | None = None,
-        *,
-        number_format: str = "Human",
-    ) -> None:
-        """Render a compact summary header for the uploaded combat log."""
-        if not isinstance(players_df, pd.DataFrame) or players_df.empty:
-            st.info("No player metadata found in this file.")
-            return
 
-        context_lines = self._format_context(players_df, battle_df)
-        if context_lines:
-            context_text = " • ".join(context_lines)
-            st.markdown(
-                "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
-                f"{context_text}</div>",
-                unsafe_allow_html=True,
-            )
 
-        session_info = st.session_state.get("session_info")
-        name_lookup, ship_lookup = self._alliance_lookup(session_info)
 
-        players_rows = players_df.iloc[:-1] if len(players_df) > 1 else players_df.iloc[0:0]
-        npc_row = players_df.iloc[-1:]
-
-        list_cols = st.columns(2)
-        with list_cols[0]:
-            self._render_combatant_list("Players", players_rows, name_lookup, ship_lookup)
-        with list_cols[1]:
-            self._render_combatant_list("NPC", npc_row, name_lookup, ship_lookup)
-
-    def _format_context(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
-        location = players_df["Location"].iloc[0] if "Location" in players_df.columns else None
-        timestamp = players_df["Timestamp"].iloc[0] if "Timestamp" in players_df.columns else None
-        lines: list[str] = []
-
-        context_parts: list[str] = []
-        if pd.notna(location):
-            location_text = str(location).strip()
-            if location_text and "system" not in location_text.lower():
-                location_text = f"{location_text} System"
-            context_parts.append(location_text)
-        if pd.notna(timestamp):
-            parsed = pd.to_datetime(timestamp, errors="coerce")
-            if pd.notna(parsed):
-                parsed_dt = parsed.to_pydatetime()
-                today_year = datetime.now().year
-                date_part = f"{parsed_dt:%a} {parsed_dt.day} {parsed_dt:%b}"
-                if parsed_dt.year != today_year:
-                    date_part = f"{date_part} [{parsed_dt:%Y}]"
-                time_part = f"{parsed_dt:%H:%M}"
-                context_parts.append(f"on {date_part} at {time_part}")
-            else:
-                context_parts.append(str(timestamp))
-        if context_parts:
-            lines.append(" ".join(context_parts))
-
-        if isinstance(battle_df, pd.DataFrame) and not battle_df.empty and "round" in battle_df.columns:
-            rounds = pd.to_numeric(battle_df["round"], errors="coerce")
-            max_round = rounds.max()
-            if pd.notna(max_round):
-                lines.append(f"Battle Rounds: {int(max_round)}")
-        return lines
 
     def _alliance_lookup(
         self,
@@ -282,23 +333,7 @@ class AttackerAndTargetReport(AbstractReport):
                 ship_lookup[(name, ship)] = alliance
         return name_lookup, ship_lookup
 
-    def _render_combatant_list(
-        self,
-        title: str,
-        rows: pd.DataFrame,
-        name_lookup: dict[str, str],
-        ship_lookup: dict[tuple[str, str], str],
-    ) -> None:
-        st.markdown(f"**{title}**")
-        if rows.empty:
-            st.caption("None listed in the current log.")
-            return
-        lines = []
-        for _, row in rows.iterrows():
-            emoji = self._outcome_emoji(row.get("Outcome"))
-            label = self._format_combatant_label(row, name_lookup, ship_lookup)
-            lines.append(f"- {emoji} {label}")
-        st.markdown("\n".join(lines))
+
 
     def _outcome_emoji(self, outcome: object) -> str:
         if isinstance(outcome, str):

@@ -53,16 +53,10 @@ class RawDamageReport(RoundOrShotsReport):
     def get_log_description(self) -> str:
         return "Upload a battle log to visualize raw damage (normal vs isolytic, crit vs non-crit)."
 
-    def get_derived_dataframes(self, df: pd.DataFrame) -> Optional[list[pd.DataFrame]]:
-        players_df = df.attrs.get("players_df")
-        fleets_df = df.attrs.get("fleets_df")
-        _, lens = render_combat_log_header(
-            players_df,
-            fleets_df,
-            df,
-            lens_key="raw_damage",
-        )
+    def get_lens_key(self) -> str:
+        return "raw_damage"
 
+    def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
         display_df.attrs = {}
 

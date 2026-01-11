@@ -23,7 +23,8 @@ class AbstractReport(ABC):
         )
         if df is None:
             return
-        dfs = self.get_derived_dataframes(df)
+        self.lens = self.render_header(df)
+        dfs = self.get_derived_dataframes(df, self.lens)
         if dfs is None:
             return
         self.display_plots(dfs)
@@ -62,7 +63,7 @@ class AbstractReport(ABC):
         return df
 
     @abstractmethod
-    def get_derived_dataframes(self, df: pd.DataFrame) -> Optional[list[pd.DataFrame]]:
+    def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         pass
 
 
