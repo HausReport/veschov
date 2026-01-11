@@ -19,8 +19,11 @@ class RoundOrShotsReport(AbstractReport):
 
     def display_under_chart(self) -> None:
         utt = self.get_under_chart_text()
-        if utt is not None:
-            st.markdown(utt, unsafe_allow_html=True)
         self._resolve_view_by()
         default_index = VIEW_BY_OPTIONS.index(self.VIEW_BY_DEFAULT)
-        select_view_by(self.VIEW_BY_KEY, default_index=default_index)
+        text_column, selector_column = st.columns([4, 1])
+        with selector_column:
+            select_view_by(self.VIEW_BY_KEY, default_index=default_index)
+        if utt is not None:
+            with text_column:
+                st.markdown(utt, unsafe_allow_html=True)
