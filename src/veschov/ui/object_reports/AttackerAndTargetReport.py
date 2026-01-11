@@ -254,7 +254,6 @@ class AttackerAndTargetReport(AbstractReport):
         st.session_state["selected_target_specs"] = attackers
         st.session_state["attacker_roster_specs"] = target_roster
         st.session_state["target_roster_specs"] = attacker_roster
-        st.session_state["sync_role_checkboxes"] = True
 
     @staticmethod
     def _normalize_specs(session_info: SessionInfo | Set[ShipSpecifier] | None) -> Sequence[ShipSpecifier]:
@@ -368,7 +367,6 @@ class AttackerAndTargetReport(AbstractReport):
             spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
             roster_specs: Sequence[SerializedShipSpec],
             checkbox_prefix: str,
-            sync_checkboxes: bool,
     ) -> None:
         """Log why stored selections were filtered out."""
         checkbox_key_prefix = f"{checkbox_prefix}_"
@@ -380,24 +378,22 @@ class AttackerAndTargetReport(AbstractReport):
             if not selected_specs and roster_specs:
                 logger.warning(
                     "No stored %s selections in session state; defaulting to roster defaults. "
-                    "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
+                    "(options=%d, roster=%d, checkbox_keys=%d)",
                     role,
                     len(spec_lookup),
                     len(roster_specs),
                     checkbox_count,
-                    sync_checkboxes,
                 )
             return
         if not stored_specs:
             if not selected_specs and roster_specs:
                 logger.warning(
                     "Stored %s selections are empty; defaulting to roster defaults. "
-                    "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
+                    "(options=%d, roster=%d, checkbox_keys=%d)",
                     role,
                     len(spec_lookup),
                     len(roster_specs),
                     checkbox_count,
-                    sync_checkboxes,
                 )
             return
         deduped = cls._dedupe_specs(stored_specs)
@@ -411,35 +407,32 @@ class AttackerAndTargetReport(AbstractReport):
         if missing_in_options:
             logger.warning(
                 "Stored %s selections dropped because they are missing from current ship options: %s "
-                "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
+                "(options=%d, roster=%d, checkbox_keys=%d)",
                 role,
                 missing_in_options,
                 len(spec_lookup),
                 len(roster_specs),
                 checkbox_count,
-                sync_checkboxes,
             )
         if missing_in_roster:
             logger.warning(
                 "Stored %s selections dropped because they are not in the current roster: %s "
-                "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
+                "(options=%d, roster=%d, checkbox_keys=%d)",
                 role,
                 missing_in_roster,
                 len(spec_lookup),
                 len(roster_specs),
                 checkbox_count,
-                sync_checkboxes,
             )
         if len(deduped) > len(selected_specs) and not missing_in_options and not missing_in_roster:
             logger.warning(
                 "Stored %s selections contained duplicates; reduced to %s. "
-                "(options=%d, roster=%d, checkbox_keys=%d, sync_checkboxes=%s)",
+                "(options=%d, roster=%d, checkbox_keys=%d)",
                 role,
                 selected_specs,
                 len(spec_lookup),
                 len(roster_specs),
                 checkbox_count,
-                sync_checkboxes,
             )
 
     def _render_role_panel(
@@ -450,7 +443,6 @@ class AttackerAndTargetReport(AbstractReport):
             spec_lookup: dict[SerializedShipSpec, ShipSpecifier],
             key_prefix: str,
             outcome_lookup: dict[SerializedShipSpec, object],
-            sync_checkboxes: bool,
     ) -> list[SerializedShipSpec]:
         """Render a checkbox list for a role roster and return selected specs."""
         st.markdown(f"**{title}**")
@@ -471,8 +463,7 @@ class AttackerAndTargetReport(AbstractReport):
             label = self._format_ship_spec_label(spec, outcome_lookup)
             checkbox_key = f"{key_prefix}_{spec_key}"
             desired_value = spec_key in selected_specs
-            if sync_checkboxes or checkbox_key not in st.session_state:
-                st.session_state[checkbox_key] = desired_value
+            st.session_state[checkbox_key] = desired_value
             checked = st.checkbox(label, key=checkbox_key)
             if checked:
                 resolved.append(spec_key)
@@ -535,16 +526,10 @@ class AttackerAndTargetReport(AbstractReport):
         st.session_state["attacker_roster_specs"] = attacker_roster_specs
         st.session_state["target_roster_specs"] = target_roster_specs
 
-        sync_checkboxes = st.session_state.get("sync_role_checkboxes", False)
-        should_sync_checkboxes = sync_checkboxes
         stored_attacker_specs = st.session_state.get("selected_attacker_specs") or list(attacker_roster_specs)
         stored_target_specs = st.session_state.get("selected_target_specs") or list(target_roster_specs)
-        if stored_attacker_specs != st.session_state.get("selected_attacker_specs"):
-            st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
-            should_sync_checkboxes = True
-        if stored_target_specs != st.session_state.get("selected_target_specs"):
-            st.session_state["selected_target_specs"] = list(stored_target_specs)
-            should_sync_checkboxes = True
+        st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
+        st.session_state["selected_target_specs"] = list(stored_target_specs)
         selected_attacker_specs = self._filter_roster(
             stored_attacker_specs,
             spec_lookup,
@@ -562,7 +547,6 @@ class AttackerAndTargetReport(AbstractReport):
             spec_lookup=spec_lookup,
             roster_specs=attacker_roster_specs,
             checkbox_prefix="attacker_include",
-            sync_checkboxes=sync_checkboxes,
         )
         self._log_filtered_selection(
             "target",
@@ -571,7 +555,6 @@ class AttackerAndTargetReport(AbstractReport):
             spec_lookup=spec_lookup,
             roster_specs=target_roster_specs,
             checkbox_prefix="target_include",
-            sync_checkboxes=sync_checkboxes,
         )
         if not selected_attacker_specs:
             logger.warning("No selected attacker specs remained after filtering; using roster defaults.")
@@ -591,17 +574,8 @@ class AttackerAndTargetReport(AbstractReport):
             initial_attacker_specs != list(selected_attacker_specs)
             or initial_target_specs != list(selected_target_specs)
         ):
-            should_sync_checkboxes = True
-        attacker_checkbox_count = sum(
-            1 for key in st.session_state.keys()
-            if isinstance(key, str) and key.startswith("attacker_include_")
-        )
-        target_checkbox_count = sum(
-            1 for key in st.session_state.keys()
-            if isinstance(key, str) and key.startswith("target_include_")
-        )
-        if attacker_checkbox_count == 0 or target_checkbox_count == 0:
-            should_sync_checkboxes = True
+            st.session_state["selected_attacker_specs"] = list(selected_attacker_specs)
+            st.session_state["selected_target_specs"] = list(selected_target_specs)
 
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
         outcome_lookup = self._build_outcome_lookup(players_df)
@@ -613,7 +587,6 @@ class AttackerAndTargetReport(AbstractReport):
                 spec_lookup,
                 "attacker_include",
                 outcome_lookup,
-                should_sync_checkboxes,
             )
         with selector_swap:
             st.button(
@@ -631,13 +604,10 @@ class AttackerAndTargetReport(AbstractReport):
                 spec_lookup,
                 "target_include",
                 outcome_lookup,
-                should_sync_checkboxes,
             )
 
         st.session_state["selected_attacker_specs"] = list(selected_attacker_specs)
         st.session_state["selected_target_specs"] = list(selected_target_specs)
-        if should_sync_checkboxes:
-            st.session_state["sync_role_checkboxes"] = False
 
         selected_attackers = [spec_lookup[item] for item in selected_attacker_specs if item in spec_lookup]
         selected_targets = [spec_lookup[item] for item in selected_target_specs if item in spec_lookup]
