@@ -52,18 +52,6 @@ class ApexBarrierReport(RoundOrShotsReport):
         self.total_mitigation: float | None = None
         self.x_axis = "shot_index"
 
-    def render_header(self, df: pd.DataFrame):
-        players_df = df.attrs.get("players_df")
-        fleets_df = df.attrs.get("fleets_df")
-        number_format, lens = self.render_combat_log_header(
-            players_df,
-            fleets_df,
-            df,
-            lens_key=self.get_lens_key(),
-        )
-        self.number_format = number_format
-        return lens
-
     def get_x_axis_text(self) -> Optional[str]:
         return "Shot or Round Number"
 
