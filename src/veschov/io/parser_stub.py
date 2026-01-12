@@ -8,8 +8,8 @@ from typing import IO, Any
 
 import pandas as pd
 
-from veschov.columns import resolve_event_type, add_alias_columns
 from veschov.io.StartsWhen import extract_sections, section_to_dataframe, SECTION_HEADERS, StartsWhen
+from veschov.io.columns import resolve_event_type, add_alias_columns
 from veschov.transforms.derive_metrics import add_shot_index
 
 logger = logging.getLogger(__name__)

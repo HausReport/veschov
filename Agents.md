@@ -28,6 +28,7 @@
     - Golden data files are acceptable and encouraged where appropriate.
     - Tests should validate behavior, not incidental implementation details.
 10. Observations (for Codex):
-    - Use this section to record patterns, invariants, or assumptions discovered
-      while working in the codebase.
+    - At the end of your assignment, consider if you've gained knowledge about this project that could be useful in future assignments.
+    - If so, add it to the "Codex Observations" section below.
+    - You may use this section to record patterns, invariants, or assumptions, or problems discoveredgno
     - Do not repeat existing rules; add only genuinely new insights.

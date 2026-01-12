@@ -16,7 +16,7 @@ from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetR
 logger = logging.getLogger(__name__)
 
 
-class PlayerInfoReport(AttackerAndTargetReport):
+class CombatantInfoReport(AttackerAndTargetReport):
     """Render player cards for selected combatants."""
 
     def __init__(self) -> None:
@@ -197,5 +197,5 @@ class PlayerInfoReport(AttackerAndTargetReport):
 
 def render_player_info_report() -> None:
     """Render the player info report with roster-based selections."""
-    report = PlayerInfoReport()
+    report = CombatantInfoReport()
     report.render()
