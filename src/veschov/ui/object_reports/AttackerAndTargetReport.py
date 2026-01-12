@@ -139,6 +139,7 @@ class AttackerAndTargetReport(AbstractReport):
 
         combatant_specs = self._normalize_specs(session_info)
         if not combatant_specs:
+            logger.warning("No combatant specs available to render combatants list.")
             st.info("No combatant data found in this file.")
             return
 
@@ -167,6 +168,7 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> None:
         st.markdown(f"**{title}**")
         if not specs:
+            logger.warning("No combatant specs available for %s list.", title)
             st.caption("None listed in the current log.")
             return
         lines = []
@@ -266,20 +268,6 @@ class AttackerAndTargetReport(AbstractReport):
 
         return sorted(specs, key=lambda spec: str(spec))
 
-    @staticmethod
-    def _gather_specs(
-            session_info: SessionInfo | Set[ShipSpecifier] | None,
-    ) -> Sequence[ShipSpecifier]:
-        if isinstance(session_info, SessionInfo):
-            specs = session_info.get_every_ship()
-        elif isinstance(session_info, set):
-            specs = session_info
-        else:
-            specs = set()
-
-        options = sorted(specs, key=lambda spec: str(spec))
-        return options
-
     def _resolve_player_alliance(self, row: pd.Series) -> str:
         for column in ("Alliance", "Player Alliance"):
             if column in row.index:
@@ -294,12 +282,14 @@ class AttackerAndTargetReport(AbstractReport):
             options: Sequence[ShipSpecifier],
     ) -> ShipSpecifier | None:
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            logger.warning("Unable to infer enemy spec: players_df missing or empty.")
             return None
         row = players_df.iloc[-1]
         name = self._normalize_text(row.get("Player Name"))
         alliance = self._resolve_player_alliance(row)
         ship = self._normalize_text(row.get("Ship Name"))
         if not any([name, alliance, ship]):
+            logger.warning("Unable to infer enemy spec: missing name/alliance/ship values.")
             return None
 
         for spec in options:
@@ -321,6 +311,7 @@ class AttackerAndTargetReport(AbstractReport):
             return [matched]
         if options:
             return [options[-1]]
+        logger.warning("Unable to determine default target; no ship options provided.")
         return []
 
     @staticmethod
@@ -343,6 +334,8 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> list[SerializedShipSpec]:
         """Filter a serialized roster to specs that still exist in the lookup."""
         if not roster:
+            if spec_lookup:
+                logger.warning("Roster filter received no specs while options exist; returning empty list.")
             return []
         deduped = cls._dedupe_specs(roster)
         filtered = [spec for spec in deduped if spec in spec_lookup]
@@ -461,7 +454,8 @@ class AttackerAndTargetReport(AbstractReport):
             label = self._format_ship_spec_label(spec, outcome_lookup)
             checkbox_key = f"{key_prefix}_{spec_key}"
             desired_value = spec_key in selected_specs
-            st.session_state[checkbox_key] = desired_value
+            if checkbox_key not in st.session_state:
+                st.session_state[checkbox_key] = desired_value
             checked = st.checkbox(label, key=checkbox_key)
             if checked:
                 resolved.append(spec_key)
@@ -472,7 +466,7 @@ class AttackerAndTargetReport(AbstractReport):
             session_info: SessionInfo | Set[ShipSpecifier] | None,
             players_df: pd.DataFrame | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
-        options = self._gather_specs(session_info)
+        options = self._normalize_specs(session_info)
         if not options:
             logger.warning(
                 "Actor/target selector has no ship options; session_info=%s.",
@@ -621,8 +615,10 @@ class AttackerAndTargetReport(AbstractReport):
 
     def _build_outcome_lookup(self, players_df: pd.DataFrame | None) -> dict[SerializedShipSpec, object]:
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            logger.warning("Outcome lookup skipped: players_df missing or empty.")
             return {}
         if "Outcome" not in players_df.columns:
+            logger.warning("Outcome lookup skipped: 'Outcome' column missing.")
             return {}
         outcome_lookup: dict[SerializedShipSpec, object] = {}
         for _, row in players_df.iterrows():
