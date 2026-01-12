@@ -15,7 +15,7 @@ from veschov.transforms.columns import (
     resolve_column,
 )
 from veschov.ui.chirality import Lens, resolve_lens
-from veschov.ui.components.combat_log_header import get_number_format
+from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 from veschov.utils.series import coerce_numeric
 

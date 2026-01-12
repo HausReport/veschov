@@ -12,7 +12,7 @@ import streamlit as st
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, TARGET_COLUMN_CANDIDATES, resolve_column
 from veschov.ui.chirality import Lens, resolve_lens
-from veschov.ui.components.combat_log_header import get_number_format
+from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 
 SerializedShipSpec = tuple[str, str, str]

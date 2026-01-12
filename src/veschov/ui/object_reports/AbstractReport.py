@@ -8,7 +8,7 @@ import streamlit as st
 
 from veschov.io.parser_stub import parse_battle_log
 from veschov.ui.chirality import Lens
-from veschov.ui.components.combat_log_header import render_sidebar_combat_log_upload
+from veschov.ui.components.combat_log_upload import render_sidebar_combat_log_upload
 
 
 class AbstractReport(ABC):

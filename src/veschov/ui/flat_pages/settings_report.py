@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from veschov.ui.components.combat_log_header import (
+from veschov.ui.components.number_format import (
     NUMBER_FORMAT_DEFAULT,
     NUMBER_FORMAT_HELP,
     NUMBER_FORMAT_OPTIONS,

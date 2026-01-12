@@ -6,6 +6,9 @@
 4. Page navigation is in [root]/.streamlit/pages.toml.
 5. Pytests are in [root]/tests.  Some normal and abnormal logs are in [root]/tests/logs.
 6. Docstrings should be widely used and clear.
+7. We like logging.  Loggers should be defined at the module level and used freely.  Streamlit error notification to the user is fine, but not a substitute for logging. 
+7.1 Silent returns that interrupt execution and silent exception handling lead to difficult-to-debug problems.  When you see cases like this, please add an appropriate logger.warning.
+7.2 Err on the side of too many logger messages rather than too few.
 7. Typing is mandatory, not aspirational.
    - All functions must declare parameter and return types.
    - Prefer modern typing (`list[T]`, `dict[str, T]`, `X | None`).
