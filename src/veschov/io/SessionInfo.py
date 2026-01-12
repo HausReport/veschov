@@ -149,6 +149,9 @@ class SessionInfo:
             logger.warning("Outcome lookup skipped: 'Outcome' column missing.")
             return {}
         outcome_lookup: dict[tuple[str, str, str], object] = {}
+        #
+        # Test 1 - look to see if this combatant has a victory/defeat entry
+        #
         for _, row in self.players_df.iterrows():
             name = self.normalize_text(row.get("Player Name"))
             ship = self.normalize_text(row.get("Ship Name"))
@@ -159,6 +162,13 @@ class SessionInfo:
             if key in outcome_lookup:
                 continue
             outcome_lookup[key] = row.get("Outcome")
+        #
+        # Test 2 - the NPC should ALWAYS be in this players_df and should always have an outcome
+        #
+        #
+        # Test 3 - The battle_df should have a row with Type="Combatant Destroyed" and Attacker Name==the loser's name
+
+        #
         return outcome_lookup
 
     def get_every_ship(self) -> set[ShipSpecifier]:
