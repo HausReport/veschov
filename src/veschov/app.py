@@ -4,7 +4,7 @@ from __future__ import annotations
 import streamlit as st
 from st_pages import add_page_title, get_nav_from_toml
 
-st.set_page_config(page_title="STFC Reports", layout="wide")
+st.set_page_config(page_title="veSchov: Illuminate the Battle.", layout="wide")
 
 # Routing must happen after common frame setup
 nav = get_nav_from_toml()  # reads .streamlit/pages.toml

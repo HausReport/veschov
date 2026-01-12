@@ -161,7 +161,7 @@ it together."</strong>
         return None
 
 
-st.set_page_config(page_title="STFC Reports", layout="wide")
+st.set_page_config(page_title="veSchov: Illuminate the Battle.", layout="wide")
 HomeReport().render()
 
 
