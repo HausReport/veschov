@@ -80,7 +80,7 @@ class ApexBarrierReport(RoundOrShotsReport):
         )
 
     def get_under_chart_text(self) -> Optional[str]:
-        return "Use the view selector to switch between shot-level and round-level totals."
+        return "Use the view selector to switch between shot-level values and round-level averages."
 
     def get_log_title(self) -> str:
         return "Apex Barrier Analysis"
@@ -157,7 +157,7 @@ class ApexBarrierReport(RoundOrShotsReport):
                 return None
             plot_df = (
                 round_df.groupby("round", dropna=False)["apex_barrier_hit"]
-                .sum(min_count=1)
+                .mean()
                 .reset_index()
             )
             plot_df["round"] = plot_df["round"].astype(int)
