@@ -8,8 +8,7 @@ dependencies = [
   "plotly>=5.20",
   "st-pages>=1.0.1",
   "humanize>=4.15.0",
-  "toml>=0.10.2",
-  "humanize>=4.15.0"
+  "toml>=0.10.2"
 ]
 
 [tool.setuptools]
@@ -22,8 +21,3 @@ where = ["src"]
 output_directory = "docs"
 exclude = []
 
-[tool.poetry]
-name = "veschov"
-version = "0.1.0"
-
-packages = [{ include = "veschov", from = "src" }]
