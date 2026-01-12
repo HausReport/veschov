@@ -10,11 +10,30 @@ from veschov.ui.components.number_format import (
     NUMBER_FORMAT_OPTIONS,
     NUMBER_FORMAT_SESSION_KEY,
 )
+from veschov.ui.components.theme import (
+    THEME_DEFAULT,
+    THEME_HELP,
+    THEME_OPTIONS,
+    THEME_SESSION_KEY,
+)
 
 
 def render_settings_report() -> None:
     """Render the settings report."""
     st.title("Settings")
+
+    theme_options = list(THEME_OPTIONS)
+    current_theme = st.session_state.get(THEME_SESSION_KEY, THEME_DEFAULT)
+    if current_theme not in theme_options:
+        current_theme = THEME_DEFAULT
+    theme_index = theme_options.index(current_theme)
+    theme_selection = st.selectbox(
+        "Color Theme",
+        theme_options,
+        index=theme_index,
+        help=THEME_HELP,
+    )
+    st.session_state[THEME_SESSION_KEY] = theme_selection
 
     options = list(NUMBER_FORMAT_OPTIONS)
     current_value = st.session_state.get(NUMBER_FORMAT_SESSION_KEY, NUMBER_FORMAT_DEFAULT)
