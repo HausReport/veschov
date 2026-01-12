@@ -582,8 +582,8 @@ class AttackerAndTargetReport(AbstractReport):
             )
         with selector_swap:
             st.button(
-                "🔄",
-                help="Swap attacker and target selections.",
+                "🔄 Swap Attacker(s)/Target(s)",
+                help="Swap attacker/target selections.",
                 key="swap_attacker_target_specs",
                 on_click=self._swap_selected_specs,
                 width="stretch",
