@@ -14,6 +14,7 @@ from veschov.ui.view_by import prepare_round_view
 
 
 class DamageFlowByRoundReport(RoundOrShotsReport):
+    VIEW_BY_KEY = "damage_flow_by_round_view_by"
 
     def get_x_axis_text(self) -> Optional[str]:
         return "Shot or Round Number"
