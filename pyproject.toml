@@ -1,13 +1,15 @@
 [project]
 name = "veschov"
-version = "0.1.0"
+version = "0.1.1"
 requires-python = ">=3.11"
 dependencies = [
-  "streamlit>=1.40",
+  "streamlit>=1.52",
   "pandas>=2.2",
   "plotly>=5.20",
   "st-pages>=1.0.1",
   "humanize>=4.15.0",
+  "toml>=0.10.2",
+  "humanize>=4.15.0"
 ]
 
 [tool.setuptools]
@@ -19,3 +21,9 @@ where = ["src"]
 [tool.pdoc]
 output_directory = "docs"
 exclude = []
+
+[tool.poetry]
+name = "veschov"
+version = "0.1.0"
+
+packages = [{ include = "veschov", from = "src" }]

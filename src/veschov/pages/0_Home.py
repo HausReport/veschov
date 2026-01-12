@@ -60,20 +60,23 @@ class HomeReport(AbstractReport):
 <div>
 <h1 style="margin-top:0;">Home</h1>
 <p style="opacity:0.9; font-size: 1.05rem;">
-Welcome to STFC Reports. Use the left navigation to explore sessions and combat logs.
+<strong>"Greetings, warrior and welcome to veSchov!  That's tlhIngan Hol for 'Illuminate the battle.'
+I've loaded up a sample battle from Hanoi Xan so you can tour the facility, but you're welcome to 
+<u>upload your own battle log</u> using the control in the lower-left corner and we can look through 
+it together."</strong>
 </p>
 
 <p style="opacity:0.85;">
-<strong>nuH ghaj Sov.</strong> &nbsp; <em>Knowledge is a weapon.</em>
+<strong>"nuH ghaj Sov.</strong> &nbsp; <em>Knowledge is a weapon."</strong>
 </p>
 
-<p style="opacity:0.85;">
-Add your longer explanatory text here — it will naturally wrap around him as it flows down the page.
-Keep writing and you’ll see the wrap behavior.
-</p>
 </div>
 """,
             unsafe_allow_html=True,
+        )
+        df = self.add_log_uploader(
+            title="Home",
+            description="Upload a battle log to explore sample reports.",
         )
 
     def _img_to_data_uri(self, path: Path) -> str | None:
@@ -160,3 +163,5 @@ Keep writing and you’ll see the wrap behavior.
 
 st.set_page_config(page_title="STFC Reports", layout="wide")
 HomeReport().render()
+
+
