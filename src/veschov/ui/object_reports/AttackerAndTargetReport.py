@@ -18,13 +18,6 @@ from veschov.ui.object_reports.AbstractReport import AbstractReport
 SerializedShipSpec = tuple[str, str, str]
 logger = logging.getLogger(__name__)
 
-OUTCOME_ICONS = {
-    "VICTORY": ("Victory", "🏆"),
-    "DEFEAT": ("Defeat", "💀"),
-    "PARTIAL VICTORY": ("Partial Victory", "⚖️"),
-    "PARTIAL": ("Partial Victory", "⚖️"),
-}
-
 
 class AttackerAndTargetReport(AbstractReport):
 
@@ -152,7 +145,7 @@ class AttackerAndTargetReport(AbstractReport):
 
         outcome_lookup = {}
         if isinstance(session_info, SessionInfo):
-            outcome_lookup = self._build_outcome_lookup(session_info.players_df)
+            outcome_lookup = session_info.build_outcome_lookup()
 
         list_cols = st.columns(2)
         with list_cols[0]:
@@ -585,7 +578,11 @@ class AttackerAndTargetReport(AbstractReport):
             """,
             unsafe_allow_html=True,
         )
-        outcome_lookup = self._build_outcome_lookup(players_df)
+        outcome_lookup = (
+            session_info.build_outcome_lookup()
+            if isinstance(session_info, SessionInfo)
+            else {}
+        )
         selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
         with selector_left:
             selected_attacker_specs = self._render_role_panel(
@@ -638,32 +635,7 @@ class AttackerAndTargetReport(AbstractReport):
         return selected_attackers, selected_targets
 
     def _outcome_emoji(self, outcome: object) -> str:
-        if isinstance(outcome, str):
-            normalized = outcome.strip().upper().replace("_", " ")
-            label_emoji = OUTCOME_ICONS.get(normalized)
-            if label_emoji:
-                return label_emoji[1]
-        return "❔"
-
-    def _build_outcome_lookup(self, players_df: pd.DataFrame | None) -> dict[SerializedShipSpec, object]:
-        if not isinstance(players_df, pd.DataFrame) or players_df.empty:
-            logger.warning("Outcome lookup skipped: players_df missing or empty.")
-            return {}
-        if "Outcome" not in players_df.columns:
-            logger.warning("Outcome lookup skipped: 'Outcome' column missing.")
-            return {}
-        outcome_lookup: dict[SerializedShipSpec, object] = {}
-        for _, row in players_df.iterrows():
-            name = self._normalize_text(row.get("Player Name"))
-            ship = self._normalize_text(row.get("Ship Name"))
-            alliance = self._resolve_player_alliance(row)
-            if not any([name, ship, alliance]):
-                continue
-            key = self._normalize_spec_key(name, alliance, ship)
-            if key in outcome_lookup:
-                continue
-            outcome_lookup[key] = row.get("Outcome")
-        return outcome_lookup
+        return SessionInfo.outcome_emoji(outcome)
 
     def _normalize_text(self, value: object) -> str:
         if pd.isna(value) or value is None:
@@ -671,11 +643,7 @@ class AttackerAndTargetReport(AbstractReport):
         return str(value).strip()
 
     def _normalize_spec_key(self, name: object, alliance: object, ship: object) -> SerializedShipSpec:
-        return (
-            self._normalize_text(name),
-            self._normalize_text(alliance),
-            self._normalize_text(ship),
-        )
+        return SessionInfo.normalize_spec_key(name, alliance, ship)
 
     def _format_combatant_label(
             self,

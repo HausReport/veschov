@@ -8,6 +8,13 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+OUTCOME_ICONS = {
+    "VICTORY": ("Victory", "🏆"),
+    "DEFEAT": ("Defeat", "💀"),
+    "PARTIAL VICTORY": ("Partial Victory", "⚖️"),
+    "PARTIAL": ("Partial Victory", "⚖️"),
+}
+
 
 @dataclass(frozen=True)
 class ShipSpecifier:
@@ -78,6 +85,81 @@ class SessionInfo:
             mask |= self.combat_df.index.isin(filtered_df.index)
 
         return self.combat_df.loc[mask]
+
+    @staticmethod
+    def normalize_text(value: object) -> str:
+        """Normalize values into trimmed strings, mapping nulls to empty."""
+        if pd.isna(value) or value is None:
+            return ""
+        return str(value).strip()
+
+    @classmethod
+    def normalize_spec_key(
+        cls,
+        name: object,
+        alliance: object,
+        ship: object,
+    ) -> tuple[str, str, str]:
+        """Normalize a (name, alliance, ship) tuple for stable lookups."""
+        return (
+            cls.normalize_text(name),
+            cls.normalize_text(alliance),
+            cls.normalize_text(ship),
+        )
+
+    @classmethod
+    def normalize_outcome(cls, outcome: object) -> str:
+        """Normalize outcome values into uppercase labels."""
+        if pd.isna(outcome) or outcome is None:
+            return ""
+        normalized = str(outcome).strip().upper().replace("_", " ")
+        return normalized
+
+    @classmethod
+    def outcome_label_emoji(cls, outcome: object) -> tuple[str, str] | None:
+        """Return the label and emoji for a known outcome."""
+        normalized = cls.normalize_outcome(outcome)
+        if not normalized:
+            return None
+        return OUTCOME_ICONS.get(normalized)
+
+    @classmethod
+    def outcome_emoji(cls, outcome: object) -> str:
+        """Return the emoji for a known outcome, or the unknown fallback."""
+        label_emoji = cls.outcome_label_emoji(outcome)
+        if label_emoji:
+            return label_emoji[1]
+        return "❔"
+
+    def _resolve_player_alliance(self, row: pd.Series) -> str:
+        """Return the alliance field from the players section when available."""
+        for column in ("Alliance", "Player Alliance"):
+            if column in row.index:
+                alliance = self.normalize_text(row.get(column))
+                if alliance:
+                    return alliance
+        return ""
+
+    def build_outcome_lookup(self) -> dict[tuple[str, str, str], object]:
+        """Return a lookup of normalized ship specs to Outcome values."""
+        if not isinstance(self.players_df, pd.DataFrame) or self.players_df.empty:
+            logger.warning("Outcome lookup skipped: players_df missing or empty.")
+            return {}
+        if "Outcome" not in self.players_df.columns:
+            logger.warning("Outcome lookup skipped: 'Outcome' column missing.")
+            return {}
+        outcome_lookup: dict[tuple[str, str, str], object] = {}
+        for _, row in self.players_df.iterrows():
+            name = self.normalize_text(row.get("Player Name"))
+            ship = self.normalize_text(row.get("Ship Name"))
+            alliance = self._resolve_player_alliance(row)
+            if not any([name, ship, alliance]):
+                continue
+            key = self.normalize_spec_key(name, alliance, ship)
+            if key in outcome_lookup:
+                continue
+            outcome_lookup[key] = row.get("Outcome")
+        return outcome_lookup
 
     def get_every_ship(self) -> set[ShipSpecifier]:
         """Return unique attacker combinations across the combat log."""
