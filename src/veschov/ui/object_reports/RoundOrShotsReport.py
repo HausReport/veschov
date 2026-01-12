@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import streamlit as st
 
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
@@ -8,14 +10,13 @@ class RoundOrShotsReport(AttackerAndTargetReport):
     VIEW_BY_DEFAULT = "Round"
     VIEW_BY_KEY = "actual_damage_view_by"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.view_by = self._resolve_view_by()
 
     def _resolve_view_by(self) -> str:
         view_by = st.session_state.get(self.VIEW_BY_KEY)
         if view_by not in VIEW_BY_OPTIONS:
             view_by = self.VIEW_BY_DEFAULT
-            st.session_state[self.VIEW_BY_KEY] = view_by
         return view_by
 
     def display_under_chart(self) -> None:
