@@ -241,7 +241,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                 yaxis_title=self.get_y_axis_text(),
                 yaxis_autorange="reversed",
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         return None
