@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AttackerAndTargetReport(AbstractReport):
+    number_format: str | None = None
 
     def render_combat_log_header(
             self,
@@ -224,15 +225,16 @@ class AttackerAndTargetReport(AbstractReport):
     def get_lens_key(self) -> str:
         pass
 
-    def render_header(self, df: pd.DataFrame):
+    def render_header(self, df: pd.DataFrame) -> Lens | None:
         players_df = df.attrs.get("players_df")
         fleets_df = df.attrs.get("fleets_df")
-        _, lens = self.render_combat_log_header(
+        number_format, lens = self.render_combat_log_header(
             players_df,
             fleets_df,
             df,
             lens_key=self.get_lens_key(),
         )
+        self.number_format = number_format
         return lens
 
     @staticmethod
