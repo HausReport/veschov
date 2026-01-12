@@ -572,33 +572,13 @@ class AttackerAndTargetReport(AbstractReport):
         st.markdown(
             """
             <style>
-                .attacker-target-selector {
-                    display: flex;
-                    align-items: stretch;
-                    gap: 0.75rem;
-                    width: 100%;
-                }
-                .attacker-target-panel {
-                    flex: 1 1 0;
-                    min-width: 18rem;
-                }
                 .attacker-target-swap {
-                    flex: 0 0 auto;
+                    height: 100%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    height: 100%;
-                    min-width: 6rem;
-                }
-                .attacker-target-swap .stButton {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100%;
-                    width: 100%;
                 }
                 .attacker-target-swap .stButton > button {
-                    height: 100%;
                     width: 100%;
                 }
             </style>
@@ -606,37 +586,35 @@ class AttackerAndTargetReport(AbstractReport):
             unsafe_allow_html=True,
         )
         outcome_lookup = self._build_outcome_lookup(players_df)
-        st.markdown("<div class='attacker-target-selector'>", unsafe_allow_html=True)
-        st.markdown("<div class='attacker-target-panel'>", unsafe_allow_html=True)
-        selected_attacker_specs = self._render_role_panel(
-            "Attackers",
-            attacker_roster_specs,
-            set(selected_attacker_specs),
-            spec_lookup,
-            "attacker_include",
-            outcome_lookup,
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
-        st.button(
-            "🔄 Swap Attacker(s)/Target(s)",
-            help="Swap attacker/target selections.",
-            key="swap_attacker_target_specs",
-            on_click=self._swap_selected_specs,
-            width="stretch",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("<div class='attacker-target-panel'>", unsafe_allow_html=True)
-        selected_target_specs = self._render_role_panel(
-            "Targets",
-            target_roster_specs,
-            set(selected_target_specs),
-            spec_lookup,
-            "target_include",
-            outcome_lookup,
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
+        with selector_left:
+            selected_attacker_specs = self._render_role_panel(
+                "Attackers",
+                attacker_roster_specs,
+                set(selected_attacker_specs),
+                spec_lookup,
+                "attacker_include",
+                outcome_lookup,
+            )
+        with selector_swap:
+            st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
+            st.button(
+                "🔄 Swap Attacker(s)/Target(s)",
+                help="Swap attacker/target selections.",
+                key="swap_attacker_target_specs",
+                on_click=self._swap_selected_specs,
+                width="stretch",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+        with selector_right:
+            selected_target_specs = self._render_role_panel(
+                "Targets",
+                target_roster_specs,
+                set(selected_target_specs),
+                spec_lookup,
+                "target_include",
+                outcome_lookup,
+            )
 
         st.session_state["selected_attacker_specs"] = list(selected_attacker_specs)
         st.session_state["selected_target_specs"] = list(selected_target_specs)
