@@ -572,7 +572,12 @@ class AttackerAndTargetReport(AbstractReport):
                     justify-content: center;
                 }
                 .attacker-target-swap .stButton > button {
-                    width: 100%;
+                    width: 1in;
+                    height: 1in;
+                    min-width: 1in;
+                    min-height: 1in;
+                    max-width: 1in;
+                    max-height: 1in;
                 }
             </style>
             """,
