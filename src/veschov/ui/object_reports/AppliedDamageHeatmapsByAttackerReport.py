@@ -15,7 +15,7 @@ from veschov.transforms.columns import (
     TARGET_COLUMN_CANDIDATES,
     resolve_column,
 )
-from veschov.ui.chirality import Lens, resolve_lens
+from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 from veschov.utils.series import coerce_numeric
 
@@ -60,42 +60,10 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     def get_lens_key(self) -> str:
         return "applied_damage_heatmaps"
 
-    def render_header(self, df: pd.DataFrame) -> Lens | None:
-        players_df = df.attrs.get("players_df")
-        fleets_df = df.attrs.get("fleets_df")
-
-        number_format, lens = self.render_combat_log_header(
-            players_df,
-            fleets_df,
-            df,
-            lens_key=self.get_lens_key(),
-        )
-        self.number_format = number_format
-        resolved_session_info = st.session_state.get("session_info")
-        selected_attackers, selected_targets = self._resolve_selected_specs_from_state(
-            resolved_session_info,
-        )
-        self.selected_attackers = list(selected_attackers)
-        self.selected_targets = list(selected_targets)
-        resolved_session_info = (
-            resolved_session_info
-            if isinstance(resolved_session_info, SessionInfo)
-            else None
-        )
-        self.outcome_lookup = self._build_outcome_lookup(resolved_session_info, df)
-
-        if lens is None and self.selected_attackers and self.selected_targets:
-            lens = resolve_lens(
-                self.get_lens_key(),
-                self.selected_attackers,
-                self.selected_targets,
-            )
-
-        return lens
-
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
         display_df.attrs = {}
+        self._refresh_selection_state(display_df)
 
         required_columns = ("round", "shot_index", "applied_damage")
         missing_columns = [col for col in required_columns if col not in display_df.columns]
@@ -283,6 +251,21 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         if "attacker_ship" in df.columns and spec.ship:
             spec_mask &= df["attacker_ship"] == spec.ship
         return spec_mask
+
+    def _refresh_selection_state(self, df: pd.DataFrame) -> None:
+        self.number_format = get_number_format()
+        resolved_session_info = st.session_state.get("session_info")
+        selected_attackers, selected_targets = self._resolve_selected_specs_from_state(
+            resolved_session_info,
+        )
+        self.selected_attackers = list(selected_attackers)
+        self.selected_targets = list(selected_targets)
+        resolved_session_info = (
+            resolved_session_info
+            if isinstance(resolved_session_info, SessionInfo)
+            else None
+        )
+        self.outcome_lookup = self._build_outcome_lookup(resolved_session_info, df)
 
     def _format_applied_damage_value(self, value: object) -> str:
         if value is None or pd.isna(value):
