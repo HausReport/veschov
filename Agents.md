@@ -32,3 +32,6 @@
     - If so, add it to the "Codex Observations" section below.
     - You may use this section to record patterns, invariants, or assumptions, or problems discoveredgno
     - Do not repeat existing rules; add only genuinely new insights.
+
+** Codex Observations **
+[Add your insights here.]
