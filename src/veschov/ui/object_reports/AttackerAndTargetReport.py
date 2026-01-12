@@ -605,6 +605,20 @@ class AttackerAndTargetReport(AbstractReport):
         selected_targets = [spec_lookup[item] for item in selected_target_specs if item in spec_lookup]
         return selected_attackers, selected_targets
 
+    def _resolve_selected_specs_from_state(
+            self,
+            session_info: SessionInfo | Set[ShipSpecifier] | None,
+    ) -> tuple[list[ShipSpecifier], list[ShipSpecifier]]:
+        options = self._normalize_specs(session_info)
+        if not options:
+            return [], []
+        spec_lookup = {self._serialize_spec(spec): spec for spec in options}
+        attacker_specs = st.session_state.get("selected_attacker_specs", [])
+        target_specs = st.session_state.get("selected_target_specs", [])
+        selected_attackers = [spec_lookup[item] for item in attacker_specs if item in spec_lookup]
+        selected_targets = [spec_lookup[item] for item in target_specs if item in spec_lookup]
+        return selected_attackers, selected_targets
+
     def _outcome_emoji(self, outcome: object) -> str:
         if isinstance(outcome, str):
             normalized = outcome.strip().upper().replace("_", " ")
