@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from veschov.io.SessionInfo import ShipSpecifier
+from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
     TARGET_COLUMN_CANDIDATES,
@@ -74,7 +74,12 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         )
         self.selected_attackers = list(selected_attackers)
         self.selected_targets = list(selected_targets)
-        self.outcome_lookup = self._build_outcome_lookup(players_df)
+        resolved_session_info = (
+            resolved_session_info
+            if isinstance(resolved_session_info, SessionInfo)
+            else None
+        )
+        self.outcome_lookup = self._build_outcome_lookup(resolved_session_info, df)
 
         if lens is None and self.selected_attackers and self.selected_targets:
             lens = resolve_lens(
