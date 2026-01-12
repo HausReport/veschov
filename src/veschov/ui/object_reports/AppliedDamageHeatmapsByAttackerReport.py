@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, override
 
+import humanize
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -31,6 +32,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         self.outcome_lookup: dict[tuple[str, str, str], object] = {}
         self.global_zmin: float | None = None
         self.global_zmax: float | None = None
+        self.number_format = "Human"
 
     def get_x_axis_text(self) -> Optional[str]:
         return "Round"
@@ -62,12 +64,13 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         players_df = df.attrs.get("players_df")
         fleets_df = df.attrs.get("fleets_df")
 
-        _, lens = self.render_combat_log_header(
+        number_format, lens = self.render_combat_log_header(
             players_df,
             fleets_df,
             df,
             lens_key=self.get_lens_key(),
         )
+        self.number_format = number_format
         resolved_session_info = st.session_state.get("session_info")
         selected_attackers, selected_targets = self._resolve_selected_specs_from_state(
             resolved_session_info,
@@ -217,6 +220,14 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                 else:
                     z_matrix[shot_index, col_index] = float(current_value) + damage_value
 
+            formatted_matrix = [
+                [
+                    self._format_applied_damage_value(z_matrix[row_index, col_index])
+                    for col_index in range(len(x_rounds))
+                ]
+                for row_index in range(y_max)
+            ]
+
             fig = go.Figure(
                 data=[
                     go.Heatmap(
@@ -226,7 +237,10 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                         zmin=self.global_zmin,
                         zmax=self.global_zmax,
                         colorbar={"title": "Applied Damage"},
-                        hovertemplate="Round %{x}<br>Shot %{y}<br>Applied %{z}<extra></extra>",
+                        customdata=formatted_matrix,
+                        hovertemplate=(
+                            "Round %{x}<br>Shot %{y}<br>Applied %{customdata}<extra></extra>"
+                        ),
                     )
                 ]
             )
@@ -269,3 +283,13 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         if "attacker_ship" in df.columns and spec.ship:
             spec_mask &= df["attacker_ship"] == spec.ship
         return spec_mask
+
+    def _format_applied_damage_value(self, value: object) -> str:
+        if value is None or pd.isna(value):
+            return "—"
+        numeric_value = float(value)
+        if self.number_format == "Human" and abs(numeric_value) >= 1_000_000:
+            return humanize.intword(numeric_value, format="%.1f")
+        if numeric_value.is_integer():
+            return f"{int(numeric_value):,}"
+        return f"{numeric_value:,}"
