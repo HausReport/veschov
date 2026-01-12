@@ -18,5 +18,13 @@ exclude = []
 [tool.poetry]
 name = "veschov"
 version = "0.1.1"
-package-mode = false
 packages = [{ include = "veschov", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+streamlit = ">=1.52"
+pandas = ">=2.2"
+plotly = ">=5.20"
+st-pages = ">=1.0.1"
+humanize = ">=4.15.0"
+toml = ">=0.10.2"
