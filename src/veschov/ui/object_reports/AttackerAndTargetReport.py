@@ -572,12 +572,13 @@ class AttackerAndTargetReport(AbstractReport):
                     justify-content: center;
                 }
                 .attacker-target-swap .stButton > button {
-                    width: 1in;
-                    height: 1in;
-                    min-width: 1in;
-                    min-height: 1in;
-                    max-width: 1in;
-                    max-height: 1in;
+                    width: 1in !important;
+                    height: 1in !important;
+                    min-width: 1in !important;
+                    min-height: 1in !important;
+                    max-width: 1in !important;
+                    max-height: 1in !important;
+                    padding: 0 !important;
                 }
             </style>
             """,
@@ -605,7 +606,6 @@ class AttackerAndTargetReport(AbstractReport):
                 help="Swap attacker/target selections.",
                 key="swap_attacker_target_specs",
                 on_click=self._swap_selected_specs,
-                width="stretch",
             )
             st.markdown("</div>", unsafe_allow_html=True)
         with selector_right:
