@@ -14,6 +14,15 @@ OUTCOME_ICONS = {
     "PARTIAL VICTORY": ("Partial Victory", "⚖️"),
     "PARTIAL": ("Partial Victory", "⚖️"),
 }
+OUTCOME_SYNONYMS = {
+    "WIN": "VICTORY",
+    "WON": "VICTORY",
+    "LOSS": "DEFEAT",
+    "LOST": "DEFEAT",
+    "DEFEATED": "DEFEAT",
+    "PARTIAL VICTORY": "PARTIAL",
+}
+UNKNOWN_OUTCOMES = {"UNKNOWN", "UNSURE", "N/A", "NA", "?", ""}
 
 
 @dataclass(frozen=True)
@@ -113,7 +122,16 @@ class SessionInfo:
         if pd.isna(outcome) or outcome is None:
             return ""
         normalized = str(outcome).strip().upper().replace("_", " ")
+        normalized = OUTCOME_SYNONYMS.get(normalized, normalized)
+        if normalized in UNKNOWN_OUTCOMES:
+            return ""
         return normalized
+
+    @classmethod
+    def is_determinate_outcome(cls, outcome: object) -> bool:
+        """Return True when the outcome is a known victory/defeat/partial."""
+        normalized = cls.normalize_outcome(outcome)
+        return normalized in OUTCOME_ICONS
 
     @classmethod
     def outcome_label_emoji(cls, outcome: object) -> tuple[str, str] | None:
@@ -154,6 +172,25 @@ class SessionInfo:
             return "PARTIAL"
         return None
 
+    def _attacker_alliance_lookup(self) -> dict[tuple[str, str], set[str]]:
+        """Return attacker alliance values keyed by (name, ship)."""
+        df = self.combat_df
+        required_columns = {"attacker_name", "attacker_ship", "attacker_alliance"}
+        if not required_columns.issubset(df.columns):
+            missing = required_columns - set(df.columns)
+            logger.warning("Combat df missing attacker columns for alliances: %s", sorted(missing))
+            return {}
+        lookup: dict[tuple[str, str], set[str]] = {}
+        for _, row in df.iterrows():
+            name = self.normalize_text(row.get("attacker_name"))
+            ship = self.normalize_text(row.get("attacker_ship"))
+            alliance = self.normalize_text(row.get("attacker_alliance"))
+            if not name or not ship or not alliance:
+                continue
+            key = (name, ship)
+            lookup.setdefault(key, set()).add(alliance)
+        return lookup
+
     def build_outcome_lookup(self) -> dict[tuple[str, str, str], object]:
         """Return a lookup of normalized ship specs to Outcome values."""
         if not isinstance(self.players_df, pd.DataFrame) or self.players_df.empty:
@@ -163,6 +200,7 @@ class SessionInfo:
             logger.warning("Outcome lookup skipped: 'Outcome' column missing.")
             return {}
         outcome_lookup: dict[tuple[str, str, str], object] = {}
+        attacker_alliances = self._attacker_alliance_lookup()
         npc_row = self.players_df.iloc[-1]
         npc_name = self.normalize_text(npc_row.get("Player Name"))
         npc_outcome = npc_row.get("Outcome")
@@ -181,10 +219,15 @@ class SessionInfo:
                 continue
             key = self.normalize_spec_key(name, alliance, ship)
             normalized_outcome = self.normalize_outcome(row.get("Outcome"))
-            if not normalized_outcome:
+            if not self.is_determinate_outcome(normalized_outcome):
                 continue
             if key not in outcome_lookup:
                 outcome_lookup[key] = row.get("Outcome")
+            if not alliance:
+                for inferred_alliance in attacker_alliances.get((name, ship), set()):
+                    derived_key = self.normalize_spec_key(name, inferred_alliance, ship)
+                    if derived_key not in outcome_lookup:
+                        outcome_lookup[derived_key] = row.get("Outcome")
         #
         # Test 2 - the NPC should ALWAYS be in this players_df and should always have an outcome
         #
@@ -202,6 +245,15 @@ class SessionInfo:
                     outcome_lookup[key] = normalized_npc_outcome
                 elif inferred_player_outcome:
                     outcome_lookup[key] = inferred_player_outcome
+                if not alliance:
+                    for inferred_alliance in attacker_alliances.get((name, ship), set()):
+                        derived_key = self.normalize_spec_key(name, inferred_alliance, ship)
+                        if derived_key in outcome_lookup:
+                            continue
+                        if name == npc_name:
+                            outcome_lookup[derived_key] = normalized_npc_outcome
+                        elif inferred_player_outcome:
+                            outcome_lookup[derived_key] = inferred_player_outcome
         #
         # Test 3 - The battle_df should have a row with Type="Combatant Destroyed" and Attacker Name==the loser's name
 
