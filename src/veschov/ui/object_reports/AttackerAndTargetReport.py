@@ -564,17 +564,46 @@ class AttackerAndTargetReport(AbstractReport):
 
         st.markdown(
             """
-            <style>
-                .attacker-target-swap {
-                    height: 100%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .attacker-target-swap .stButton > button {
-                    width: 100%;
-                }
-            </style>
+<style>
+  /* scope to just this wrapper */
+  .attacker-target-swap {
+    width: 110px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Streamlit button wrapper(s) */
+  .attacker-target-swap .stButton,
+  .attacker-target-swap .stButton > div {
+    width: 105px !important;
+    height: 105px !important;
+    flex: 0 0 105px !important;
+  }
+
+  /* the actual clickable button */
+  .attacker-target-swap .stButton > button {
+    width: 100px !important;
+    height: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    min-height: 100px !important;
+    max-height: 100px !important;
+
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* make the emoji/text scale nicely (optional) */
+  .attacker-target-swap .stButton > button p {
+    margin: 0 !important;
+    font-size: 64px !important; /* adjust */
+  }
+</style>
             """,
             unsafe_allow_html=True,
         )
@@ -583,7 +612,7 @@ class AttackerAndTargetReport(AbstractReport):
             if isinstance(session_info, SessionInfo)
             else {}
         )
-        selector_left, selector_swap, selector_right = st.columns([8, 1, 8])
+        selector_left, selector_swap, selector_right = st.columns([7, 3, 7])
         with selector_left:
             selected_attacker_specs = self._render_role_panel(
                 "Attackers",
@@ -596,11 +625,11 @@ class AttackerAndTargetReport(AbstractReport):
         with selector_swap:
             st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
             st.button(
-                "🔄 Swap",
+                "🔄\nSwap",
                 help="Swap attacker/target selections.",
                 key="swap_attacker_target_specs",
                 on_click=self._swap_selected_specs,
-                width="stretch",
+                # width=125,
             )
             st.markdown("</div>", unsafe_allow_html=True)
         with selector_right:
