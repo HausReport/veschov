@@ -1,0 +1,6 @@
+Player Name	Player Level	Outcome	Ship Name	Ship Level	Ship Strength	Ship XP	Officer One	Officer Two	Officer Three	Hull Health	Hull Health Remaining	Shield Health	Shield Health Remaining	Location	Timestamp
+Player One	42	--	USS Example	42	123456	0	--	--	--	100000	50000	80000	40000	Test System	1/1/2026 12:00:00 PM
+Hostile Encounter	--	PARTIAL	Hostile Encounter	--	--	--	--	--	--	--	--	--	--	Test System	1/1/2026 12:00:00 PM
+
+Round	Battle Event	Type
+1	1	Attack
