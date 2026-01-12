@@ -1,6 +1,13 @@
 Player Name	Player Level	Outcome	Ship Name	Ship Level	Ship Strength	Ship XP	Officer One	Officer Two	Officer Three	Hull Health	Hull Health Remaining	Shield Health	Shield Health Remaining	Location	Timestamp
-Player One	42	--	USS Example	42	123456	0	--	--	--	100000	50000	80000	40000	Test System	1/1/2026 12:00:00 PM
-Hostile Encounter	--	PARTIAL	Hostile Encounter	--	--	--	--	--	--	--	--	--	--	Test System	1/1/2026 12:00:00 PM
+XanOfHanoi	67	PARTIAL	BORG CUBE	75	14603573248	0	Jean-Luc Picard	Beverly Crusher	Deanna Troi	15562749962	15562749962	10749017959	10749017959	Corialsis	1/12/2026 1:18:58 PM
+Assimilated Prohibitor-class	60	PARTIAL	Assimilated Prohibitor-class	60	24150829056	0	Assimilated El-Aurian	--	--	37447797039	30377797039	9361949260	9361949260	Corialsis	1/12/2026 1:18:58 PM
 
-Round	Battle Event	Type
-1	1	Attack
+Reward Name	Count
+
+Fleet Type	Attack	Defense	Health	Ship Ability	Captain Maneuver	Officer One Ability	Officer Two Ability	Officer Three Ability	Officer Attack Bonus	Damage Per Round	Armour Pierce	Shield Pierce	Accuracy	Critical Chance	Critical Damage	Officer Defense Bonus	Armour	Shield Deflection	Dodge	Officer Health Bonus	Shield Health	Hull Health	Impulse Speed	Warp Range	Warp Speed	Cargo Capacity	Protected Cargo	Mining Bonus	Debuff applied	Buff applied
+Player Fleet 1	1402753408	431880800	12768939008	Phase Discriminating Amplifier	Make It So	Engage	Unshakeable Moral Code	Nemesis	31.5	1338604288	6391193	75769425	6391193	0.22	3.65	31.5	80479872	2967633	2928657	36	10400011279	15137866991	242	1641	475.45	2443470	0	1	NO	NO
+Enemy Fleet 1	691248000	54708264	23404873728	Critical Breach---Hole Puncher	--	--	--	--	0	663513664	8909991	1652400	3304794	0.1	1.1	0	698226	698226	9545201	0	9361949696	37447798784	60	2	2	0	0	1	NO	NO
+
+Round	Battle Event	Type	Attacker Name	Attacker Alliance	Attacker Ship	Attacker - Is Armada?	Target Name	Target Alliance	Target Ship	Target - Is Armada?	Hyperthermic Decay %	Hyperthermic Stablizer %	Critical Hit?	Hull Damage	Shield Damage	Mitigated Damage	Mitigated Isolytic Damage	Mitigated Apex Barrier	Total Damage	Total Isolytic Damage	Ability Type	Ability Value	Ability Name	Ability Owner Name	Target Defeated	Target Destroyed	Charging Weapons %
+1	1	Attack	XanOfHanoi	ThunderDome	BORG CUBE	NO	Assimilated Prohibitor-class	--	Assimilated Prohibitor-class	NO	--	--	NO	7070000128	0	0	0	0	7070000128	0	--	--	--	--	--	--	--
+

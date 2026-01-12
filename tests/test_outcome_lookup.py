@@ -51,8 +51,8 @@ def _outcome_for_name(
         (
             "4-partial.csv",
             {
-                "Player One": "PARTIAL",
-                "Hostile Encounter": "PARTIAL",
+                "XanOfHanoi": "PARTIAL",
+                "Assimilated Prohibitor-class": "PARTIAL",
             },
         ),
     ],
