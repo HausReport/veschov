@@ -1,17 +1,38 @@
+from __future__ import annotations
+
 import base64
+import hashlib
+import logging
+import random
 from pathlib import Path
+
+import pandas as pd
 import streamlit as st
 
-def img_to_data_uri(path: str) -> str:
-    data = Path(path).read_bytes()
-    b64 = base64.b64encode(data).decode("utf-8")
-    return f"data:image/png;base64,{b64}"
+from veschov.io.SessionInfo import SessionInfo
+from veschov.io.parser_stub import parse_battle_log
+from veschov.ui.chirality import Lens
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 
-# --- path to your png with alpha (transparent background recommended) ---
-img_uri = img_to_data_uri("assets/warrior.png")
+logger = logging.getLogger(__name__)
 
-st.markdown(
-    f"""
+
+class HomeReport(AbstractReport):
+    """Render the home page content and preload a sample log."""
+
+    def __init__(self) -> None:
+        self._repo_root = Path(__file__).resolve().parents[3]
+        self._assets_path = Path(__file__).resolve().parent / "assets" / "warrior.png"
+
+    def render(self) -> None:
+        self._maybe_load_sample_log()
+        img_uri = self._img_to_data_uri(self._assets_path)
+        image_html = ""
+        if img_uri:
+            image_html = f'<img class="klingon-wrap" src="{img_uri}" alt="Battle Mentor"/>'
+
+        st.markdown(
+            f"""
 <style>
 /* Wrap container placed at top of the page content */
 .klingon-wrap {{
@@ -34,7 +55,7 @@ st.markdown(
 }}
 </style>
 
-<img class="klingon-wrap" src="{img_uri}" alt="Battle Mentor"/>
+{image_html}
 
 <div>
 <h1 style="margin-top:0;">Home</h1>
@@ -52,11 +73,90 @@ Keep writing and you’ll see the wrap behavior.
 </p>
 </div>
 """,
-    unsafe_allow_html=True,
-)
+            unsafe_allow_html=True,
+        )
+
+    def _img_to_data_uri(self, path: Path) -> str | None:
+        """Return a base64-encoded data URI for a local image path."""
+        if not path.exists():
+            logger.warning("Home page image missing at %s.", path)
+            st.warning("Home page image not found.")
+            return None
+        data = path.read_bytes()
+        b64 = base64.b64encode(data).decode("utf-8")
+        return f"data:image/png;base64,{b64}"
+
+    def _maybe_load_sample_log(self) -> None:
+        """Load a random sample log into session state if none is present."""
+        if isinstance(st.session_state.get("battle_df"), pd.DataFrame):
+            return
+        log_dir = self._repo_root / "tests" / "logs"
+        if not log_dir.exists():
+            logger.warning("Sample log directory not found at %s.", log_dir)
+            return
+        candidates = [
+            path
+            for path in log_dir.iterdir()
+            if path.is_file() and path.suffix.lower() in {".csv", ".tsv", ".txt"}
+        ]
+        if not candidates:
+            logger.warning("No sample logs found in %s.", log_dir)
+            return
+
+        sample = random.choice(candidates)
+        try:
+            data = sample.read_bytes()
+            df = parse_battle_log(data, sample.name)
+        except Exception as exc:  # pragma: no cover - UI feedback
+            logger.exception("Failed to load sample log %s.", sample)
+            st.warning(f"Unable to load sample log: {sample.name}.")
+            return
+
+        upload_hash = hashlib.md5(data).hexdigest()
+        st.session_state["battle_df"] = df
+        st.session_state["battle_filename"] = sample.name
+        st.session_state["battle_upload_hash"] = upload_hash
+        st.session_state["players_df"] = df.attrs.get("players_df")
+        st.session_state["fleets_df"] = df.attrs.get("fleets_df")
+        st.session_state["session_info"] = SessionInfo(df)
+        st.caption(f"Loaded sample log: {sample.name}")
+
+    def get_under_title_text(self) -> str | None:
+        return None
+
+    def get_under_chart_text(self) -> str | None:
+        return None
+
+    def get_log_title(self) -> str:
+        return "Home"
+
+    def get_log_description(self) -> str:
+        return "Welcome to STFC Reports."
+
+    def render_header(self, df: pd.DataFrame) -> Lens | None:
+        return None
+
+    def get_derived_dataframes(self, df: pd.DataFrame, lens: Lens | None) -> list[pd.DataFrame] | None:
+        return None
+
+    def display_plots(self, dfs: list[pd.DataFrame]) -> None:
+        return None
+
+    def display_tables(self, dfs: list[pd.DataFrame]) -> None:
+        return None
+
+    def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
+        return None
+
+    def get_x_axis_text(self) -> str | None:
+        return None
+
+    def get_y_axis_text(self) -> str | None:
+        return None
+
+    def get_title_text(self) -> str | None:
+        return None
 
 
-    # st.subheader("Status")
-# ROOT = Path(__file__).resolve().parent
-# img_path = (ROOT / "assets" / "warrior.png" )
-# st.image(img_path)
+st.set_page_config(page_title="STFC Reports", layout="wide")
+HomeReport().render()
