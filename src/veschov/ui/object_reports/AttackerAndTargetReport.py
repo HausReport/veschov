@@ -596,7 +596,7 @@ class AttackerAndTargetReport(AbstractReport):
         with selector_swap:
             st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
             st.button(
-                "🔄 Swap Attacker(s)/Target(s)",
+                "🔄 Swap",
                 help="Swap attacker/target selections.",
                 key="swap_attacker_target_specs",
                 on_click=self._swap_selected_specs,
