@@ -9,8 +9,8 @@ import streamlit as st
 logger = logging.getLogger(__name__)
 
 THEME_SESSION_KEY = "ui_theme"
-THEME_OPTIONS = ("Dark", "Light")
-THEME_DEFAULT = "Dark"
+THEME_OPTIONS = ("Light", "Dark")
+THEME_DEFAULT = "Light"
 THEME_HELP = "Choose the color theme used across all pages."
 
 
