@@ -159,7 +159,21 @@ class ApexBarrierReport(RoundOrShotsReport):
             if shot_df.empty:
                 st.warning("No shot index data is available for this selection.")
                 return None
-            plot_df = shot_df
+            duplicate_mask = shot_df["shot_index"].duplicated(keep=False)
+            if duplicate_mask.any():
+                duplicate_count = shot_df.loc[duplicate_mask, "shot_index"].nunique()
+                logger.warning(
+                    "Multiple Apex Barrier rows share the same shot_index (%s distinct values). "
+                    "Reindexing shots sequentially for display.",
+                    duplicate_count,
+                )
+            plot_df = shot_df.copy()
+            plot_df = plot_df.reset_index(drop=True)
+            plot_df["shot_index"] = pd.Series(
+                range(1, len(plot_df) + 1),
+                index=plot_df.index,
+                dtype="Int64",
+            )
             self.x_axis = "shot_index"
 
         return [plot_df, shot_df]
