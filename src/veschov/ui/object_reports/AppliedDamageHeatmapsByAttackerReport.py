@@ -8,14 +8,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from veschov.io.SessionInfo import ShipSpecifier
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
     TARGET_COLUMN_CANDIDATES,
     resolve_column,
 )
 from veschov.ui.chirality import Lens, resolve_lens
-from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 from veschov.utils.series import coerce_numeric
 
@@ -61,38 +60,28 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
 
     def render_header(self, df: pd.DataFrame) -> Lens | None:
         players_df = df.attrs.get("players_df")
-        _ = df.attrs.get("fleets_df")
-        _ = get_number_format()
+        fleets_df = df.attrs.get("fleets_df")
 
-        resolved_session_info = st.session_state.get("session_info")
-        if resolved_session_info is None:
-            resolved_session_info = SessionInfo(df)
-            st.session_state["session_info"] = resolved_session_info
-
-        selected_attackers, selected_targets = self.render_actor_target_selector(
-            resolved_session_info,
+        _, lens = self.render_combat_log_header(
             players_df,
+            fleets_df,
+            df,
+            lens_key=self.get_lens_key(),
+        )
+        resolved_session_info = st.session_state.get("session_info")
+        selected_attackers, selected_targets = self._resolve_selected_specs_from_state(
+            resolved_session_info,
         )
         self.selected_attackers = list(selected_attackers)
         self.selected_targets = list(selected_targets)
         self.outcome_lookup = self._build_outcome_lookup(players_df)
 
-        lens = None
-        if selected_attackers and selected_targets:
-            lens = resolve_lens(self.get_lens_key(), selected_attackers, selected_targets)
-            if len(selected_attackers) == 1 and len(selected_targets) == 1:
-                attacker_name = lens.actor_name or "Attacker"
-                target_name = lens.target_name or "Target"
-                st.caption(f"Lens: {lens.label} ({attacker_name} → {target_name})")
-            else:
-                attacker_label = "Attacker ships" if len(selected_attackers) != 1 else "Attacker ship"
-                target_label = "Target ships" if len(selected_targets) != 1 else "Target ship"
-                st.caption(f"Lens: {attacker_label} → {target_label}")
-
-        if isinstance(players_df, pd.DataFrame) and not players_df.empty:
-            self._render_system_time_and_rounds(players_df, df)
-        else:
-            st.info("No player metadata found in this file.")
+        if lens is None and self.selected_attackers and self.selected_targets:
+            lens = resolve_lens(
+                self.get_lens_key(),
+                self.selected_attackers,
+                self.selected_targets,
+            )
 
         return lens
 
