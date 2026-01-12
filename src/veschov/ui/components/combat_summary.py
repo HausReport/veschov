@@ -21,13 +21,6 @@ from veschov.transforms.columns import (
     resolve_column,
 )
 
-OUTCOME_ICONS = {
-    "VICTORY": ("Victory", "🏆"),
-    "DEFEAT": ("Defeat", "💀"),
-    "PARTIAL VICTORY": ("Partial Victory", "⚖️"),
-    "PARTIAL": ("Partial Victory", "⚖️"),
-}
-
 BAR_COLORS = {
     "fill": "#7ea2c7",
     "remainder": "#d9a0a0",
@@ -105,23 +98,15 @@ def _parse_numeric_value(value: object) -> float | None:
 def _format_outcome_title(row: pd.Series, number_format: str) -> str:
     name = _display_value(row.get("Player Name"), number_format)
     outcome = row.get("Outcome")
-    if isinstance(outcome, str):
-        normalized = outcome.strip().upper()
-        normalized = normalized.replace("_", " ")
-        label_emoji = OUTCOME_ICONS.get(normalized)
-        if label_emoji:
-            label, emoji = label_emoji
-            return f"{name} {label}: {emoji}"
+    label_emoji = SessionInfo.outcome_label_emoji(outcome)
+    if label_emoji:
+        label, emoji = label_emoji
+        return f"{name} {label}: {emoji}"
     return f"{name} Outcome: ❔"
 
 
 def _outcome_emoji(outcome: object) -> str:
-    if isinstance(outcome, str):
-        normalized = outcome.strip().upper().replace("_", " ")
-        label_emoji = OUTCOME_ICONS.get(normalized)
-        if label_emoji:
-            return label_emoji[1]
-    return "❔"
+    return SessionInfo.outcome_emoji(outcome)
 
 
 def _ship_power_text(row: pd.Series, number_format: str) -> str:
