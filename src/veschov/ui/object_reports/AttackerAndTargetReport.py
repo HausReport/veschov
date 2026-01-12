@@ -634,6 +634,18 @@ class AttackerAndTargetReport(AbstractReport):
         selected_targets = [spec_lookup[item] for item in target_specs if item in spec_lookup]
         return selected_attackers, selected_targets
 
+    def _build_outcome_lookup(
+            self,
+            session_info: SessionInfo | None,
+            battle_df: pd.DataFrame | None,
+    ) -> dict[SerializedShipSpec, object]:
+        if isinstance(session_info, SessionInfo):
+            return session_info.build_outcome_lookup()
+        if isinstance(battle_df, pd.DataFrame):
+            return SessionInfo(battle_df).build_outcome_lookup()
+        logger.warning("Outcome lookup unavailable: missing session info and battle df.")
+        return {}
+
     def _outcome_emoji(self, outcome: object) -> str:
         return SessionInfo.outcome_emoji(outcome)
 
