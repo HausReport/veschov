@@ -1,5 +1,26 @@
 from __future__ import annotations
 
+"""Apply a combat "lens" to filter combat dataframes.
+
+The combat lens concept is a lightweight wrapper around attacker/target selection. A
+`Lens` instance (resolved via :mod:`veschov.ui.chirality`) carries:
+
+* `attacker_specs` and `target_specs`: canonical ship specifiers chosen in the UI.
+* Optional `actor_name` and `target_name`: human-friendly labels for single-ship selections.
+* A display `label` describing the perspective ("Player → NPC", "NPC → Player", etc.).
+
+This module bridges the lens with raw dataframes. It resolves which dataframe columns
+contain attacker and target names, then filters rows based on the selected lens. The
+filtering prefers the stronger identity match provided by `SessionInfo` when available
+in `st.session_state["session_info"]`, falling back to column-name filtering when the
+session info is unavailable or a spec-based selection is empty.
+
+Usage patterns:
+* Reports that already inherit the attacker/target selector can call
+  :func:`apply_combat_lens` directly on derived dataframes.
+* When `Lens` is ``None`` (no selection), the function returns the input unchanged.
+"""
+
 from typing import Iterable
 
 import pandas as pd
@@ -19,7 +40,43 @@ def apply_combat_lens(
         include_nan_attackers: bool = False,
         include_nan_targets: bool = False,
 ) -> pd.DataFrame:
-    """Filter combat data using the selected attacker specs and column-based targets."""
+    """Filter combat data using a resolved combat lens.
+
+    This function applies an attacker/target "lens" to a dataframe that represents
+    combat events. It performs two passes:
+
+    1. **Attacker filtering**:
+       * If `st.session_state["session_info"]` is a :class:`SessionInfo` and the lens
+         includes `attacker_specs`, filter by the index set of combat rows that match
+         those ship specifiers (this is the most authoritative match).
+       * Otherwise, try to resolve an attacker column and match against the name set
+         derived from the lens (`Lens.attacker_names()`), which uses spec names first
+         and falls back to the lens actor label.
+       * Optionally include rows where the attacker column is ``NaN``.
+    2. **Target filtering**:
+       * Resolve a target column and filter by `Lens.target_names()`, again falling
+         back from spec names to lens target labels.
+       * Optionally include rows where the target column is ``NaN``.
+
+    If a column cannot be resolved or the lens does not provide matching names/specs,
+    the function leaves that dimension unfiltered.
+
+    Args:
+        df: Input dataframe containing combat events.
+        lens: The resolved lens from :mod:`veschov.ui.chirality`. If ``None``, the
+            dataframe is returned unmodified.
+        attacker_column_candidates: Column name candidates to use when resolving the
+            attacker column.
+        target_column_candidates: Column name candidates to use when resolving the
+            target column.
+        include_nan_attackers: Whether to include rows with missing attacker values
+            when applying attacker filtering.
+        include_nan_targets: Whether to include rows with missing target values when
+            applying target filtering.
+
+    Returns:
+        The filtered dataframe, constrained by the lens selection if possible.
+    """
     if lens is None:
         return df
 
