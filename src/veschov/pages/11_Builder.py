@@ -223,7 +223,6 @@ def restore_state_from_query() -> None:
 
 def pick(value: str) -> None:
     st.session_state.holding = value
-    st.session_state.manual_pick = "—"
 
 
 def all_placed_values() -> set[str]:
@@ -269,6 +268,7 @@ def slot_click(row_key: str, idx: int) -> None:
     row[idx] = holding
     st.session_state[row_key] = row
     st.session_state.holding = None
+    st.session_state.manual_pick = "—"
     remove_suggestion(holding)
 
 
