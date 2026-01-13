@@ -7,7 +7,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from veschov.transforms.columns import get_series
+from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, get_series, resolve_column
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 from veschov.utils.series import coerce_numeric
 
@@ -22,6 +23,7 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         self.battle_filename = "Session battle data"
         self.nodes: list[str] = []
         self.edges: list[tuple[str, str, float]] = []
+        self.attacker_labels: list[str] = []
         self.mismatch_ratio = 0.0
         self.mismatch = 0.0
         self.apex_mitigated_total = 0.0
@@ -94,6 +96,13 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
 
         total_iso = coerce_numeric(shot_df["total_iso"]).fillna(0)
         total_normal = coerce_numeric(shot_df["total_normal"]).fillna(0)
+        attacker_totals = self._build_attacker_totals(
+            shot_df,
+            lens,
+            is_crit,
+            total_iso,
+            total_normal,
+        )
         mitigated_iso = coerce_numeric(shot_df["mitigated_iso"]).fillna(0)
         mitigated_normal = coerce_numeric(shot_df["mitigated_normal"]).fillna(0)
         mitigated_apex = coerce_numeric(shot_df["mitigated_apex"]).fillna(0)
@@ -150,7 +159,7 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         hull_from_iso = sum_hull_damage * share_iso
         hull_from_reg = sum_hull_damage * share_reg
 
-        self.nodes = [
+        base_nodes = [
             "Iso Non-Crit",
             "Iso Crit",
             "Regular Non-Crit",
@@ -163,7 +172,37 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
             "Shield Dmg",
             "Hull Dmg",
         ]
-        self.edges = [
+        self.nodes = self.attacker_labels + base_nodes if self.attacker_labels else base_nodes
+        self.edges = []
+        if self.attacker_labels:
+            for attacker_label in self.attacker_labels:
+                attacker_values = attacker_totals.get(attacker_label, {})
+                self.edges.extend(
+                    [
+                        (
+                            attacker_label,
+                            "Iso Non-Crit",
+                            attacker_values.get("iso_noncrit", 0.0),
+                        ),
+                        (
+                            attacker_label,
+                            "Iso Crit",
+                            attacker_values.get("iso_crit", 0.0),
+                        ),
+                        (
+                            attacker_label,
+                            "Regular Non-Crit",
+                            attacker_values.get("reg_noncrit", 0.0),
+                        ),
+                        (
+                            attacker_label,
+                            "Regular Crit",
+                            attacker_values.get("reg_crit", 0.0),
+                        ),
+                    ]
+                )
+        self.edges.extend(
+            [
             ("Iso Non-Crit", "Raw Iso", iso_noncrit_raw),
             ("Iso Crit", "Raw Iso", iso_crit_raw),
             ("Regular Non-Crit", "Raw Regular", reg_noncrit_raw),
@@ -176,7 +215,8 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
             ("Raw Regular", "Shield Dmg", shield_from_reg),
             ("Raw Iso", "Hull Dmg", hull_from_iso),
             ("Raw Regular", "Hull Dmg", hull_from_reg),
-        ]
+            ]
+        )
 
         totals = {
             "iso_raw_total": iso_raw_total,
@@ -219,6 +259,97 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
 
         return [shot_df, totals_df, debug_df]
 
+    def _build_attacker_totals(
+            self,
+            shot_df: pd.DataFrame,
+            lens,
+            is_crit: pd.Series,
+            total_iso: pd.Series,
+            total_normal: pd.Series,
+    ) -> dict[str, dict[str, float]]:
+        """Build per-attacker damage totals for the sankey entry nodes."""
+        self.attacker_labels = []
+        attacker_totals: dict[str, dict[str, float]] = {}
+
+        session_info = st.session_state.get("session_info")
+        selected_attackers = (
+            list(lens.attacker_specs)
+            if lens is not None and lens.attacker_specs
+            else self._resolve_selected_specs_from_state(session_info)[0]
+        )
+        if len(selected_attackers) <= 1:
+            return attacker_totals
+
+        attacker_column = resolve_column(shot_df, ATTACKER_COLUMN_CANDIDATES)
+        if attacker_column is None:
+            logger.warning("Damage flow missing attacker columns for per-attacker split.")
+            st.info("Per-attacker split unavailable: missing attacker name columns.")
+            return attacker_totals
+
+        outcome_lookup = self._build_outcome_lookup(
+            session_info if isinstance(session_info, SessionInfo) else None,
+            shot_df,
+        )
+        for attacker in selected_attackers:
+            if not (attacker.name or attacker.alliance or attacker.ship):
+                continue
+            attacker_mask = self._build_single_attacker_mask(shot_df, attacker, attacker_column)
+            attacker_label = self._format_ship_spec_label(attacker, outcome_lookup)
+            self.attacker_labels.append(attacker_label)
+            attacker_totals[attacker_label] = {
+                "iso_noncrit": float(total_iso.where(attacker_mask & ~is_crit, 0).sum()),
+                "iso_crit": float(total_iso.where(attacker_mask & is_crit, 0).sum()),
+                "reg_noncrit": float(total_normal.where(attacker_mask & ~is_crit, 0).sum()),
+                "reg_crit": float(total_normal.where(attacker_mask & is_crit, 0).sum()),
+            }
+        return attacker_totals
+
+    @staticmethod
+    def _build_single_attacker_mask(
+            df: pd.DataFrame,
+            spec: ShipSpecifier,
+            attacker_column: str,
+    ) -> pd.Series:
+        """Match attacker rows by name, alliance, and ship when available."""
+        spec_mask = pd.Series(True, index=df.index)
+        if spec.name:
+            spec_mask &= df[attacker_column] == spec.name
+        if "attacker_alliance" in df.columns and spec.alliance:
+            spec_mask &= df["attacker_alliance"] == spec.alliance
+        if "attacker_ship" in df.columns and spec.ship:
+            spec_mask &= df["attacker_ship"] == spec.ship
+        return spec_mask
+
+    def _build_node_layout(self) -> dict[str, list[float]]:
+        """Anchor attacker and category nodes to fixed columns for layout stability."""
+        attacker_count = len(self.attacker_labels)
+        category_nodes = ["Iso Non-Crit", "Iso Crit", "Regular Non-Crit", "Regular Crit"]
+        x_positions: list[float] = []
+        y_positions: list[float] = []
+        for index, label in enumerate(self.nodes):
+            if label in self.attacker_labels:
+                x_positions.append(0.05)
+                y_positions.append((index if attacker_count <= 1 else index / attacker_count))
+            elif label in category_nodes:
+                x_positions.append(0.28)
+                category_index = category_nodes.index(label)
+                y_positions.append(0.15 + (category_index * 0.2))
+            elif label in ("Raw Iso", "Raw Regular"):
+                x_positions.append(0.48)
+                y_positions.append(0.3 if label == "Raw Iso" else 0.7)
+            elif label in ("Iso Mitigation", "Regular Mitigation", "Apex Mitigation"):
+                x_positions.append(0.68)
+                if label == "Iso Mitigation":
+                    y_positions.append(0.25)
+                elif label == "Regular Mitigation":
+                    y_positions.append(0.75)
+                else:
+                    y_positions.append(0.5)
+            else:
+                x_positions.append(0.88)
+                y_positions.append(0.35 if label == "Shield Dmg" else 0.65)
+        return {"x": x_positions, "y": y_positions}
+
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         st.markdown(
             """
@@ -243,10 +374,14 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
             targets.append(node_index[target])
             values.append(value)
 
+        node_config: dict[str, object] = {"label": self.nodes, "pad": 18, "thickness": 16}
+        if self.attacker_labels:
+            node_config.update(self._build_node_layout())
+
         fig = go.Figure(
             data=[
                 go.Sankey(
-                    node={"label": self.nodes, "pad": 18, "thickness": 16},
+                    node=node_config,
                     link={"source": sources, "target": targets, "value": values},
                 )
             ]
