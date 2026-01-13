@@ -148,8 +148,7 @@ with form:
     def render_bridge_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
         val = st.session_state.bridge_slots[i]
         label = val if val is not None else "—"
-        if col.button(label, key=f"bridge_{i}"):
-            slot_click("bridge_slots", i)
+        col.button(label, key=f"bridge_{i}", on_click=slot_click, args=("bridge_slots", i))
 
     centered_row(BRIDGE_SLOTS, render_bridge_label)
     centered_row(BRIDGE_SLOTS, render_bridge_slot)
@@ -162,8 +161,7 @@ with form:
     def render_below_decks_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
         val = st.session_state.even_slots[i]
         label = val if val is not None else "—"
-        if col.button(label, key=f"even_{i}"):
-            slot_click("even_slots", i)
+        col.button(label, key=f"even_{i}", on_click=slot_click, args=("even_slots", i))
 
     centered_row(EVEN_SLOTS, render_below_decks_slot)
 
