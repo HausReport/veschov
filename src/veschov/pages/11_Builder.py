@@ -46,7 +46,7 @@ def load_officer_names(path: Path) -> list[str]:
 
 
 OFFICER_NAMES = load_officer_names(ASSETS_DIR / "officer_names.json")
-DEFAULT_SUGGESTIONS = OFFICER_NAMES[:8]
+DEFAULT_SUGGESTIONS = [] # OFFICER_NAMES[:8]
 
 
 def init_state() -> None:
@@ -316,7 +316,7 @@ def on_manual_pick_change() -> None:
 init_state()
 restore_state_from_query()
 
-st.title("POC: Click chip/dropdown → click slot")
+st.title("Share or Save Your Build")
 
 if "battle_df" in st.session_state:
     pass
