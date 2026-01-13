@@ -7,19 +7,27 @@ from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by
 
 
 class RoundOrShotsReport(AttackerAndTargetReport):
+    """Report base that adds a round/shots view selector to the chart header.
+
+    Subclasses use ``self.view_by`` to decide whether the x-axis represents
+    combat rounds or number of shots.
+    """
     VIEW_BY_DEFAULT = "Round"
     VIEW_BY_KEY = "actual_damage_view_by"
 
     def __init__(self) -> None:
+        """Initialize the report with the current view-by selection."""
         self.view_by = self._resolve_view_by()
 
     def _resolve_view_by(self) -> str:
+        """Resolve the view-by choice from session state or defaults."""
         view_by = st.session_state.get(self.VIEW_BY_KEY)
         if view_by not in VIEW_BY_OPTIONS:
             view_by = self.VIEW_BY_DEFAULT
         return view_by
 
     def display_under_chart(self) -> None:
+        """Render the view selector alongside the standard under-chart text."""
         utt = self.get_under_chart_text()
         self._resolve_view_by()
         default_index = VIEW_BY_OPTIONS.index(self.VIEW_BY_DEFAULT)

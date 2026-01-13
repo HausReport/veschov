@@ -12,9 +12,22 @@ from veschov.ui.components.combat_log_upload import render_sidebar_combat_log_up
 
 
 class AbstractReport(ABC):
+    """Shared lifecycle for combat-log reports.
+
+    Reports follow the same rendering pipeline:
+    1. Optional introductory markdown under the title.
+    2. Sidebar upload of a combat log, parsed into a dataframe.
+    3. Header controls to establish context (e.g., lens selection).
+    4. Derived dataframes for charts/tables.
+    5. Chart, caption, and table output.
+    6. Optional debug output for power users.
+
+    Subclasses override the template methods to customize each step.
+    """
     lens: Lens | None
 
     def render(self) -> None:
+        """Run the full report lifecycle using the template methods."""
         utt = self.get_under_title_text()
         # st.warning("This page is using the new system.")
         if utt is not None:
@@ -35,27 +48,33 @@ class AbstractReport(ABC):
         self.render_debug_info(dfs)
 
     def display_under_chart(self) -> None:
+        """Render optional descriptive text beneath the main chart."""
         utt = self.get_under_chart_text()
         if utt is not None:
             st.markdown(utt, unsafe_allow_html=True)
 
     @abstractmethod
     def get_under_title_text(self) -> Optional[str]:
+        """Return optional markdown shown beneath the page title."""
         return None
 
     @abstractmethod
     def get_under_chart_text(self) -> Optional[str]:
+        """Return optional markdown shown beneath the chart section."""
         return None
 
     @abstractmethod
     def get_log_title(self) -> str:
+        """Return the sidebar title for the combat log uploader."""
         return ""
 
     @abstractmethod
     def get_log_description(self) -> str:
+        """Return the sidebar description for the combat log uploader."""
         return ""
 
     def add_log_uploader(self, *, title: str, description: str) -> Optional[pd.DataFrame]:
+        """Render the log uploader and parse the battle log into a dataframe."""
         df = render_sidebar_combat_log_upload(
             title=title,
             description=description,
@@ -67,32 +86,44 @@ class AbstractReport(ABC):
 
     @abstractmethod
     def render_header(self, df: pd.DataFrame) -> Lens | None:
+        """Render header controls and return the chosen lens, if any."""
         pass
 
     @abstractmethod
-    def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
+    def get_derived_dataframes(
+            self,
+            df: pd.DataFrame,
+            lens: Lens | None,
+    ) -> Optional[list[pd.DataFrame]]:
+        """Produce report-specific dataframes derived from the raw log."""
         pass
 
     @abstractmethod
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
+        """Render the main charts for the report."""
         pass
 
     @abstractmethod
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
+        """Render any supporting tables beneath the charts."""
         pass
 
     @abstractmethod
     def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
+        """Render optional debug output used during report development."""
         pass
 
     @abstractmethod
     def get_x_axis_text(self) -> Optional[str]:
+        """Return optional x-axis label text for charts."""
         return None
 
     @abstractmethod
     def get_y_axis_text(self) -> Optional[str]:
+        """Return optional y-axis label text for charts."""
         return None
 
     @abstractmethod
     def get_title_text(self) -> Optional[str]:
+        """Return the main title text for the report page."""
         return None
