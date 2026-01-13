@@ -132,6 +132,13 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         self.global_zmax = float(damage_values.max())
         return [filtered_df]
 
+    def get_plot_titles(self) -> list[str]:
+        ret: list[str] = []
+        for attacker in self.selected_attackers:
+           tmp = f" {attacker.name} raw total damage by shot"
+           ret.append(tmp)
+        return ret
+
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         filtered_df = dfs[0]
         # all_rounds = sorted(filtered_df["round"].unique())
@@ -139,6 +146,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         rmin = int(filtered_df["round"].min())
         rmax = int(filtered_df["round"].max())
         all_rounds = list(range(rmin, rmax + 1))
+        attacker_index = 0
         for attacker in self.selected_attackers:
             attacker_label = self._format_ship_spec_label(attacker, self.outcome_lookup)
             st.subheader(attacker_label)
@@ -213,11 +221,13 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
                 ]
             )
             fig.update_layout(
+                # title = self.get_plot_titles()[attacker_index],
                 xaxis_title=self.get_x_axis_text(),
                 yaxis_title=self.get_y_axis_text(),
                 yaxis_autorange="reversed",
             )
             st.plotly_chart(fig, width="stretch")
+            attacker_index += 1
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         return None

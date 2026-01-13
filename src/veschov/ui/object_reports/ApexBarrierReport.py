@@ -178,6 +178,10 @@ class ApexBarrierReport(RoundOrShotsReport):
 
         return [plot_df, shot_df]
 
+    def get_plot_titles(self) -> list[str]:
+        kind = self._resolve_view_by().title()
+        return [f"Effective Apex Barrier of Attacker by {kind}"]
+
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         plot_df = dfs[0]
         fig = px.line(
@@ -185,7 +189,7 @@ class ApexBarrierReport(RoundOrShotsReport):
             x=self.x_axis,
             y="apex_barrier_hit",
             markers=True,
-            title=f"{self.get_title_text()} — {self.battle_filename}",
+            title=self.get_plot_titles()[0]
         )
         max_value = plot_df[self.x_axis].max()
         if pd.notna(max_value):

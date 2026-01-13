@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 import pandas as pd
 import streamlit as st
@@ -97,6 +97,9 @@ class AbstractReport(ABC):
     ) -> Optional[list[pd.DataFrame]]:
         """Produce report-specific dataframes derived from the raw log."""
         pass
+
+    def get_plot_titles(self) -> list[str]:
+        return ["Plot Title"]
 
     @abstractmethod
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:

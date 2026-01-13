@@ -94,6 +94,10 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
             self.x_axis = "shot_index"
         return [long_df, shot_df]
 
+    def get_plot_titles(self) -> list[str]:
+        kind = self._resolve_view_by().lower()
+        return [f"Damage Distribution - Where did it go? (by {kind})"]
+
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
         fig = px.area(
@@ -105,7 +109,7 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
             # facet_col_wrap=4,
             color_discrete_map=SEGMENT_COLORS,
             category_orders={"segment": SEGMENT_ORDER},
-            title=self.get_title_text(),
+            title=self.get_plot_titles()[0],
             hover_data=self.hover_columns,
         )
         max_value = long_df[self.x_axis].max()
