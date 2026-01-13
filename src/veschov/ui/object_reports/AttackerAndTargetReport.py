@@ -114,8 +114,41 @@ class AttackerAndTargetReport(AbstractReport):
 
     def _get_system_time_and_rounds(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
         """Collect system name, timestamp, and round count from dataframes."""
-        location = players_df["Location"].iloc[0] if "Location" in players_df.columns else None
-        timestamp = players_df["Timestamp"].iloc[0] if "Timestamp" in players_df.columns else None
+        def resolve_metadata_value(
+                df: pd.DataFrame,
+                candidates: Sequence[str],
+        ) -> tuple[str | None, object | None]:
+            if df.empty:
+                return None, None
+            normalized_columns = {
+                str(column).strip().lower(): column for column in df.columns
+            }
+            for candidate in candidates:
+                column = normalized_columns.get(candidate.lower())
+                if column is not None:
+                    return column, df[column].iloc[0]
+            for column in df.columns:
+                column_key = str(column).strip().lower()
+                if any(candidate.lower() in column_key for candidate in candidates):
+                    return column, df[column].iloc[0]
+            return None, None
+
+        location_column, location = resolve_metadata_value(
+            players_df,
+            ("location", "system", "system name"),
+        )
+        timestamp_column, timestamp = resolve_metadata_value(
+            players_df,
+            ("timestamp", "date", "time", "date/time"),
+        )
+        if location_column is None:
+            logger.warning("Players df missing location/system column for header context.")
+        if timestamp_column is None:
+            logger.warning("Players df missing timestamp/date column for header context.")
+        if location_column and pd.isna(location):
+            logger.warning("Players df location value missing for %s.", location_column)
+        if timestamp_column and pd.isna(timestamp):
+            logger.warning("Players df timestamp value missing for %s.", timestamp_column)
         lines: list[str] = []
 
         context_parts: list[str] = []
