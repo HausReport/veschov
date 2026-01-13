@@ -34,4 +34,6 @@
     - Do not repeat existing rules; add only genuinely new insights.
 
 ** Codex Observations **
-[Add your insights here.]
+- New reports should subclass `AbstractReport` (or `AttackerAndTargetReport` / `RoundOrShotsReport`) and follow the render
+  lifecycle: provide sidebar log text, render header controls to set the lens, derive dataframes, then render plots, under-chart
+  text, tables, and optional debug info in that order.

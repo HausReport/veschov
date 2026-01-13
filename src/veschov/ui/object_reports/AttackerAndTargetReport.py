@@ -20,6 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 class AttackerAndTargetReport(AbstractReport):
+    """Base report that adds attacker/target selection and lens filtering.
+
+    This report adds a consistent header experience for combat logs:
+    - Actor/target selectors with swap support.
+    - Lens resolution based on current selections.
+    - System/time/round metadata banner.
+    - Helpers for filtering combat data to match the selections.
+
+    Subclasses typically supply a lens key and then build charts/tables
+    from data filtered via :meth:`apply_combat_lens`.
+    """
     number_format: str | None = None
 
     def render_combat_log_header(
@@ -31,7 +42,12 @@ class AttackerAndTargetReport(AbstractReport):
             lens_key: str,
             session_info: SessionInfo | Set[ShipSpecifier] | None = None,
     ) -> tuple[str, Lens | None]:
-        """Render the standard header controls for combat-log reports."""
+        """Render the standard header controls for combat-log reports.
+
+        This resolves the number format, session info, and lens, then renders
+        the actor/target selector and metadata header. Returns the chosen
+        number format and lens for downstream chart/table logic.
+        """
         #
         # This section just sets up variables
         #
@@ -80,7 +96,12 @@ class AttackerAndTargetReport(AbstractReport):
 
         return number_format, lens
 
-    def _render_system_time_and_rounds(self, players_df, battle_df):
+    def _render_system_time_and_rounds(
+            self,
+            players_df: pd.DataFrame,
+            battle_df: pd.DataFrame | None,
+    ) -> None:
+        """Render the system/time/rounds banner for the report header."""
         context_lines = self._get_system_time_and_rounds(players_df, battle_df)
         if context_lines:
             context_text = " • ".join(context_lines)
@@ -91,6 +112,7 @@ class AttackerAndTargetReport(AbstractReport):
             )
 
     def _get_system_time_and_rounds(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
+        """Collect system name, timestamp, and round count from dataframes."""
         location = players_df["Location"].iloc[0] if "Location" in players_df.columns else None
         timestamp = players_df["Timestamp"].iloc[0] if "Timestamp" in players_df.columns else None
         lines: list[str] = []
@@ -128,6 +150,7 @@ class AttackerAndTargetReport(AbstractReport):
             session_info: SessionInfo | Set[ShipSpecifier] | None,
             battle_df: pd.DataFrame | None,
     ) -> None:
+        """Render a two-column list of player and NPC combatants."""
         if not isinstance(session_info, SessionInfo) and isinstance(battle_df, pd.DataFrame):
             session_info = SessionInfo(battle_df)
 
@@ -160,6 +183,7 @@ class AttackerAndTargetReport(AbstractReport):
             specs: Sequence[ShipSpecifier],
             outcome_lookup: dict[SerializedShipSpec, object],
     ) -> None:
+        """Render a bullet list of combatants with optional outcome emojis."""
         st.markdown(f"**{title}**")
         if not specs:
             logger.warning("No combatant specs available for %s list.", title)
@@ -185,7 +209,11 @@ class AttackerAndTargetReport(AbstractReport):
             include_nan_attackers: bool = False,
             include_nan_targets: bool = False,
     ) -> pd.DataFrame:
-        """Filter combat data using the selected attacker specs and column-based targets."""
+        """Filter combat data using the selected attacker specs and targets.
+
+        The filter uses SessionInfo indices when available, otherwise falls back
+        to matching attacker/target names against resolved columns.
+        """
         if lens is None:
             return df
 
@@ -223,9 +251,11 @@ class AttackerAndTargetReport(AbstractReport):
 
     @abstractmethod
     def get_lens_key(self) -> str:
+        """Return the lens key used to resolve lens metadata for this report."""
         pass
 
     def render_header(self, df: pd.DataFrame) -> Lens | None:
+        """Render the combat-log header and persist the number format."""
         players_df = df.attrs.get("players_df")
         fleets_df = df.attrs.get("fleets_df")
         number_format, lens = self.render_combat_log_header(
@@ -239,10 +269,12 @@ class AttackerAndTargetReport(AbstractReport):
 
     @staticmethod
     def _serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
+        """Serialize a ShipSpecifier into a stable tuple for session storage."""
         return (spec.name or "", spec.alliance or "", spec.ship or "")
 
     @staticmethod
     def _swap_selected_specs() -> None:
+        """Swap the attacker and target selection state."""
         attackers = st.session_state.get("selected_attacker_specs", [])
         targets = st.session_state.get("selected_target_specs", [])
         attacker_roster = st.session_state.get("attacker_roster_specs", [])
@@ -254,6 +286,7 @@ class AttackerAndTargetReport(AbstractReport):
 
     @staticmethod
     def _normalize_specs(session_info: SessionInfo | Set[ShipSpecifier] | None) -> Sequence[ShipSpecifier]:
+        """Return a sorted list of ship specs from session info or a set."""
         if isinstance(session_info, SessionInfo):
             specs = session_info.get_every_ship()
         elif isinstance(session_info, set):
@@ -264,6 +297,7 @@ class AttackerAndTargetReport(AbstractReport):
         return sorted(specs, key=lambda spec: str(spec))
 
     def _resolve_player_alliance(self, row: pd.Series) -> str:
+        """Extract a normalized alliance string from a player metadata row."""
         for column in ("Alliance", "Player Alliance"):
             if column in row.index:
                 alliance = self._normalize_text(row.get(column))
@@ -276,6 +310,7 @@ class AttackerAndTargetReport(AbstractReport):
             players_df: pd.DataFrame | None,
             options: Sequence[ShipSpecifier],
     ) -> ShipSpecifier | None:
+        """Match the local player spec from players_df to a ship option."""
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
             logger.warning("Unable to infer enemy spec: players_df missing or empty.")
             return None
@@ -301,6 +336,7 @@ class AttackerAndTargetReport(AbstractReport):
             players_df: pd.DataFrame | None,
             options: Sequence[ShipSpecifier],
     ) -> list[ShipSpecifier]:
+        """Determine a default target selection from player metadata."""
         matched = self._match_enemy_spec(players_df, options)
         if matched is not None:
             return [matched]
@@ -461,6 +497,7 @@ class AttackerAndTargetReport(AbstractReport):
             session_info: SessionInfo | Set[ShipSpecifier] | None,
             players_df: pd.DataFrame | None,
     ) -> tuple[Sequence[ShipSpecifier], Sequence[ShipSpecifier]]:
+        """Render the attacker/target selection widgets and return selections."""
         options = self._normalize_specs(session_info)
         if not options:
             logger.warning(
@@ -655,6 +692,7 @@ class AttackerAndTargetReport(AbstractReport):
             self,
             session_info: SessionInfo | Set[ShipSpecifier] | None,
     ) -> tuple[list[ShipSpecifier], list[ShipSpecifier]]:
+        """Resolve selected specs from session state into ShipSpecifier lists."""
         options = self._normalize_specs(session_info)
         if not options:
             return [], []
@@ -670,6 +708,7 @@ class AttackerAndTargetReport(AbstractReport):
             session_info: SessionInfo | None,
             battle_df: pd.DataFrame | None,
     ) -> dict[SerializedShipSpec, object]:
+        """Build a lookup of ship outcome status for labeling."""
         if isinstance(session_info, SessionInfo):
             return session_info.build_outcome_lookup()
         if isinstance(battle_df, pd.DataFrame):
@@ -678,14 +717,17 @@ class AttackerAndTargetReport(AbstractReport):
         return {}
 
     def _outcome_emoji(self, outcome: object) -> str:
+        """Convert an outcome value into a display emoji."""
         return SessionInfo.outcome_emoji(outcome)
 
     def _normalize_text(self, value: object) -> str:
+        """Normalize arbitrary values into trimmed strings for comparison."""
         if pd.isna(value) or value is None:
             return ""
         return str(value).strip()
 
     def _normalize_spec_key(self, name: object, alliance: object, ship: object) -> SerializedShipSpec:
+        """Normalize and serialize key fields into a ShipSpecifier key."""
         return SessionInfo.normalize_spec_key(name, alliance, ship)
 
     def _format_combatant_label(
@@ -694,6 +736,7 @@ class AttackerAndTargetReport(AbstractReport):
             name_lookup: dict[str, str],
             ship_lookup: dict[tuple[str, str], str],
     ) -> str:
+        """Build a display label for a combatant row."""
         name = self._normalize_text(row.get("Player Name"))
         ship = self._normalize_text(row.get("Ship Name"))
         alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
@@ -709,6 +752,7 @@ class AttackerAndTargetReport(AbstractReport):
             spec: ShipSpecifier,
             outcome_lookup: dict[SerializedShipSpec, object] | None = None,
     ) -> str:
+        """Build a display label for a ship spec, including outcome emoji."""
         name = self._normalize_text(spec.name)
         ship = self._normalize_text(spec.ship)
         alliance = self._normalize_text(spec.alliance)
