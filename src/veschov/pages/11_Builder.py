@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import lzma
 import zlib
 from pathlib import Path
 from typing import Callable, TypedDict, cast
@@ -17,23 +18,20 @@ class OfficerNameRecord(TypedDict):
     key: str
     text: str
 
+
 class BuilderState(TypedDict):
     v: int
     holding: str | None
     bridge_slots: list[str | None]
     even_slots: list[str | None]
     manual_pick: str
+    notes: str
+    suggestions: list[str]
 
 BRIDGE_SLOTS = 3
 EVEN_SLOTS = 10
-STATE_VERSION = 1
-
-# Suggested chips: label -> value placed when clicked
-SUGGESTED = [
-    ("2 is even",  "2"),
-    ("5 is prime", "5"),
-    ("7 is prime", "7"),
-]
+STATE_VERSION = 2
+LZMA_PREFIX = "x:"
 
 ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets"
 
@@ -46,6 +44,7 @@ def load_officer_names(path: Path) -> list[str]:
 
 
 OFFICER_NAMES = load_officer_names(ASSETS_DIR / "officer_names.json")
+DEFAULT_SUGGESTIONS = OFFICER_NAMES[:8]
 
 
 def init_state() -> None:
@@ -53,6 +52,8 @@ def init_state() -> None:
     st.session_state.setdefault("bridge_slots", [None] * BRIDGE_SLOTS)
     st.session_state.setdefault("even_slots", [None] * EVEN_SLOTS)
     st.session_state.setdefault("manual_pick", "—")
+    st.session_state.setdefault("notes", "")
+    st.session_state.setdefault("suggestions", DEFAULT_SUGGESTIONS.copy())
     st.session_state.setdefault("state_restored", False)
 
 
@@ -103,12 +104,24 @@ def _coerce_state(payload: object) -> BuilderState | None:
         logger.warning("State payload manual pick is invalid: %s", manual_pick)
         return None
 
+    notes = payload.get("notes", "")
+    if not isinstance(notes, str):
+        logger.warning("State payload notes are invalid: %s", notes)
+        return None
+
+    suggestions = payload.get("suggestions", DEFAULT_SUGGESTIONS)
+    if not isinstance(suggestions, list) or any(not isinstance(value, str) for value in suggestions):
+        logger.warning("State payload suggestions are invalid.")
+        return None
+
     return BuilderState(
         v=raw_version,
         holding=cast(str | None, holding),
         bridge_slots=bridge_slots,
         even_slots=even_slots,
         manual_pick=manual_pick,
+        notes=notes,
+        suggestions=list(suggestions),
     )
 
 
@@ -119,20 +132,34 @@ def serialize_state() -> str:
         "bridge_slots": cast(list[str | None], st.session_state.bridge_slots),
         "even_slots": cast(list[str | None], st.session_state.even_slots),
         "manual_pick": cast(str, st.session_state.manual_pick),
+        "notes": cast(str, st.session_state.notes),
+        "suggestions": cast(list[str], st.session_state.suggestions),
     }
     encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    compressed = zlib.compress(encoded, level=9)
-    return base64.urlsafe_b64encode(compressed).decode("ascii")
+    compressed = lzma.compress(encoded, preset=9)
+    return f"{LZMA_PREFIX}{base64.urlsafe_b64encode(compressed).decode('ascii')}"
 
 
 def deserialize_state(encoded: str) -> BuilderState | None:
     try:
-        padded = _pad_base64(encoded)
+        codec = "zlib"
+        raw = encoded
+        if encoded.startswith(LZMA_PREFIX):
+            codec = "lzma"
+            raw = encoded[len(LZMA_PREFIX) :]
+
+        padded = _pad_base64(raw)
         compressed = base64.urlsafe_b64decode(padded.encode("ascii"))
-        decoded = zlib.decompress(compressed).decode("utf-8")
+        if codec == "lzma":
+            decoded = lzma.decompress(compressed).decode("utf-8")
+        else:
+            decoded = zlib.decompress(compressed).decode("utf-8")
         payload = json.loads(decoded)
     except (ValueError, zlib.error) as exc:
         logger.warning("Failed to decode state payload: %s", exc)
+        return None
+    except lzma.LZMAError as exc:
+        logger.warning("Failed to LZMA decompress state payload: %s", exc)
         return None
     except OSError as exc:
         logger.warning("Failed to decompress state payload: %s", exc)
@@ -169,15 +196,22 @@ def restore_state_from_query() -> None:
     st.session_state.bridge_slots = restored["bridge_slots"]
     st.session_state.even_slots = restored["even_slots"]
     st.session_state.manual_pick = restored["manual_pick"]
+    st.session_state.notes = restored["notes"]
+    st.session_state.suggestions = restored["suggestions"]
     st.session_state.state_restored = True
 
 
 def pick(value: str) -> None:
     st.session_state.holding = value
+    st.session_state.manual_pick = "—"
 
 
 def all_placed_values() -> set[str]:
-    return set(st.session_state.bridge_slots) | set(st.session_state.even_slots)
+    placed: set[str] = set()
+    for value in st.session_state.bridge_slots + st.session_state.even_slots:
+        if value is not None:
+            placed.add(value)
+    return placed
 
 
 def remove_value_everywhere(value: str) -> None:
@@ -188,19 +222,34 @@ def remove_value_everywhere(value: str) -> None:
                 slots[i] = None
 
 
+def add_suggestion(value: str) -> None:
+    if value not in st.session_state.suggestions:
+        st.session_state.suggestions.append(value)
+
+
+def remove_suggestion(value: str) -> None:
+    if value in st.session_state.suggestions:
+        st.session_state.suggestions = [
+            suggestion for suggestion in st.session_state.suggestions if suggestion != value
+        ]
+
+
 def slot_click(row_key: str, idx: int) -> None:
     holding = st.session_state.holding
     row = st.session_state[row_key]
 
     if holding is None:
         if row[idx] is not None:
+            removed = row[idx]
             row[idx] = None
+            add_suggestion(removed)
         return
 
     # Dedupe, place, then drop.
     remove_value_everywhere(holding)
     row[idx] = holding
     st.session_state.holding = None
+    remove_suggestion(holding)
 
 
 def centered_row(num_slots: int, render_slot_button: Callable[[st.delta_generator.DeltaGenerator, int], None]) -> None:
@@ -261,63 +310,78 @@ else:
 
 st.divider()
 
-# --- BRIDGE with labels above slots ---
-st.subheader("Bridge", text_alignment="center")
+crew_col, notes_col = st.columns([3, 2])
 
-def render_bridge_label(col: st.delta_generator.DeltaGenerator, i: int) -> None:
-    labels = ["#1", "Capt.", "#2"]
-    container = col.container()
-    container.markdown(
-        f"<div style='text-align:center; font-size:0.85rem; opacity:0.8;'>{labels[i]}</div>",
-        unsafe_allow_html=True,
+with crew_col:
+    # --- BRIDGE with labels above slots ---
+    st.subheader("Bridge", text_alignment="center")
+
+    def render_bridge_label(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+        labels = ["#1", "Capt.", "#2"]
+        container = col.container()
+        container.markdown(
+            f"<div style='text-align:center; font-size:0.85rem; opacity:0.8;'>{labels[i]}</div>",
+            unsafe_allow_html=True,
+        )
+
+    def render_bridge_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+        val = st.session_state.bridge_slots[i]
+        label = val if val is not None else "—"
+        if col.button(label, key=f"bridge_{i}"):
+            slot_click("bridge_slots", i)
+
+    centered_row(BRIDGE_SLOTS, render_bridge_label)
+    centered_row(BRIDGE_SLOTS, render_bridge_slot)
+
+    st.divider()
+
+    # --- EVENS (10 slots) ---
+    st.subheader("Below-Deck Officers", text_alignment="center")
+
+    def render_below_decks_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+        val = st.session_state.even_slots[i]
+        label = val if val is not None else "—"
+        if col.button(label, key=f"even_{i}"):
+            slot_click("even_slots", i)
+
+    centered_row(EVEN_SLOTS, render_below_decks_slot)
+
+    st.divider()
+
+    # --- Bottom: 50/50 Manual Pick + Suggestions ---
+    left, right = st.columns(2)
+
+    with left:
+        st.subheader("Choose Officers (type to search)")
+        st.selectbox(
+            "Pick an officer name",
+            options=["—"] + OFFICER_NAMES,
+            key="manual_pick",
+            on_change=on_manual_pick_change,
+            help="Selecting a name puts it in Holding. Then click a slot to place.",
+        )
+
+    with right:
+        st.subheader("Suggestions")
+
+        placed = all_placed_values()
+        filtered = [
+            (value, value)
+            for value in st.session_state.suggestions
+            if value not in placed
+        ]
+
+        st.caption("Click a suggestion to hold it; it disappears once placed.")
+        render_wrapped_chips(filtered, per_row=4, key_prefix="sugg")
+
+with notes_col:
+    st.subheader("Notes")
+    st.text_area(
+        "Notes",
+        key="notes",
+        height=260,
+        help="Freeform notes for this crew layout.",
     )
-
-def render_bridge_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
-    val = st.session_state.bridge_slots[i]
-    label = val if val is not None else "—"
-    if col.button(label, key=f"bridge_{i}"):
-        slot_click("bridge_slots", i)
-
-centered_row(BRIDGE_SLOTS, render_bridge_label)
-centered_row(BRIDGE_SLOTS, render_bridge_slot)
-
-st.divider()
-
-# --- EVENS (10 slots) ---
-st.subheader("Below-Deck Officers", text_alignment="center")
-
-def render_below_decks_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
-    val = st.session_state.even_slots[i]
-    label = val if val is not None else "—"
-    if col.button(label, key=f"even_{i}"):
-        slot_click("even_slots", i)
-
-centered_row(EVEN_SLOTS, render_below_decks_slot)
-
-st.divider()
-
-# --- Bottom: 50/50 Manual Pick + Suggestions ---
-left, right = st.columns(2)
-
-with left:
-    st.subheader("Choose Officers (type to search)")
-    st.selectbox(
-        "Pick an officer name",
-        options=["—"] + OFFICER_NAMES,
-        key="manual_pick",
-        on_change=on_manual_pick_change,
-        help="Selecting a name puts it in Holding. Then click a slot to place.",
-    )
-
-with right:
-    st.subheader("Suggestions")
-
-    placed = all_placed_values()
-    # filter suggestions: hide any whose value is already placed
-    filtered = [(lbl, val) for (lbl, val) in SUGGESTED if val not in placed]
-
-    st.caption("Click a suggestion to hold it; it disappears once placed.")
-    render_wrapped_chips(filtered, per_row=4, key_prefix="sugg")
 
 submitted = False
 with st.form("state-share"):
