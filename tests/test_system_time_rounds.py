@@ -92,6 +92,7 @@ def _expected_context_line(location: str, timestamp: str) -> str:
         (
             "2-outpost-retal.csv",
             [
+                _expected_context_line("Draxyl", "12/31/2025 8:02:44 PM"),
                 "Battle Rounds: 11",
             ],
         ),
