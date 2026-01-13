@@ -9,7 +9,10 @@ import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, get_series, resolve_column
-from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
+from veschov.ui.object_reports.AttackerAndTargetReport import (
+    AttackerAndTargetReport,
+    SerializedShipSpec,
+)
 from veschov.utils.series import coerce_numeric
 
 logger = logging.getLogger(__name__)
@@ -17,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 class DamageFlowByBattleReport(AttackerAndTargetReport):
     """Render the damage flow Sankey report for an entire battle."""
+
+    ATTACKER_NODE_COLOR = "#66b3b3"
+    ATTACKER_LABEL_COLOR = "#2a9d8f"
 
     def __init__(self) -> None:
         super().__init__()
@@ -294,7 +300,7 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
             if not (attacker.name or attacker.alliance or attacker.ship):
                 continue
             attacker_mask = self._build_single_attacker_mask(shot_df, attacker, attacker_column)
-            attacker_label = self._format_ship_spec_label(attacker, outcome_lookup)
+            attacker_label = self._format_attacker_label(attacker, outcome_lookup)
             self.attacker_labels.append(attacker_label)
             attacker_totals[attacker_label] = {
                 "iso_noncrit": float(total_iso.where(attacker_mask & ~is_crit, 0).sum()),
@@ -303,6 +309,24 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
                 "reg_crit": float(total_normal.where(attacker_mask & is_crit, 0).sum()),
             }
         return attacker_totals
+
+    def _format_attacker_label(
+            self,
+            spec: ShipSpecifier,
+            outcome_lookup: dict[SerializedShipSpec, object] | None = None,
+    ) -> str:
+        """Format attacker labels without alliance tags."""
+        name = self._normalize_text(spec.name)
+        ship = self._normalize_text(spec.ship)
+        alliance = self._normalize_text(spec.alliance)
+        outcome = None
+        if outcome_lookup is not None:
+            outcome = outcome_lookup.get(self._normalize_spec_key(name, alliance, ship))
+        emoji = self._outcome_emoji(outcome)
+        label = name or "Unknown"
+        if ship and ship != name:
+            label = f"{label} — {ship}"
+        return f"{emoji} {label}"
 
     @staticmethod
     def _build_single_attacker_mask(
@@ -328,7 +352,7 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         y_positions: list[float] = []
         for index, label in enumerate(self.nodes):
             if label in self.attacker_labels:
-                x_positions.append(0.05)
+                x_positions.append(0.0)
                 y_positions.append((index if attacker_count <= 1 else index / attacker_count))
             elif label in category_nodes:
                 x_positions.append(0.28)
@@ -349,6 +373,29 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
                 x_positions.append(0.88)
                 y_positions.append(0.35 if label == "Shield Dmg" else 0.65)
         return {"x": x_positions, "y": y_positions}
+
+    def _build_node_colors(self) -> list[str]:
+        """Assign distinct colors to base nodes and a shared color to attackers."""
+        base_colors = {
+            "Iso Non-Crit": "#a6cee3",
+            "Iso Crit": "#1f78b4",
+            "Regular Non-Crit": "#b2df8a",
+            "Regular Crit": "#33a02c",
+            "Raw Iso": "#6baed6",
+            "Raw Regular": "#74c476",
+            "Iso Mitigation": "#9ecae1",
+            "Regular Mitigation": "#a1d99b",
+            "Apex Mitigation": "#41ab5d",
+            "Shield Dmg": "#3182bd",
+            "Hull Dmg": "#de2d26",
+        }
+        colors: list[str] = []
+        for label in self.nodes:
+            if label in self.attacker_labels:
+                colors.append(self.ATTACKER_NODE_COLOR)
+            else:
+                colors.append(base_colors.get(label, "#c7c7c7"))
+        return colors
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         st.markdown(
@@ -374,19 +421,31 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
             targets.append(node_index[target])
             values.append(value)
 
-        node_config: dict[str, object] = {"label": self.nodes, "pad": 18, "thickness": 16}
+        node_config: dict[str, object] = {
+            "label": self.nodes,
+            "pad": 24,
+            "thickness": 16,
+            "color": self._build_node_colors(),
+        }
         if self.attacker_labels:
             node_config.update(self._build_node_layout())
+
+        attacker_count = max(1, len(self.attacker_labels))
+        figure_height = 250 + ((attacker_count - 1) * 50)
 
         fig = go.Figure(
             data=[
                 go.Sankey(
                     node=node_config,
                     link={"source": sources, "target": targets, "value": values},
+                    textfont={"color": self.ATTACKER_LABEL_COLOR},
                 )
             ]
         )
-        fig.update_layout(title=f"Damage Flow by Battle — {self.battle_filename}")
+        fig.update_layout(
+            title=f"Damage Flow by Battle — {self.battle_filename}",
+            height=figure_height,
+        )
         st.plotly_chart(fig, width="stretch")
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
