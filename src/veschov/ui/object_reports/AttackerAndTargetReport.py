@@ -180,7 +180,7 @@ class AttackerAndTargetReport(AbstractReport):
                 today_year = datetime.now().year
                 date_part = f"{parsed_dt:%a} {parsed_dt.day} {parsed_dt:%b}"
                 if parsed_dt.year != today_year:
-                    date_part = f"{date_part} [{parsed_dt:%Y}]"
+                    date_part = f"{date_part} {parsed_dt:%Y}"
                 time_part = f"{parsed_dt:%H:%M}"
                 context_parts.append(f"on {date_part} at {time_part}")
             else:
