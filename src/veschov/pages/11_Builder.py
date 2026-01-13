@@ -25,12 +25,14 @@ class BuilderState(TypedDict):
     bridge_slots: list[str | None]
     even_slots: list[str | None]
     manual_pick: str
+    build_name: str
+    ship_name: str
     notes: str
     suggestions: list[str]
 
 BRIDGE_SLOTS = 3
 EVEN_SLOTS = 10
-STATE_VERSION = 2
+STATE_VERSION = 3
 LZMA_PREFIX = "x:"
 
 ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets"
@@ -52,6 +54,8 @@ def init_state() -> None:
     st.session_state.setdefault("bridge_slots", [None] * BRIDGE_SLOTS)
     st.session_state.setdefault("even_slots", [None] * EVEN_SLOTS)
     st.session_state.setdefault("manual_pick", "—")
+    st.session_state.setdefault("build_name", "")
+    st.session_state.setdefault("ship_name", "")
     st.session_state.setdefault("notes", "")
     st.session_state.setdefault("suggestions", DEFAULT_SUGGESTIONS.copy())
     st.session_state.setdefault("state_restored", False)
@@ -104,6 +108,16 @@ def _coerce_state(payload: object) -> BuilderState | None:
         logger.warning("State payload manual pick is invalid: %s", manual_pick)
         return None
 
+    build_name = payload.get("build_name", "")
+    if not isinstance(build_name, str):
+        logger.warning("State payload build name is invalid: %s", build_name)
+        return None
+
+    ship_name = payload.get("ship_name", "")
+    if not isinstance(ship_name, str):
+        logger.warning("State payload ship name is invalid: %s", ship_name)
+        return None
+
     notes = payload.get("notes", "")
     if not isinstance(notes, str):
         logger.warning("State payload notes are invalid: %s", notes)
@@ -120,6 +134,8 @@ def _coerce_state(payload: object) -> BuilderState | None:
         bridge_slots=bridge_slots,
         even_slots=even_slots,
         manual_pick=manual_pick,
+        build_name=build_name,
+        ship_name=ship_name,
         notes=notes,
         suggestions=list(suggestions),
     )
@@ -132,6 +148,8 @@ def serialize_state() -> str:
         "bridge_slots": cast(list[str | None], st.session_state.bridge_slots),
         "even_slots": cast(list[str | None], st.session_state.even_slots),
         "manual_pick": cast(str, st.session_state.manual_pick),
+        "build_name": cast(str, st.session_state.build_name),
+        "ship_name": cast(str, st.session_state.ship_name),
         "notes": cast(str, st.session_state.notes),
         "suggestions": cast(list[str], st.session_state.suggestions),
     }
@@ -196,6 +214,8 @@ def restore_state_from_query() -> None:
     st.session_state.bridge_slots = restored["bridge_slots"]
     st.session_state.even_slots = restored["even_slots"]
     st.session_state.manual_pick = restored["manual_pick"]
+    st.session_state.build_name = restored["build_name"]
+    st.session_state.ship_name = restored["ship_name"]
     st.session_state.notes = restored["notes"]
     st.session_state.suggestions = restored["suggestions"]
     st.session_state.state_restored = True
@@ -216,15 +236,13 @@ def all_placed_values() -> set[str]:
 
 def remove_value_everywhere(value: str) -> None:
     for key in ("bridge_slots", "even_slots"):
-        slots = st.session_state[key]
-        for i, v in enumerate(slots):
-            if v == value:
-                slots[i] = None
+        slots = [v if v != value else None for v in st.session_state[key]]
+        st.session_state[key] = slots
 
 
 def add_suggestion(value: str) -> None:
     if value not in st.session_state.suggestions:
-        st.session_state.suggestions.append(value)
+        st.session_state.suggestions = st.session_state.suggestions + [value]
 
 
 def remove_suggestion(value: str) -> None:
@@ -236,18 +254,20 @@ def remove_suggestion(value: str) -> None:
 
 def slot_click(row_key: str, idx: int) -> None:
     holding = st.session_state.holding
-    row = st.session_state[row_key]
+    row = list(st.session_state[row_key])
 
     if holding is None:
         if row[idx] is not None:
             removed = row[idx]
             row[idx] = None
+            st.session_state[row_key] = row
             add_suggestion(removed)
         return
 
     # Dedupe, place, then drop.
     remove_value_everywhere(holding)
     row[idx] = holding
+    st.session_state[row_key] = row
     st.session_state.holding = None
     remove_suggestion(holding)
 
@@ -375,6 +395,8 @@ with crew_col:
         render_wrapped_chips(filtered, per_row=4, key_prefix="sugg")
 
 with notes_col:
+    st.text_input("Build Name", key="build_name")
+    st.text_input("Ship Name", key="ship_name")
     st.subheader("Notes")
     st.text_area(
         "Notes",
