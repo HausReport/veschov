@@ -174,9 +174,20 @@ class AttackerAndTargetReport(AbstractReport):
 
         if isinstance(battle_df, pd.DataFrame) and not battle_df.empty and "round" in battle_df.columns:
             rounds = pd.to_numeric(battle_df["round"], errors="coerce")
-            max_round = rounds.max()
-            if pd.notna(max_round):
-                lines.append(f"Battle Rounds: {int(max_round)}")
+            valid_rounds = rounds.dropna()
+            if not valid_rounds.empty:
+                min_round = valid_rounds.min()
+                max_round = valid_rounds.max()
+                if pd.notna(min_round) and pd.notna(max_round):
+                    round_count = int(max_round)
+                    if min_round == 0:
+                        round_count = int(max_round) + 1
+                        logger.warning(
+                            "Round data appears zero-indexed; displaying %s rounds based on max round %s.",
+                            round_count,
+                            max_round,
+                        )
+                    lines.append(f"Battle Rounds: {round_count}")
         return lines
 
     def render_combatants(

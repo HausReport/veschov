@@ -83,6 +83,13 @@ def _expected_context_line(location: str, timestamp: str) -> str:
             ],
         ),
         (
+            "5-kren.csv",
+            [
+                _expected_context_line("Kren", "2/1/2026 5:12:34 PM"),
+                "Battle Rounds: 6",
+            ],
+        ),
+        (
             "2-outpost-retal.csv",
             [
                 "Battle Rounds: 11",
