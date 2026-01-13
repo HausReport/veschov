@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, override
 
+import humanize
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -11,6 +12,42 @@ from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_roun
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
+
+
+SEGMENT_LABELS = {
+    "Hull": "Hull Damage",
+    "Shield": "Shield Damage",
+    "Mitigated Normal": "Mitigated by Shield/Dodge/Armor",
+    "Mitigated Isolytic": "Mitigated by Isolytic Defense",
+    "Mitigated Apex": "Mitigated by Apex Barrier",
+}
+LEGEND_TITLE = "Final Damage Destination"
+
+HOVER_LABELS = {
+    "hull_damage": "Hull Damage",
+    "shield_damage": "Shield Damage",
+    "mitigated_normal": "Mitigated by Shield/Dodge/Armor",
+    "mitigated_iso": "Mitigated by Isolytic Defense",
+    "mitigated_apex": "Mitigated by Apex Barrier",
+    "battle_event": "Battle Event",
+    "is_crit": "Critical Hit",
+}
+
+
+def _format_hover_value(value: object, number_format: str) -> str:
+    """Format hover values using the configured large-number preference."""
+    if pd.isna(value):
+        return "—"
+    if isinstance(value, bool):
+        return str(value)
+    numeric = pd.to_numeric(value, errors="coerce")
+    if pd.notna(numeric):
+        if abs(numeric) >= 1_000_000 and number_format == "Human":
+            return humanize.intword(numeric, format="%.1f")
+        if float(numeric).is_integer():
+            return f"{int(numeric):,}"
+        return f"{numeric:,}"
+    return str(value)
 
 
 class DamageFlowByRoundReport(RoundOrShotsReport):
@@ -100,18 +137,54 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
+        number_format = self.number_format or "Human"
+        plot_df = long_df.copy()
+        plot_df["segment_display"] = (
+            plot_df["segment"].map(SEGMENT_LABELS).fillna(plot_df["segment"])
+        )
+        segment_display_order = [SEGMENT_LABELS.get(segment, segment) for segment in SEGMENT_ORDER]
+        segment_display_colors = {
+            SEGMENT_LABELS.get(segment, segment): color
+            for segment, color in SEGMENT_COLORS.items()
+        }
+        plot_df["amount_display"] = plot_df["amount"].apply(
+            lambda value: _format_hover_value(value, number_format)
+        )
+        hover_display_columns: list[str] = []
+        hover_display_labels: list[str] = []
+        for column in self.hover_columns:
+            display_column = f"{column}_display"
+            plot_df[display_column] = plot_df[column].apply(
+                lambda value: _format_hover_value(value, number_format)
+            )
+            hover_display_columns.append(display_column)
+            hover_display_labels.append(HOVER_LABELS.get(column, column.replace("_", " ").title()))
+
+        custom_data_columns = ["amount_display", *hover_display_columns]
+        x_label = self.get_x_axis_text() or self.x_axis.replace("_", " ").title()
+        hover_lines = [
+            f"{x_label}: %{{x}}",
+            f"{LEGEND_TITLE}: %{{fullData.name}}",
+            "Amount: %{customdata[0]}",
+        ]
+        for index, label in enumerate(hover_display_labels, start=1):
+            hover_lines.append(f"{label}: %{{customdata[{index}]}}")
+        hover_template = "<br>".join(hover_lines) + "<extra></extra>"
         fig = px.area(
-            long_df,
+            plot_df,
             x=self.x_axis,
             y="amount",
-            color="segment",
+            color="segment_display",
             # facet_col="round",
             # facet_col_wrap=4,
-            color_discrete_map=SEGMENT_COLORS,
-            category_orders={"segment": SEGMENT_ORDER},
+            color_discrete_map=segment_display_colors,
+            category_orders={"segment_display": segment_display_order},
             title=self.get_plot_titles()[0],
-            hover_data=self.hover_columns,
+            custom_data=custom_data_columns,
+            labels={"segment_display": LEGEND_TITLE},
         )
+        fig.update_traces(hovertemplate=hover_template)
+        fig.update_layout(legend_title_text=LEGEND_TITLE)
         max_value = long_df[self.x_axis].max()
         if pd.notna(max_value):
             fig.update_xaxes(range=[1, int(max_value)])
