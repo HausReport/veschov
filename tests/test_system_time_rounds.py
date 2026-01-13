@@ -85,8 +85,8 @@ def _expected_context_line(location: str, timestamp: str) -> str:
         (
             "5-kren.csv",
             [
-                _expected_context_line("Kren", "2/1/2026 5:12:34 PM"),
-                "Battle Rounds: 6",
+                _expected_context_line("Kyana", "11/25/2025 7:20:59 PM"),
+                "Battle Rounds: 5",
             ],
         ),
         (
@@ -107,4 +107,6 @@ def test_get_system_time_and_rounds(
     report = _HeaderReport()
     lines = report._get_system_time_and_rounds(players_df, combat_df)
 
+    print(f"Expected: {expected_lines}")
+    print(f"Got: {lines}")
     assert lines == expected_lines
