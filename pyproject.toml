@@ -17,7 +17,7 @@ exclude = []
 
 [tool.poetry]
 name = "veschov"
-version = "0.1.1"
+version = "0.1.2"
 packages = [{ include = "veschov", from = "src" }]
 
 [tool.poetry.dependencies]

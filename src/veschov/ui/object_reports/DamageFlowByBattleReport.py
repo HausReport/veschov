@@ -345,34 +345,40 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         return spec_mask
 
     def _build_node_layout(self) -> dict[str, list[float]]:
-        """Anchor attacker and category nodes to fixed columns for layout stability."""
         attacker_count = len(self.attacker_labels)
         category_nodes = ["Iso Non-Crit", "Iso Crit", "Regular Non-Crit", "Regular Crit"]
-        x_positions: list[float] = []
-        y_positions: list[float] = []
-        for index, label in enumerate(self.nodes):
+
+        x: list[float] = []
+        y: list[float | None] = []  # allow None for “let plotly decide”
+
+        attacker_i = 0
+
+        for label in self.nodes:
             if label in self.attacker_labels:
-                x_positions.append(0.0)
-                y_positions.append((index if attacker_count <= 1 else index / attacker_count))
-            elif label in category_nodes:
-                x_positions.append(0.28)
-                category_index = category_nodes.index(label)
-                y_positions.append(0.15 + (category_index * 0.2))
-            elif label in ("Raw Iso", "Raw Regular"):
-                x_positions.append(0.48)
-                y_positions.append(0.3 if label == "Raw Iso" else 0.7)
-            elif label in ("Iso Mitigation", "Regular Mitigation", "Apex Mitigation"):
-                x_positions.append(0.68)
-                if label == "Iso Mitigation":
-                    y_positions.append(0.25)
-                elif label == "Regular Mitigation":
-                    y_positions.append(0.75)
+                x.append(0.0)
+                if attacker_count <= 1:
+                    y.append(0.5)
                 else:
-                    y_positions.append(0.5)
+                    y.append(attacker_i / (attacker_count - 1))
+                attacker_i += 1
+
+            elif label in category_nodes:
+                x.append(0.28)
+                y.append(None)  # <- key change
+
+            elif label in ("Raw Iso", "Raw Regular"):
+                x.append(0.48)
+                y.append(None)
+
+            elif label in ("Iso Mitigation", "Regular Mitigation", "Apex Mitigation"):
+                x.append(0.68)
+                y.append(None)
+
             else:
-                x_positions.append(0.88)
-                y_positions.append(0.35 if label == "Shield Dmg" else 0.65)
-        return {"x": x_positions, "y": y_positions}
+                x.append(0.88)
+                y.append(None)
+
+        return {"x": x, "y": y}
 
     def _build_node_colors(self) -> list[str]:
         """Assign distinct colors to base nodes and a shared color to attackers."""
@@ -423,28 +429,44 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
 
         node_config: dict[str, object] = {
             "label": self.nodes,
-            "pad": 24,
-            "thickness": 16,
+            "pad": 36,
+            "thickness": 25,
             "color": self._build_node_colors(),
         }
         if self.attacker_labels:
             node_config.update(self._build_node_layout())
 
         attacker_count = max(1, len(self.attacker_labels))
-        figure_height = 250 + ((attacker_count - 1) * 50)
+        figure_height = 600 + ((attacker_count - 1) * 50)
 
+        text_color_dark = "rgba(245,245,245,0.95)"
+        text_color_light = "rgba(20,20,20,0.90)"
+        #link_color = text_color_light
         fig = go.Figure(
             data=[
                 go.Sankey(
                     node=node_config,
-                    link={"source": sources, "target": targets, "value": values},
-                    textfont={"color": self.ATTACKER_LABEL_COLOR},
+                    link={"source": sources, "target": targets, "value": values}, #, "color": link_color},
+                    textfont={"color": text_color_light},
+                    arrangement="fixed"
                 )
             ]
         )
         fig.update_layout(
             title=f"Damage Flow by Battle — {self.battle_filename}",
             height=figure_height,
+            font=dict(
+                size=16,  # try 14–16
+                # color=text_color_light,
+                family="Segoe UI"
+            )
+        )
+        fig.update_traces(
+            node=dict(
+                line=dict(color="rgba(0,0,0,0.65)", width=5.2),
+                thickness=25,
+                pad=36
+            )
         )
         st.plotly_chart(fig, width="stretch")
 
