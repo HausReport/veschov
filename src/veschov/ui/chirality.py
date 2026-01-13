@@ -48,22 +48,22 @@ def resolve_lens(
 ) -> Lens:
     actor_name = selected_attackers[0].name if len(selected_attackers) == 1 else None
     target_name = selected_targets[0].name if len(selected_targets) == 1 else None
-    if page_id == "apex_barrier":
-        return Lens(
-            actor_name=target_name,
-            target_name=actor_name,
-            label="NPC → Player",
-            attacker_specs=tuple(selected_targets),
-            target_specs=tuple(selected_attackers),
-        )
-    if page_id == "isolytic_damage":
-        return Lens(
-            actor_name=actor_name,
-            target_name=target_name,
-            label="Player → NPC",
-            attacker_specs=tuple(selected_attackers),
-            target_specs=tuple(selected_targets),
-        )
+    # if page_id == "apex_barrier":
+    #     return Lens(
+    #         actor_name=target_name,
+    #         target_name=actor_name,
+    #         label="NPC → Player",
+    #         attacker_specs=tuple(selected_targets),
+    #         target_specs=tuple(selected_attackers),
+    #     )
+    # if page_id == "isolytic_damage":
+    #     return Lens(
+    #         actor_name=actor_name,
+    #         target_name=target_name,
+    #         label="Player → NPC",
+    #         attacker_specs=tuple(selected_attackers),
+    #         target_specs=tuple(selected_targets),
+    #     )
     return Lens(
         actor_name=actor_name,
         target_name=target_name,

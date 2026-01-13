@@ -63,8 +63,8 @@ class ApexBarrierReport(RoundOrShotsReport):
 
     def get_under_title_text(self) -> Optional[str]:
         return (
-            "Apex Barrier values are inferred from combat log mitigation fields and "
-            "represent the portion of each hit absorbed by the barrier."
+           """Shows effective Apex Barrier for every hit the target takes.  This is useful if, for example, you're using Annorax.  
+              Values are calculated from combat log mitigation fields and correlate to portion of each hit absorbed by the barrier."""
         )
 
     def get_under_chart_text(self) -> Optional[str]:
@@ -126,9 +126,9 @@ class ApexBarrierReport(RoundOrShotsReport):
             st.error(f"Missing required column: {exc.args[0]}")
             return None
 
-        include_missing = st.checkbox("Include rows without Apex Barrier hit", value=False)
-        if not include_missing:
-            display_df = display_df[display_df["apex_barrier_hit"].notna()].copy()
+        # include_missing = st.checkbox("Include rows without Apex Barrier hit", value=False)
+        # if not include_missing:
+        display_df = display_df[display_df["apex_barrier_hit"].notna()].copy()
 
         filtered_df = self.apply_combat_lens(display_df, lens)
         if filtered_df.empty:
@@ -180,7 +180,7 @@ class ApexBarrierReport(RoundOrShotsReport):
 
     def get_plot_titles(self) -> list[str]:
         kind = self._resolve_view_by().title()
-        return [f"Effective Apex Barrier of Attacker by {kind}"]
+        return [f"Effective Apex Barrier of Defender by {kind}"]
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         plot_df = dfs[0]
@@ -189,12 +189,17 @@ class ApexBarrierReport(RoundOrShotsReport):
             x=self.x_axis,
             y="apex_barrier_hit",
             markers=True,
-            title=self.get_plot_titles()[0]
         )
         max_value = plot_df[self.x_axis].max()
         if pd.notna(max_value):
             fig.update_xaxes(range=[1, int(max_value)])
         st.plotly_chart(fig, width="stretch")
+
+        fig.update_layout(
+            # title = self.get_plot_titles()[attacker_index],
+            xaxis_title=self.get_x_axis_text(),
+            yaxis_title=self.get_y_axis_text(),
+        )
 
         formatted_total = (
             _format_large_number(self.total_mitigation, self.number_format)

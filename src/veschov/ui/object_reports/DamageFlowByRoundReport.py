@@ -63,14 +63,13 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
         return "Damage Flow by Shot or Round Number"
 
     def get_under_title_text(self) -> Optional[str]:
-        return """Damage Flow by Round highlights what damage actually landed on shields and hull after all 
-        mitigation (iso-defense, Apex, and other reductions). It is not the same as “Total Damage” 
-        in the log."""
+        return """This report shows where damage 'ends up' - whether it lands on the hull, the shields, or  
+        is blocked by normal mitigation (shields, dodge, and armor), by isolytic defense, or by Apex Barrier."""
 
     def get_under_chart_text(self) -> Optional[str]:
-        return """This chart stacks disjoint components of a hit. 
-        Blue/red are damage taken (shield/hull). Greens are damage prevented by mitigation 
-        (normal/isolytic) and Apex Barrier."""
+        return """This chart shows how total damage was distributed to the selected target(s).  The blue layer shows danage to the target's
+        shield, the red layer to their hull, and the green layers represent damage absorbed by standard mitigation (shield, dodge, and armor), isolytic
+        defense, and apex barrier."""
 
     def get_log_title(self) -> str:
         return "Damage Flow by Round"

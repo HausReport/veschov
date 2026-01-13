@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 NON_CRIT_LABEL = "Non-critical hits"
 CRIT_LABEL = "Critical hits"
-CRIT_COLOR = "#C62828"
+CRIT_COLOR = "#E1062C"
 NONCRIT_COLOR = "#B07A7A"
 
 
@@ -49,10 +49,16 @@ class CritHitReport(RoundOrShotsReport):
         )
 
     def get_under_chart_text(self) -> Optional[str]:
-        return "Stacked areas show how many shots landed each round, with crits highlighted."
+        kind = self._resolve_view_by().title()
+        if kind == "Round":
+            return "Stacked areas show how many critical- and non-critical hits landed each round, with crits highlighted."
+        else:
+            return "This odd view shows each hit, bright red for criticals and darker red for non-criticals."
+
 
     def get_log_title(self) -> str:
-        return "Hits per Round"
+        kind = self._resolve_view_by().title()
+        return f"Hits per {kind}"
 
     def get_log_description(self) -> str:
         return "Upload a battle log to visualize crit vs non-crit hit counts per shot or round."
@@ -148,6 +154,10 @@ class CritHitReport(RoundOrShotsReport):
         long_df["count"] = coerce_numeric(long_df["count"]).fillna(0)
         long_df[self.x_axis] = coerce_numeric(long_df[self.x_axis]).astype(int)
         return [long_df, series_df, shot_df]
+
+    def get_plot_titles(self) -> list[str]:
+        kind = self._resolve_view_by().title()
+        return [f"Effective Apex Barrier of Attacker by {kind}"]
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
