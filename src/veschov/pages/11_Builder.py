@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import base64
 import json
+import logging
+import zlib
 from pathlib import Path
 from typing import Callable, TypedDict, cast
 
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 
 class OfficerNameRecord(TypedDict):
@@ -12,8 +17,16 @@ class OfficerNameRecord(TypedDict):
     key: str
     text: str
 
+class BuilderState(TypedDict):
+    v: int
+    holding: str | None
+    bridge_slots: list[str | None]
+    even_slots: list[str | None]
+    manual_pick: str
+
 BRIDGE_SLOTS = 3
 EVEN_SLOTS = 10
+STATE_VERSION = 1
 
 # Suggested chips: label -> value placed when clicked
 SUGGESTED = [
@@ -40,6 +53,123 @@ def init_state() -> None:
     st.session_state.setdefault("bridge_slots", [None] * BRIDGE_SLOTS)
     st.session_state.setdefault("even_slots", [None] * EVEN_SLOTS)
     st.session_state.setdefault("manual_pick", "—")
+    st.session_state.setdefault("state_restored", False)
+
+
+def _pad_base64(value: str) -> str:
+    return value + ("=" * (-len(value) % 4))
+
+
+def _validate_slots(values: object, expected_len: int) -> list[str | None] | None:
+    if not isinstance(values, list):
+        return None
+    if len(values) != expected_len:
+        return None
+    for value in values:
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            return None
+    return [cast(str | None, value) for value in values]
+
+
+def _coerce_state(payload: object) -> BuilderState | None:
+    if not isinstance(payload, dict):
+        logger.warning("State payload is not a dict.")
+        return None
+
+    raw_version = payload.get("v", STATE_VERSION)
+    if not isinstance(raw_version, int):
+        logger.warning("State payload version is invalid: %s", raw_version)
+        return None
+
+    holding = payload.get("holding")
+    if holding is not None and not isinstance(holding, str):
+        logger.warning("State payload holding is invalid: %s", holding)
+        return None
+
+    bridge_slots = _validate_slots(payload.get("bridge_slots"), BRIDGE_SLOTS)
+    if bridge_slots is None:
+        logger.warning("State payload bridge slots are invalid.")
+        return None
+
+    even_slots = _validate_slots(payload.get("even_slots"), EVEN_SLOTS)
+    if even_slots is None:
+        logger.warning("State payload even slots are invalid.")
+        return None
+
+    manual_pick = payload.get("manual_pick")
+    if not isinstance(manual_pick, str):
+        logger.warning("State payload manual pick is invalid: %s", manual_pick)
+        return None
+
+    return BuilderState(
+        v=raw_version,
+        holding=cast(str | None, holding),
+        bridge_slots=bridge_slots,
+        even_slots=even_slots,
+        manual_pick=manual_pick,
+    )
+
+
+def serialize_state() -> str:
+    payload: BuilderState = {
+        "v": STATE_VERSION,
+        "holding": cast(str | None, st.session_state.holding),
+        "bridge_slots": cast(list[str | None], st.session_state.bridge_slots),
+        "even_slots": cast(list[str | None], st.session_state.even_slots),
+        "manual_pick": cast(str, st.session_state.manual_pick),
+    }
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    compressed = zlib.compress(encoded, level=9)
+    return base64.urlsafe_b64encode(compressed).decode("ascii")
+
+
+def deserialize_state(encoded: str) -> BuilderState | None:
+    try:
+        padded = _pad_base64(encoded)
+        compressed = base64.urlsafe_b64decode(padded.encode("ascii"))
+        decoded = zlib.decompress(compressed).decode("utf-8")
+        payload = json.loads(decoded)
+    except (ValueError, zlib.error) as exc:
+        logger.warning("Failed to decode state payload: %s", exc)
+        return None
+    except OSError as exc:
+        logger.warning("Failed to decompress state payload: %s", exc)
+        return None
+
+    return _coerce_state(payload)
+
+
+def _get_state_query_param() -> str | None:
+    value = st.query_params.get("state")
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value[0] if value else None
+    return value
+
+
+def restore_state_from_query() -> None:
+    if st.session_state.state_restored:
+        return
+
+    raw_state = _get_state_query_param()
+    if not raw_state:
+        st.session_state.state_restored = True
+        return
+
+    restored = deserialize_state(raw_state)
+    if restored is None:
+        logger.warning("State query parameter could not be restored; using defaults.")
+        st.session_state.state_restored = True
+        return
+
+    st.session_state.holding = restored["holding"]
+    st.session_state.bridge_slots = restored["bridge_slots"]
+    st.session_state.even_slots = restored["even_slots"]
+    st.session_state.manual_pick = restored["manual_pick"]
+    st.session_state.state_restored = True
 
 
 def pick(value: str) -> None:
@@ -115,6 +245,7 @@ def on_manual_pick_change() -> None:
 
 
 init_state()
+restore_state_from_query()
 
 st.title("POC: Click chip/dropdown → click slot")
 
@@ -130,45 +261,38 @@ else:
 
 st.divider()
 
-form = st.form("bridge-and-below-deck")
-# At this point the URL query string is empty / unchanged, even
-# if the user has edited the text field.
-with form:
-    # --- BRIDGE with labels above slots ---
-    st.subheader("Bridge", text_alignment="center")
+# --- BRIDGE with labels above slots ---
+st.subheader("Bridge", text_alignment="center")
 
-    def render_bridge_label(col: st.delta_generator.DeltaGenerator, i: int) -> None:
-        labels = ["#1", "Capt.", "#2"]
-        container = col.container()
-        container.markdown(
-            f"<div style='text-align:center; font-size:0.85rem; opacity:0.8;'>{labels[i]}</div>",
-            unsafe_allow_html=True,
-        )
+def render_bridge_label(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+    labels = ["#1", "Capt.", "#2"]
+    container = col.container()
+    container.markdown(
+        f"<div style='text-align:center; font-size:0.85rem; opacity:0.8;'>{labels[i]}</div>",
+        unsafe_allow_html=True,
+    )
 
-    def render_bridge_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
-        val = st.session_state.bridge_slots[i]
-        label = val if val is not None else "—"
-        if col.button(label, key=f"bridge_{i}"):
-            slot_click("bridge_slots", i)
+def render_bridge_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+    val = st.session_state.bridge_slots[i]
+    label = val if val is not None else "—"
+    if col.button(label, key=f"bridge_{i}"):
+        slot_click("bridge_slots", i)
 
-    centered_row(BRIDGE_SLOTS, render_bridge_label)
-    centered_row(BRIDGE_SLOTS, render_bridge_slot)
+centered_row(BRIDGE_SLOTS, render_bridge_label)
+centered_row(BRIDGE_SLOTS, render_bridge_slot)
 
-    st.divider()
+st.divider()
 
-    # --- EVENS (10 slots) ---
-    st.subheader("Below-Deck Officers", text_alignment="center")
+# --- EVENS (10 slots) ---
+st.subheader("Below-Deck Officers", text_alignment="center")
 
-    def render_below_decks_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
-        val = st.session_state.even_slots[i]
-        label = val if val is not None else "—"
-        if col.button(label, key=f"even_{i}"):
-            slot_click("even_slots", i)
+def render_below_decks_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+    val = st.session_state.even_slots[i]
+    label = val if val is not None else "—"
+    if col.button(label, key=f"even_{i}"):
+        slot_click("even_slots", i)
 
-    centered_row(EVEN_SLOTS, render_below_decks_slot)
-
-if form.form_submit_button("Submit"):
-    pass
+centered_row(EVEN_SLOTS, render_below_decks_slot)
 
 st.divider()
 
@@ -194,5 +318,13 @@ with right:
 
     st.caption("Click a suggestion to hold it; it disappears once placed.")
     render_wrapped_chips(filtered, per_row=4, key_prefix="sugg")
+
+submitted = False
+with st.form("state-share"):
+    st.caption("Save the current layout into the URL for sharing.")
+    submitted = st.form_submit_button("Save state to URL")
+
+if submitted:
+    st.query_params["state"] = serialize_state()
 
 st.caption("Tip: click a filled slot with nothing held to clear it (suggestions will reappear).")
