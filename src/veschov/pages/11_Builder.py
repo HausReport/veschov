@@ -6,9 +6,11 @@ import logging
 import lzma
 import zlib
 from pathlib import Path
-from typing import Callable, TypedDict, cast
+from typing import Callable, Iterable, TypedDict, cast
 
 import streamlit as st
+
+from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +61,7 @@ def init_state() -> None:
     st.session_state.setdefault("notes", "")
     st.session_state.setdefault("suggestions", DEFAULT_SUGGESTIONS.copy())
     st.session_state.setdefault("state_restored", False)
+    st.session_state.setdefault("auto_seeded", False)
 
 
 def _pad_base64(value: str) -> str:
@@ -313,13 +316,114 @@ def on_manual_pick_change() -> None:
         pick(val)
 
 
+def _normalize_names(values: Iterable[str]) -> list[str]:
+    """Return sorted, deduplicated officer names from a raw iterable."""
+    normalized = {value.strip() for value in values if value and value.strip()}
+    return sorted(normalized)
+
+
+def _pick_single_name(values: Iterable[str], label: str) -> str | None:
+    """Return a deterministic officer name from a set, logging if multiple."""
+    names = _normalize_names(values)
+    if not names:
+        return None
+    if len(names) > 1:
+        logger.warning("Multiple %s names found (%s); using %s.", label, names, names[0])
+    return names[0]
+
+
+def _player_specs(session_info: SessionInfo) -> list[ShipSpecifier]:
+    """Return sorted player ship specs inferred from session info."""
+    specs = [
+        spec
+        for spec in session_info.get_every_ship()
+        if SessionInfo.normalize_text(spec.alliance)
+    ]
+    return sorted(specs, key=lambda spec: (spec.name or "", spec.ship or "", spec.alliance or ""))
+
+
+def _set_suggestions(values: Iterable[str]) -> None:
+    """Set suggestions to the provided officer names."""
+    st.session_state.suggestions = _normalize_names(values)
+
+
+def _auto_seed_from_session() -> None:
+    """Seed bridge/below-deck slots from session info when no state URL exists."""
+    if st.session_state.auto_seeded:
+        return
+
+    if _get_state_query_param():
+        return
+
+    session_info = st.session_state.get("session_info")
+    if not isinstance(session_info, SessionInfo):
+        return
+
+    player_specs = _player_specs(session_info)
+    if len(player_specs) == 1:
+        spec = player_specs[0]
+        if not spec.name or not spec.ship:
+            logger.warning("Player ship spec missing name or ship; cannot auto-seed builder.")
+            st.session_state.auto_seeded = True
+            return
+
+        bridge_slots = list(st.session_state.bridge_slots)
+        bridge_updated = False
+
+        captain = _pick_single_name(
+            session_info.get_captain_name(spec.name, spec.ship),
+            "captain",
+        )
+        if captain:
+            bridge_slots[1] = captain
+            bridge_updated = True
+
+        first_officer = _pick_single_name(
+            session_info.get_1st_officer_name(spec.name, spec.ship),
+            "first officer",
+        )
+        if first_officer:
+            bridge_slots[0] = first_officer
+            bridge_updated = True
+
+        second_officer = _pick_single_name(
+            session_info.get_2nd_officer_name(spec.name, spec.ship),
+            "second officer",
+        )
+        if second_officer:
+            bridge_slots[2] = second_officer
+            bridge_updated = True
+
+        if bridge_updated:
+            st.session_state.bridge_slots = bridge_slots
+            below_deck = _normalize_names(
+                session_info.get_below_deck_officers(spec.name, spec.ship)
+            )
+            even_slots = list(st.session_state.even_slots)
+            for index, officer in enumerate(below_deck):
+                if index >= len(even_slots):
+                    break
+                even_slots[index] = officer
+            st.session_state.even_slots = even_slots
+        else:
+            _set_suggestions(session_info.all_officer_names(spec.name, spec.ship))
+    elif len(player_specs) > 1:
+        combined_officers: set[str] = set()
+        for spec in player_specs:
+            if not spec.name or not spec.ship:
+                logger.warning("Player spec missing name or ship; skipping %s.", spec)
+                continue
+            combined_officers.update(session_info.all_officer_names(spec.name, spec.ship))
+        _set_suggestions(combined_officers)
+
+    st.session_state.auto_seeded = True
+
+
 init_state()
 restore_state_from_query()
+_auto_seed_from_session()
 
 st.title("Share or Save Your Build")
-
-if "battle_df" in st.session_state:
-    pass
 
 # --- Holding text ---
 holding = st.session_state.holding
