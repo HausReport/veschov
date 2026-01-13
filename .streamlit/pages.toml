@@ -49,6 +49,12 @@ name = "Officer & Tech Procs"
 icon = "🧑"
 
 [[pages]]
+path = "pages/11_Builder.py"
+name = "Share Build"
+icon = "📤"
+
+[[pages]]
 path = "pages/9_Settings.py"
 name = "Settings"
 icon = "⚙️"
+
