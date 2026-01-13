@@ -25,7 +25,7 @@ icon = "🔀"
 
 [[pages]]
 path = "pages/10_Attacker_Shot_Heatmaps.py"
-name = "Attacker Shot Heatmaps"
+name = "Shot Heatmaps"
 icon = "🔥"
 
 [[pages]]

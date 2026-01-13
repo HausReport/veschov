@@ -76,11 +76,11 @@ class AttackerAndTargetReport(AbstractReport):
             if len(selected_attackers) == 1 and len(selected_targets) == 1:
                 attacker_name = lens.actor_name or "Attacker"
                 target_name = lens.target_name or "Target"
-                st.caption(f"Lens: {lens.label} ({attacker_name} → {target_name})")
+                # st.caption(f"Lens: {lens.label} ({attacker_name} → {target_name})")
             else:
                 attacker_label = "Attacker ships" if len(selected_attackers) != 1 else "Attacker ship"
                 target_label = "Target ships" if len(selected_targets) != 1 else "Target ship"
-                st.caption(f"Lens: {attacker_label} → {target_label}")
+                # st.caption(f"Lens: {attacker_label} → {target_label}")
 
         #
         # Adds the system/time/and rounds line
@@ -105,6 +105,7 @@ class AttackerAndTargetReport(AbstractReport):
         context_lines = self._get_system_time_and_rounds(players_df, battle_df)
         if context_lines:
             context_text = " • ".join(context_lines)
+            # FIXME: This, and about 10 lines down, is where system name, date, and time are written.
             st.markdown(
                 "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
                 f"{context_text}</div>",
