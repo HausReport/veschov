@@ -1,5 +1,16 @@
-# streamlit_app.py
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Callable, TypedDict, cast
+
 import streamlit as st
+
+
+class OfficerNameRecord(TypedDict):
+    id: int
+    key: str
+    text: str
 
 BRIDGE_SLOTS = 3
 EVEN_SLOTS = 10
@@ -11,29 +22,27 @@ SUGGESTED = [
     ("7 is prime", "7"),
 ]
 
-# Manual pick: long-ish names to prove search/select feels natural
-OFFICERS = [
-    "Alexander F. Johnson",
-    "Beatrice L. Nakamura",
-    "Catherine M. O'Neill",
-    "Dmitri P. Volkov",
-    "Evelyn R. Chen",
-    "Fernando A. Morales",
-    "Greta S. Lindström",
-    "Hassan K. Al-Farouq",
-    "Isabelle T. DuPont",
-    "Jamal N. Washington",
-]
+ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets"
 
 
-def init_state():
+def load_officer_names(path: Path) -> list[str]:
+    """Load officer names from the JSON asset and return sorted text values."""
+    records = cast(list[OfficerNameRecord], json.loads(path.read_text(encoding="utf-8")))
+    names = [record["text"] for record in records]
+    return sorted(names)
+
+
+OFFICER_NAMES = load_officer_names(ASSETS_DIR / "officer_names.json")
+
+
+def init_state() -> None:
     st.session_state.setdefault("holding", None)
     st.session_state.setdefault("bridge_slots", [None] * BRIDGE_SLOTS)
     st.session_state.setdefault("even_slots", [None] * EVEN_SLOTS)
     st.session_state.setdefault("manual_pick", "—")
 
 
-def pick(value: str):
+def pick(value: str) -> None:
     st.session_state.holding = value
 
 
@@ -41,7 +50,7 @@ def all_placed_values() -> set[str]:
     return set(st.session_state.bridge_slots) | set(st.session_state.even_slots)
 
 
-def remove_value_everywhere(value: str):
+def remove_value_everywhere(value: str) -> None:
     for key in ("bridge_slots", "even_slots"):
         slots = st.session_state[key]
         for i, v in enumerate(slots):
@@ -49,7 +58,7 @@ def remove_value_everywhere(value: str):
                 slots[i] = None
 
 
-def slot_click(row_key: str, idx: int):
+def slot_click(row_key: str, idx: int) -> None:
     holding = st.session_state.holding
     row = st.session_state[row_key]
 
@@ -64,7 +73,7 @@ def slot_click(row_key: str, idx: int):
     st.session_state.holding = None
 
 
-def centered_row(num_slots: int, render_slot_button):
+def centered_row(num_slots: int, render_slot_button: Callable[[st.delta_generator.DeltaGenerator, int], None]) -> None:
     """
     Center a row of num_slots using EVEN_SLOTS as the max width reference.
     """
@@ -78,7 +87,12 @@ def centered_row(num_slots: int, render_slot_button):
         render_slot_button(cols[start + i], i)
 
 
-def render_wrapped_chips(pairs: list[tuple[str, str]], *, per_row: int = 6, key_prefix: str = "chip"):
+def render_wrapped_chips(
+    pairs: list[tuple[str, str]],
+    *,
+    per_row: int = 6,
+    key_prefix: str = "chip",
+) -> None:
     """
     Render chips horizontally by chunking into rows.
     pairs: list of (label, value)
@@ -94,7 +108,7 @@ def render_wrapped_chips(pairs: list[tuple[str, str]], *, per_row: int = 6, key_
             cols[i].button(label, key=f"{key_prefix}_{r+i}", on_click=pick, args=(value,))
 
 
-def on_manual_pick_change():
+def on_manual_pick_change() -> None:
     val = st.session_state.manual_pick
     if val != "—":
         pick(val)
@@ -103,6 +117,9 @@ def on_manual_pick_change():
 init_state()
 
 st.title("POC: Click chip/dropdown → click slot")
+
+if "battle_df" in st.session_state:
+    pass
 
 # --- Holding text ---
 holding = st.session_state.holding
@@ -113,35 +130,43 @@ else:
 
 st.divider()
 
-# --- BRIDGE with labels above slots ---
-st.subheader("Bridge", text_alignment="center")
+form = st.form("bridge-and-below-deck")
+# At this point the URL query string is empty / unchanged, even
+# if the user has edited the text field.
+with form:
+    # --- BRIDGE with labels above slots ---
+    st.subheader("Bridge", text_alignment="center")
 
-def render_bridge_label(col, i):
-    labels = ["#1", "Capt.", "#2"]
-    col.markdown(
-        f"<div style='text-align:center; font-size:0.85rem; opacity:0.8;'>{labels[i]}</div>",
-        unsafe_allow_html=True,
-    )
+    def render_bridge_label(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+        labels = ["#1", "Capt.", "#2"]
+        container = col.container()
+        container.markdown(
+            f"<div style='text-align:center; font-size:0.85rem; opacity:0.8;'>{labels[i]}</div>",
+            unsafe_allow_html=True,
+        )
 
-def render_bridge_slot(col, i):
-    val = st.session_state.bridge_slots[i]
-    label = val if val is not None else "—"
-    col.button(label, key=f"bridge_{i}", on_click=slot_click, args=("bridge_slots", i))
+    def render_bridge_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+        val = st.session_state.bridge_slots[i]
+        label = val if val is not None else "—"
+        col.button(label, key=f"bridge_{i}", on_click=slot_click, args=("bridge_slots", i))
 
-centered_row(BRIDGE_SLOTS, render_bridge_label)
-centered_row(BRIDGE_SLOTS, render_bridge_slot)
+    centered_row(BRIDGE_SLOTS, render_bridge_label)
+    centered_row(BRIDGE_SLOTS, render_bridge_slot)
 
-st.divider()
+    st.divider()
 
-# --- EVENS (10 slots) ---
-st.subheader("Below-Deck Officers", text_alignment="center")
+    # --- EVENS (10 slots) ---
+    st.subheader("Below-Deck Officers", text_alignment="center")
 
-def render_below_decks_slot(col, i):
-    val = st.session_state.even_slots[i]
-    label = val if val is not None else "—"
-    col.button(label, key=f"even_{i}", on_click=slot_click, args=("even_slots", i))
+    def render_below_decks_slot(col: st.delta_generator.DeltaGenerator, i: int) -> None:
+        val = st.session_state.even_slots[i]
+        label = val if val is not None else "—"
+        col.button(label, key=f"even_{i}", on_click=slot_click, args=("even_slots", i))
 
-centered_row(EVEN_SLOTS, render_below_decks_slot)
+    centered_row(EVEN_SLOTS, render_below_decks_slot)
+
+if form.form_submit_button("Submit"):
+    pass
 
 st.divider()
 
@@ -152,7 +177,7 @@ with left:
     st.subheader("Choose Officers (type to search)")
     st.selectbox(
         "Pick an officer name",
-        options=["—"] + OFFICERS,
+        options=["—"] + OFFICER_NAMES,
         key="manual_pick",
         on_change=on_manual_pick_change,
         help="Selecting a name puts it in Holding. Then click a slot to place.",
