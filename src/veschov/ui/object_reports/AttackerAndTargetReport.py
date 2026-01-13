@@ -120,17 +120,33 @@ class AttackerAndTargetReport(AbstractReport):
         ) -> tuple[str | None, object | None]:
             if df.empty:
                 return None, None
+            def first_non_empty(column: object) -> tuple[str, object | None]:
+                series = df[column]
+                non_null = series[series.notna()]
+                if not non_null.empty:
+                    trimmed = non_null.astype("string").str.strip()
+                    non_null = non_null[trimmed != ""]
+                if non_null.empty:
+                    return str(column), pd.NA
+                unique_values = non_null.drop_duplicates()
+                if len(unique_values) > 1:
+                    logger.warning(
+                        "Multiple values found for %s in players df; using first non-empty entry.",
+                        column,
+                    )
+                return str(column), unique_values.iloc[0]
+
             normalized_columns = {
                 str(column).strip().lower(): column for column in df.columns
             }
             for candidate in candidates:
                 column = normalized_columns.get(candidate.lower())
                 if column is not None:
-                    return column, df[column].iloc[0]
+                    return first_non_empty(column)
             for column in df.columns:
                 column_key = str(column).strip().lower()
                 if any(candidate.lower() in column_key for candidate in candidates):
-                    return column, df[column].iloc[0]
+                    return first_non_empty(column)
             return None, None
 
         location_column, location = resolve_metadata_value(
