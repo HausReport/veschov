@@ -1,13 +1,212 @@
 Player Name	Player Level	Outcome	Ship Name	Ship Level	Ship Strength	Ship XP	Officer One	Officer Two	Officer Three	Hull Health	Hull Health Remaining	Shield Health	Shield Health Remaining	Location	Timestamp
-Alpha	10	VICTORY	Ship A	10	1000	0	--	--	--	100	100	100	100	Kren	2/1/2026 5:12:34 PM
-Beta	10	DEFEAT	Ship B	10	1000	0	--	--	--	100	0	100	0	Kren	2/1/2026 5:12:34 PM
+Static Krenim Warships	68	DEFEAT	Static Krenim Warships	68	772405133312	0	Krenim Captain	--	--	589680000000	0	589680000000	0	Kyana	11/25/2025 7:20:59 PM
 
 Reward Name	Count
+Encrypted Intelligence	1175644457
+Static Temporal Wreckage	7651165
+Mega Chest	1
 
 Fleet Type	Attack	Defense	Health	Ship Ability	Captain Maneuver	Officer One Ability	Officer Two Ability	Officer Three Ability	Officer Attack Bonus	Damage Per Round	Armour Pierce	Shield Pierce	Accuracy	Critical Chance	Critical Damage	Officer Defense Bonus	Armour	Shield Deflection	Dodge	Officer Health Bonus	Shield Health	Hull Health	Impulse Speed	Warp Range	Warp Speed	Cargo Capacity	Protected Cargo	Mining Bonus	Debuff applied	Buff applied
-Player Fleet 1	100	100	100	--	--	--	--	--	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	NO	NO
-Enemy Fleet 1	100	100	100	--	--	--	--	--	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	NO	NO
+Player Fleet 1	457676160	301780576	5625850368	Anti-Tachyon Weaponry---Relative Growth	Safe Cracker	No Locked Doors	The Looking Glass	I Have One Job!	5	355198912	8183017	8304472	47898611	0.22	3.65	5	7518581	45281894	7555637	5	5846962382	5404738519	252	1607	409.61	38937240	0	1	NO	NO
+Player Fleet 2	662079936	272139680	1998178048	Apex Shred---Marked for Disposal	Red Alert! Raise Shields!	Bend the Rules	Over My Dead Program	Unshakeable Moral Code	5	641884224	24490498	2074839	1980636	0.22	3.45	5	11553217	11349416	31525304	5	2051043152	1945312910	262	1523	434.43	61437290	0	1	NO	NO
+Enemy Fleet 1	10735112192	171990007808	589680017408	Static Temporal Displacer---Krenim Temporal Core---ship_ability_name_{0}	--	--	--	--	0	8536434688	366446080	366446080	366446080	0.1	1.5	0	11466000384	11466000384	11466000384	0	589680017408	589680017408	0	2	2	0	0	1	NO	NO
 
 Round	Battle Event	Type	Attacker Name	Attacker Alliance	Attacker Ship	Attacker - Is Armada?	Target Name	Target Alliance	Target Ship	Target - Is Armada?	Hyperthermic Decay %	Hyperthermic Stablizer %	Critical Hit?	Hull Damage	Shield Damage	Mitigated Damage	Mitigated Isolytic Damage	Mitigated Apex Barrier	Total Damage	Total Isolytic Damage	Ability Type	Ability Value	Ability Name	Ability Owner Name	Target Defeated	Target Destroyed	Charging Weapons %
-0	1	Attack	Alpha	Alliance A	Ship A	NO	Beta	Alliance B	Ship B	NO	--	--	NO	10	0	0	0	0	10	0	--	--	--	--	--	--	--
-5	2	Attack	Alpha	Alliance A	Ship A	NO	Beta	Alliance B	Ship B	NO	--	--	NO	12	0	0	0	0	12	0	--	--	--	--	--	--	--
+1	1	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.7	I Have One Job!	Gwen DeMarco	--	--	--
+1	2	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.45	Three Shots of Something...	Enterprise-E Troi	--	--	--
+1	3	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.2	Bend the Rules	Kathryn Janeway	--	--	--
+1	4	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	2.5	Unshakeable Moral Code	Beverly Crusher	--	--	--
+1	5	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	3.75	A Fighting Chance	WOK Leonard McCoy	--	--	--
+1	6	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	5	War's Almost Over	Tom Paris	--	--	--
+1	7	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	To the Journey!	Harry Kim	--	--	--
+1	8	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Knock it Down	B'Elanna Torres	--	--	--
+1	9	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.55	No Locked Doors	Dajash Tolra	--	--	--
+1	10	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	11	The Looking Glass	Toli	--	--	--
+1	11	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Now We're Cooking	Neelix	--	--	--
+1	12	Forbidden Tech Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	2500	--	Chrono Deflector	--	--	--
+1	13	Forbidden Tech Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	3.2	--	Chrono Deflector	--	--	--
+1	14	Forbidden Tech Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	0.26	--	Chrono Deflector	--	--	--
+1	15	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	24348776	114787096	203809840	432426752	199659664	487516064	487516064	--	--	--	--	--	--	--
+1	16	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	23525892	110907768	196921920	417812512	192912000	471040052	471040040	--	--	--	--	--	--	--
+1	17	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	25567020	120530240	214007056	454062368	209649248	511907964	511907968	--	--	--	--	--	--	--
+1	18	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	25161304	118617584	210611040	446856992	206322384	503784648	503784656	--	--	--	--	--	--	--
+1	19	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	22977296	108321544	192329952	408069664	188413536	460056000	460055992	--	--	--	--	--	--	--
+1	20	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	604743552	1814230656	645838336	2767176448	685375168	983011264	5534352896	--	--	--	--	--	--	--
+1	21	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	8446318080	25338953728	9020279808	38648537088	9572482048	13729496576	77297074176	--	--	--	--	--	--	--
+1	22	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	8923940864	26771822592	9530358784	40834035712	10113786880	14505873408	81668071424	--	--	--	--	--	--	--
+1	23	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	589488832	1768466432	629547008	2697374208	668086464	958214528	5394748416	--	--	--	--	--	--	--
+1	24	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	61664160	184992480	96864688	265972448	69885960	147434840	531944896	--	--	--	--	--	--	--
+1	25	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	1126291200	3378873600	1769226112	4857966592	1276461696	2692886016	9715933184	--	--	--	--	--	--	--
+1	26	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.13	Red Alert! Raise Shields!	Kathryn Janeway	--	--	--
+1	27	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	5	Over My Dead Program	The Doctor	--	--	--
+1	28	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.06	The Winning Gambit	Masriad Vael	--	--	--
+1	29	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	35316780	166493392	90289904	460063040	245804432	498983772	498983776	--	--	--	--	--	--	--
+1	30	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	37760904	178015680	96538480	491902016	262815488	533516280	533516288	--	--	--	--	--	--	--
+1	31	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	37068024	174749264	94767088	482876064	257993072	523726760	523726752	--	--	--	--	--	--	--
+1	32	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	34583944	163038608	88416360	450516576	240703904	488629700	488629692	--	--	--	--	--	--	--
+1	33	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	36500336	172073024	93315752	475480928	254041968	515706012	515705996	--	--	--	--	--	--	--
+1	34	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	666128256	1998384768	711394432	3048059904	754944384	1082791936	6096119808	--	--	--	--	--	--	--
+1	35	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	695387264	2086161792	742641664	3181942784	788104576	1130352512	6363885568	--	--	--	--	--	--	--
+1	36	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	8534733312	25604198400	9114702848	39053103104	9672685568	13873217024	78106206208	--	--	--	--	--	--	--
+1	37	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	738817216	2216451840	789022912	3380668928	837325120	1200948160	6761337856	--	--	--	--	--	--	--
+1	38	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	7831455232	23494365184	8363634688	35835056128	8875637760	12730036736	71670112256	--	--	--	--	--	--	--
+1	39	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	638995136	1916985472	682417472	2923904512	724193600	1038687168	5847809024	--	--	--	--	--	--	--
+1	40	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	63412748	190238240	99611440	273514528	71867688	151615588	547029056	--	--	--	--	--	--	--
+1	41	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	68156960	204470896	107063864	293977472	77244456	162958704	587954944	--	--	--	--	--	--	--
+1	42	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	YES	0	0	0	0	0	0	0	--	--	--	--	--	--	--
+1	43	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	36928312	174090624	94409904	481056064	257020672	521752792	521752784	--	--	--	--	--	--	--
+1	44	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	34215100	161299760	87473376	445711712	238136736	483418340	483418344	--	--	--	--	--	--	--
+1	45	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	33875888	159700624	86606160	441292896	235775840	478625708	478625700	--	--	--	--	--	--	--
+1	46	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	33852976	159592592	86547584	440994400	235616352	478301952	478301952	--	--	--	--	--	--	--
+1	47	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	622534784	1867604480	664838592	2848585472	705538560	1011930944	5697170944	--	--	--	--	--	--	--
+1	48	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	488704576	1466113664	521914048	2236207104	553864448	794389632	4472414208	--	--	--	--	--	--	--
+1	49	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	10456331264	31368992768	11166881792	47845924864	11850492928	16996773888	95691849728	--	--	--	--	--	--	--
+1	50	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	592863488	1778590464	633151040	2712815872	671911104	963700224	5425631744	--	--	--	--	--	--	--
+1	51	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	126533944	379601824	198764912	545771520	143404960	302534120	1091543040	--	--	--	--	--	--	--
+1	52	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	125409280	376227840	196998240	540920576	142130336	299845120	1081841152	--	--	--	--	--	--	--
+1	53	Forbidden Tech Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	0.5	--	Tothian Mines	--	--	--
+1	54	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5498704	116694712	261674272	445663680	175347280	502439324	502439324	--	--	--	--	--	--	--
+1	55	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5363206	113819152	255226176	434681760	171026416	490058358	490058352	--	--	--	--	--	--	--
+1	56	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5645097	119801496	268640864	457528640	180015568	515815833	515815832	--	--	--	--	--	--	--
+1	57	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5796000	123004000	275822112	469759200	184827712	529604516	529604508	--	--	--	--	--	--	--
+1	58	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5313394	112762024	252855680	430644544	169437968	485506798	485506812	--	--	--	--	--	--	--
+1	59	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	593479744	1780439296	633809152	2715635712	672609536	964702016	5431271424	--	--	--	--	--	--	--
+1	60	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	437879360	1313638144	467635072	2003641856	496262656	711773376	4007283712	--	--	--	--	--	--	--
+1	61	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	594714560	1784143616	635127808	2721285888	674008960	966709056	5442571776	--	--	--	--	--	--	--
+1	62	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	7979537920	23938613248	8521780224	36512649216	9043464192	12970746368	73025298432	--	--	--	--	--	--	--
+1	63	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	8982508544	26947524608	9592906752	41102028800	10180163584	14601074688	82204057600	--	--	--	--	--	--	--
+1	64	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	8559061504	25677185024	9140684800	39164424192	9700256768	13912763904	78328848384	--	--	--	--	--	--	--
+1	65	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	137812256	413436736	216481344	594417600	156187008	329499744	1188835200	--	--	--	--	--	--	--
+1	66	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	2334693888	7004081664	3667436544	10070099968	2645982976	5582095104	20140199936	--	--	--	--	--	--	--
+2	68	battle_action_type_{0}	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	--	--	80025570	--	--	--	--
+2	69	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Now We're Cooking	Neelix	--	--	--
+2	70	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.13	Red Alert! Raise Shields!	Kathryn Janeway	--	--	--
+2	71	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	5	Over My Dead Program	The Doctor	--	--	--
+2	72	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.06	The Winning Gambit	Masriad Vael	--	--	--
+2	73	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	To the Journey!	Harry Kim	--	--	--
+2	74	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Knock it Down	B'Elanna Torres	--	--	--
+2	75	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.05	Reclaiming Lives	PIC Hugh	--	--	--
+2	76	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	11	The Looking Glass	Toli	--	--	--
+2	77	Charging Weapons	Static Krenim Warships	--	Static Krenim Warships	NO	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+2	78	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	681066688	2043200000	700935232	3130203904	771874560	1066872576	6260407808	--	--	--	--	--	--	--
+2	79	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	9484780544	28454342656	9761477632	43592351744	10749405184	14857654272	87184703488	--	--	--	--	--	--	--
+2	80	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	702112640	2106337920	722595200	3226931968	795726656	1099840448	6453863936	--	--	--	--	--	--	--
+2	81	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	542032064	1626096128	557844608	2491196416	614302208	849078592	4982392832	--	--	--	--	--	--	--
+2	82	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	62272288	186816864	106124032	264260160	70575168	161528192	528520320	--	--	--	--	--	--	--
+2	83	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	62190160	186570464	105984064	263911616	70482088	161315160	527823232	--	--	--	--	--	--	--
+2	84	Charging Weapons	Static Krenim Warships	--	Static Krenim Warships	NO	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+2	85	Charging Weapons	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+2	86	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	65018924	195056768	110804832	275915840	73688016	168652700	551831680	--	--	--	--	--	--	--
+2	87	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	1002035008	3006105088	1707661568	4252259328	1135638144	2599180480	8504518656	--	--	--	--	--	--	--
+2	88	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	YES	0	0	0	0	0	0	0	--	--	--	--	--	--	--
+2	89	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	31440888	148221328	82500688	419286880	225116432	453283104	453283112	--	--	--	--	--	--	--
+2	90	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	36503192	172086464	95784136	486796320	261362464	526266284	526266292	--	--	--	--	--	--	--
+2	91	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	35060092	165283296	91997456	467551552	251029888	505461148	505461136	--	--	--	--	--	--	--
+2	92	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	35593504	167797952	93397128	474665024	254849136	513151368	513151376	--	--	--	--	--	--	--
+2	93	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	553163584	1659490816	569300864	2542357504	626917952	866515712	5084715008	--	--	--	--	--	--	--
+2	94	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	10637154304	31911462912	10947469312	48888696832	12055426048	16662815744	97777393664	--	--	--	--	--	--	--
+2	95	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	561015360	1683046016	577381696	2578444288	635816576	878815360	5156888576	--	--	--	--	--	--	--
+2	96	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	648829696	1946488960	667757824	2982041600	735339328	1016374208	5964083200	--	--	--	--	--	--	--
+2	97	Charging Weapons	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+2	98	Forbidden Tech Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	0.5	--	Tothian Mines	--	--	--
+2	99	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5320197	112906408	293957888	458983424	163743984	517455957	517455944	--	--	--	--	--	--	--
+2	100	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5005118	106219728	276548768	431800960	154046544	486810566	486810552	--	--	--	--	--	--	--
+2	101	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	4775336	101343248	263852560	411977248	146974368	464461376	464461384	--	--	--	--	--	--	--
+2	102	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	5283738	112132672	291943392	455838048	162621856	513909842	513909864	--	--	--	--	--	--	--
+2	103	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	YES	0	0	0	0	0	0	0	--	--	--	--	--	--	--
+2	104	Charging Weapons	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+2	105	Charging Weapons	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+3	107	battle_action_type_{0}	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	--	--	34649420	--	--	--	--
+3	108	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Now We're Cooking	Neelix	--	--	--
+3	109	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.13	Red Alert! Raise Shields!	Kathryn Janeway	--	--	--
+3	110	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	5	Over My Dead Program	The Doctor	--	--	--
+3	111	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.06	The Winning Gambit	Masriad Vael	--	--	--
+3	112	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	To the Journey!	Harry Kim	--	--	--
+3	113	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Knock it Down	B'Elanna Torres	--	--	--
+3	114	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.05	Reclaiming Lives	PIC Hugh	--	--	--
+3	115	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.55	No Locked Doors	Dajash Tolra	--	--	--
+3	116	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	11	The Looking Glass	Toli	--	--	--
+3	117	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	7245712	96264456	257367024	401850752	143361712	453044840	453044816	--	--	--	--	--	--	--
+3	118	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	7225276	95992952	256641136	400717376	142957376	451767060	451767056	--	--	--	--	--	--	--
+3	119	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	7520525	99915544	267128352	417092032	148799088	470227773	470227768	--	--	--	--	--	--	--
+3	120	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	8442117	112159560	299863232	468204000	167033472	527851197	527851184	--	--	--	--	--	--	--
+3	121	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	7929530	105349480	281656192	439775680	156891568	495801230	495801220	--	--	--	--	--	--	--
+3	122	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	413007744	1652030976	531320384	2372745728	585093568	808706944	4745491456	--	--	--	--	--	--	--
+3	123	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	455032160	1820128640	585383360	2614177792	644628096	890994464	5228355584	--	--	--	--	--	--	--
+3	124	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	7927540736	31710162944	10198510592	45544034304	11230667776	15522847744	91088068608	--	--	--	--	--	--	--
+3	125	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	7231255040	28925020160	9302763520	41543847936	10244264960	14159455744	83087695872	--	--	--	--	--	--	--
+3	126	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	51852144	207408576	110457608	275051232	73457112	168124208	550102464	--	--	--	--	--	--	--
+3	127	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	46604964	186419856	99279856	247217408	66023616	151110884	494434816	--	--	--	--	--	--	--
+3	128	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.13	Red Alert! Raise Shields!	Kathryn Janeway	--	--	--
+3	129	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	5	Over My Dead Program	The Doctor	--	--	--
+3	130	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.06	The Winning Gambit	Masriad Vael	--	--	--
+3	131	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	39664952	158659808	91070504	462840576	248500560	500368208	500368192	--	--	--	--	--	--	--
+3	132	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	37737192	150948768	86644384	440346048	236423168	476049776	476049784	--	--	--	--	--	--	--
+3	133	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	YES	0	0	0	0	0	0	0	--	--	--	--	--	--	--
+3	134	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	42169708	168678832	96821408	492067968	264192832	531965376	531965372	--	--	--	--	--	--	--
+3	135	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	41765448	167061792	95893232	487350784	261660160	526865704	526865712	--	--	--	--	--	--	--
+3	136	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	5453155328	21812621312	7015298560	31328593920	7725293568	10677774848	62657187840	--	--	--	--	--	--	--
+3	137	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	500134944	2000539776	643406528	2873295104	708523584	979309728	5746590208	--	--	--	--	--	--	--
+3	138	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	407342432	1629369728	524032160	2340198400	577067712	797613632	4680396800	--	--	--	--	--	--	--
+3	139	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	6308558336	25234233344	8115745280	36242915328	8937112576	12352734208	72485830656	--	--	--	--	--	--	--
+3	140	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	398809728	1595238912	513055136	2291177728	564979712	780905760	4582355456	--	--	--	--	--	--	--
+3	141	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	439425728	1757702912	565306240	2524518144	622518976	860435712	5049036288	--	--	--	--	--	--	--
+3	142	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	816396352	3265585408	1739121792	4330598400	1156560000	2647065152	8661196800	--	--	--	--	--	--	--
+3	143	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	51758940	207035760	110259064	274556832	73325072	167822004	549113664	--	--	--	--	--	--	--
+3	144	Forbidden Tech Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	0.5	--	Tothian Mines	--	--	--
+3	145	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	42426000	169704000	97738208	498338336	265798496	537002520	537002520	--	--	--	--	--	--	--
+3	146	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	41709200	166836800	96086888	489918752	261307744	527929696	527929688	--	--	--	--	--	--	--
+3	147	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	41530568	166122272	95675376	487820576	260188640	525668708	525668724	--	--	--	--	--	--	--
+3	148	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	NO	39828752	159315008	91754832	467830912	249526752	504128120	504128136	--	--	--	--	--	--	--
+3	149	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	YES	0	0	0	0	0	0	0	--	--	--	--	--	--	--
+3	150	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	6848931328	27395725312	8810916864	39347380224	9702640640	13410833920	78694760448	--	--	--	--	--	--	--
+3	151	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	6051844608	24207378432	7785491968	34768089088	8573435392	11850061312	69536178176	--	--	--	--	--	--	--
+3	152	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	5417540608	21670162432	6969481216	31123984384	7674839040	10608038912	62247968768	--	--	--	--	--	--	--
+3	153	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	559825792	2239303168	720196864	3216221440	793085568	1096189952	6432442880	--	--	--	--	--	--	--
+3	154	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	1687981440	6751925760	3595808768	8953947136	2391303936	5473072768	17907894272	--	--	--	--	--	--	--
+3	155	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	1598353152	6393412608	3404878848	8478511104	2264330752	5182464256	16957022208	--	--	--	--	--	--	--
+3	156	Forbidden Tech Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	ForbiddenTechAbility	0.5	--	Tothian Mines	--	--	--
+3	157	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	0	92746920	281846176	400901440	128454600	451974568	451974568	--	--	--	--	--	--	--
+3	158	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	0	103613208	314867456	447871296	143504416	504928192	504928184	--	--	--	--	--	--	--
+3	159	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	0	109124800	331616480	471695328	151137968	531787284	531787292	--	--	--	--	--	--	--
+3	160	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	0	110525960	335874432	477751904	153078592	538615440	538615448	--	--	--	--	--	--	--
+3	161	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	0	104988336	319046304	453815360	145408976	511629484	511629492	--	--	--	--	--	--	--
+3	162	Shield Depleted	XanOfHanoi	ThunderDome	GS-31	NO	Static Krenim Warships	--	GS-31	YES	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--
+3	163	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	6657134080	26628536320	8564175872	38245498880	9430927360	13035274752	76490997760	--	--	--	--	--	--	--
+3	164	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	490067904	1960271616	630455680	2815459584	694261952	959597568	5630919168	--	--	--	--	--	--	--
+3	165	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	623147392	2492589568	801657856	3580006400	882790976	1220179392	7160012800	--	--	--	--	--	--	--
+3	166	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	619347840	2477391616	796769920	3558178048	877408384	1212739712	7116356096	--	--	--	--	--	--	--
+3	167	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	7720555008	30882220032	9932230656	44354891776	10937438208	15117552128	88709783552	--	--	--	--	--	--	--
+3	168	Shield Depleted	Static Krenim Warships	--	Static Krenim Warships	YES	XanOfHanoi	ThunderDome	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	YES	--	--
+3	169	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	2653273088	0	682669056	3048631552	751759744	1039070336	6097263104	--	--	--	--	--	--	--
+3	170	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	469379040	0	199978192	497966976	132990560	304380816	995933952	--	--	--	--	--	--	--
+3	171	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	7779653120	0	3314508544	8253479424	2204232192	5044914432	16506958848	--	--	--	--	--	--	--
+4	173	battle_action_type_{0}	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	--	--	81707950	--	--	--	--
+4	174	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Now We're Cooking	Neelix	--	--	--
+4	175	Officer Ability	XanOfHanoi	ThunderDome	GS-31	YES	--	--	GS-31	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.06	The Winning Gambit	Masriad Vael	--	--	--
+4	176	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	To the Journey!	Harry Kim	--	--	--
+4	177	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	1	Knock it Down	B'Elanna Torres	--	--	--
+4	178	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.05	Reclaiming Lives	PIC Hugh	--	--	--
+4	179	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	0.55	No Locked Doors	Dajash Tolra	--	--	--
+4	180	Officer Ability	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	Officer	11	The Looking Glass	Toli	--	--	--
+4	181	Charging Weapons	Static Krenim Warships	--	Static Krenim Warships	NO	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+4	182	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	38336094208	0	9863616512	44048478208	10861879296	15013111808	88096956416	--	--	--	--	--	--	--
+4	183	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	2081086848	0	535449472	2391185152	589640512	814991680	4782370304	--	--	--	--	--	--	--
+4	184	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	2581796608	0	664278656	2966504704	731508096	1011078656	5933009408	--	--	--	--	--	--	--
+4	185	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	2154591488	0	554361728	2475642624	610466816	843777408	4951285248	--	--	--	--	--	--	--
+4	186	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	2536527616	0	652631296	2914490368	718681920	993350464	5828980736	--	--	--	--	--	--	--
+4	187	Attack	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	2057829376	0	529465472	2364462336	583050880	805883392	4728924672	--	--	--	--	--	--	--
+4	188	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	2996723712	0	1276749312	3179241984	849070656	1943301696	6358483968	--	--	--	--	--	--	--
+4	189	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	NO	257524144	0	109717744	273208864	72965080	166998104	546417728	--	--	--	--	--	--	--
+4	190	Charging Weapons	Static Krenim Warships	--	Static Krenim Warships	NO	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+4	191	Charging Weapons	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	100
+4	192	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	3027639552	0	1289920896	3212040704	857830080	1963349824	6424081408	--	--	--	--	--	--	--
+4	193	Attack	XanOfHanoi	ThunderDome	GS-31	YES	Static Krenim Warships	--	Static Krenim Warships	NO	--	--	YES	2808629760	0	1196612224	2979691776	795777408	1821327616	5959383552	--	--	--	--	--	--	--
+4	194	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	118189088	0	263061088	410741440	134144656	463068132	463068140	--	--	--	--	--	--	--
+4	195	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	120287136	0	267730848	418032736	136525936	471288336	471288320	--	--	--	--	--	--	--
+4	196	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	133221536	0	296519776	462983552	151206480	521965672	521965672	--	--	--	--	--	--	--
+4	197	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	131039192	0	291662400	455399264	148729520	513415196	513415180	--	--	--	--	--	--	--
+4	198	Attack	Static Krenim Warships	--	Static Krenim Warships	NO	XanOfHanoi	ThunderDome	GS-31	YES	--	--	NO	118066864	0	262789040	410316672	134005928	462589248	462589256	--	--	--	--	--	--	--
+4	199	Combatant Destroyed	XanOfHanoi	ThunderDome	GS-31	NO	Static Krenim Warships	--	GS-31	YES	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--	--
+5	201	battle_action_type_{0}	XanOfHanoi	ThunderDome	U.S.S. RELATIVITY	YES	--	--	U.S.S. RELATIVITY	NO	--	--	--	--	--	--	--	--	--	--	--	--	49616180	--	--	--	--
+
