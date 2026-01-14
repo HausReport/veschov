@@ -8,7 +8,7 @@ import urllib.parse
 import zlib
 from pathlib import Path
 from typing import Callable, Iterable, TypedDict, cast
-import urllib.parse
+
 import streamlit as st
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 
@@ -53,6 +53,7 @@ DEFAULT_SUGGESTIONS = [] # OFFICER_NAMES[:8]
 
 
 def init_state() -> None:
+    """Initialize Streamlit session state with builder defaults."""
     st.session_state.setdefault("holding", None)
     st.session_state.setdefault("bridge_slots", [None] * BRIDGE_SLOTS)
     st.session_state.setdefault("even_slots", [None] * EVEN_SLOTS)
@@ -66,10 +67,12 @@ def init_state() -> None:
 
 
 def _pad_base64(value: str) -> str:
+    """Pad base64-encoded strings to valid lengths."""
     return value + ("=" * (-len(value) % 4))
 
 
 def _validate_slots(values: object, expected_len: int) -> list[str | None] | None:
+    """Validate a list of slots with optional string values."""
     if not isinstance(values, list):
         return None
     if len(values) != expected_len:
@@ -83,6 +86,7 @@ def _validate_slots(values: object, expected_len: int) -> list[str | None] | Non
 
 
 def _coerce_state(payload: object) -> BuilderState | None:
+    """Validate and normalize a decoded state payload."""
     if not isinstance(payload, dict):
         logger.warning("State payload is not a dict.")
         return None
@@ -146,6 +150,7 @@ def _coerce_state(payload: object) -> BuilderState | None:
 
 
 def serialize_state() -> str:
+    """Encode the current builder state into a shareable URL payload."""
     payload: BuilderState = {
         "v": STATE_VERSION,
         "holding": cast(str | None, st.session_state.holding),
@@ -163,6 +168,7 @@ def serialize_state() -> str:
 
 
 def deserialize_state(encoded: str) -> BuilderState | None:
+    """Decode and validate a shareable URL payload."""
     try:
         codec = "zlib"
         raw = encoded
@@ -191,6 +197,7 @@ def deserialize_state(encoded: str) -> BuilderState | None:
 
 
 def _get_state_query_param() -> str | None:
+    """Return the state query param, normalizing list vs string values."""
     value = st.query_params.get("state")
     if value is None:
         return None
@@ -200,6 +207,7 @@ def _get_state_query_param() -> str | None:
 
 
 def restore_state_from_query() -> None:
+    """Restore session state from the URL, if present."""
     if st.session_state.state_restored:
         return
 
@@ -226,10 +234,12 @@ def restore_state_from_query() -> None:
 
 
 def pick(value: str) -> None:
+    """Store the selected officer in the holding slot."""
     st.session_state.holding = value
 
 
 def all_placed_values() -> set[str]:
+    """Return a set of all officers currently placed in slots."""
     placed: set[str] = set()
     for value in st.session_state.bridge_slots + st.session_state.even_slots:
         if value is not None:
@@ -238,17 +248,20 @@ def all_placed_values() -> set[str]:
 
 
 def remove_value_everywhere(value: str) -> None:
+    """Remove a value from all slot lists."""
     for key in ("bridge_slots", "even_slots"):
         slots = [v if v != value else None for v in st.session_state[key]]
         st.session_state[key] = slots
 
 
 def add_suggestion(value: str) -> None:
+    """Append a value to suggestions if it is not already present."""
     if value not in st.session_state.suggestions:
         st.session_state.suggestions = st.session_state.suggestions + [value]
 
 
 def remove_suggestion(value: str) -> None:
+    """Remove a value from suggestions if it exists."""
     if value in st.session_state.suggestions:
         st.session_state.suggestions = [
             suggestion for suggestion in st.session_state.suggestions if suggestion != value
@@ -256,6 +269,7 @@ def remove_suggestion(value: str) -> None:
 
 
 def slot_click(row_key: str, idx: int) -> None:
+    """Handle clicking a slot, placing or removing officers."""
     holding = st.session_state.holding
     row = list(st.session_state[row_key])
 
@@ -312,6 +326,7 @@ def render_wrapped_chips(
 
 
 def on_manual_pick_change() -> None:
+    """Move the manual pick value into holding when changed."""
     val = st.session_state.manual_pick
     if val != "—":
         pick(val)
@@ -544,7 +559,7 @@ st.subheader("Share")
 from streamlit_copy_to_clipboard_button import copy_to_clipboard
 
 # If the user arrived via an already-shared link, still compute outputs
-state = st.query_params.get("state")
+state = _get_state_query_param()
 if (share_url is None) and state:
     qs = urllib.parse.urlencode({"state": state})
     share_url = f"{PUBLIC_BASE_URL}?{qs}"
@@ -581,4 +596,3 @@ else:
         st.code(reddit_md, language="markdown")
 
 st.caption("Tip: click a filled slot with nothing held to clear it (suggestions will reappear).")
-
