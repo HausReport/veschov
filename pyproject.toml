@@ -1,14 +1,16 @@
 [project]
 name = "veschov"
 version = "0.1.1"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
   "streamlit>=1.52",
+  "streamlit-extras>=0.78",
+  "st-pages>=1.0.1",
+  "streamlit-copy-to-clipboard-button>1.07"
   "pandas>=2.2",
   "plotly>=5.20",
-  "st-pages>=1.0.1",
   "humanize>=4.15.0",
-  "toml>=0.10.2"
+  "toml>=0.10.2",
 ]
 
 [tool.pdoc]
@@ -21,12 +23,12 @@ version = "0.1.2"
 packages = [{ include = "veschov", from = "src" }]
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.13"
 streamlit = ">=1.52"
 streamlit-extras = ">=0.78"
+st-pages = ">=1.0.1"
 streamlit-copy-to-clipboard-button =">1.07"
 pandas = ">=2.2"
 plotly = ">=5.20"
-st-pages = ">=1.0.1"
 humanize = ">=4.15.0"
 toml = ">=0.10.2"
