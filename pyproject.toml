@@ -1,7 +1,7 @@
 [project]
 name = "veschov"
 version = "0.1.1"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
   "streamlit>=1.52",
   "streamlit-extras>=0.7",
@@ -23,7 +23,7 @@ version = "0.1.2"
 packages = [{ include = "veschov", from = "src" }]
 
 [tool.poetry.dependencies]
-python = ">=3.13"
+python = ">=3.13,<3.14"
 streamlit = ">=1.52"
 streamlit-extras = ">=0.7"
 st-pages = ">=1.0.1"
