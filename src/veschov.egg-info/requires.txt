@@ -1,5 +1,6 @@
-streamlit>=1.40
+streamlit>=1.52
 pandas>=2.2
 plotly>=5.20
 st-pages>=1.0.1
 humanize>=4.15.0
+toml>=0.10.2

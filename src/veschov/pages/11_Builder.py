@@ -4,16 +4,18 @@ import base64
 import json
 import logging
 import lzma
+import os
 import zlib
 from pathlib import Path
 from typing import Callable, Iterable, TypedDict, cast
+import urllib.parse
+import streamlit.components.v1 as components
 
 import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 
 logger = logging.getLogger(__name__)
-
 
 class OfficerNameRecord(TypedDict):
     id: int
@@ -517,12 +519,71 @@ with notes_col:
         help="Freeform notes for this crew layout.",
     )
 
+
+import streamlit as st
+import urllib.parse
+# from streamlit_extras.copy_to_clipboard import copy_to_clipboard
+PUBLIC_BASE_URL = "https://veschov.streamlit.app/Builder"
+
 submitted = False
 with st.form("state-share"):
     st.caption("Save the current layout into the URL for sharing.")
-    submitted = st.form_submit_button("Save state to URL")
+    submitted = st.form_submit_button("💾 Save state to URL")
+
+share_url = None
+discord_md = None
+reddit_md = None
 
 if submitted:
-    st.query_params["state"] = serialize_state()
+    state = serialize_state()
+    st.query_params["state"] = state
+
+    qs = urllib.parse.urlencode({"state": state})
+    share_url = f"{PUBLIC_BASE_URL}?{qs}"
+
+    discord_md = f"[🔗 Open this build](<{share_url}>)"  # <...> often suppresses preview
+    reddit_md  = f"[Open this build]({share_url})"
+
+st.divider()
+st.subheader("Share")
+from streamlit_copy_to_clipboard_button import copy_to_clipboard
+
+# If the user arrived via an already-shared link, still compute outputs
+state = st.query_params.get("state")
+if (share_url is None) and state:
+    qs = urllib.parse.urlencode({"state": state})
+    share_url = f"{PUBLIC_BASE_URL}?{qs}"
+    discord_md = f"[🔗 Open this build](<{share_url}>)"
+    reddit_md  = f"[Open this build]({share_url})"
+
+if not share_url:
+    st.caption("Click **Save state to URL** to generate share links.")
+else:
+    st.code(share_url)
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        copy_to_clipboard(
+            share_url,
+            label="Copy long link to clipboard",  # Optional
+            label_after_copy="Copied!"  # Optional
+        )
+    with c2:
+        copy_to_clipboard(
+            discord_md,
+            label="💬 Copy for Discord",
+            label_after_copy="Copied!"  # Optional
+        )
+    with c3:
+        copy_to_clipboard(
+            reddit_md,
+            label="👽 Copy for Reddit markdown",
+            label_after_copy="Copied!"  # Optional
+        )
+
+    with st.expander("Show formatted text"):
+        st.code(discord_md, language="markdown")
+        st.code(reddit_md, language="markdown")
 
 st.caption("Tip: click a filled slot with nothing held to clear it (suggestions will reappear).")
+

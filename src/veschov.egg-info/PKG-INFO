@@ -1,9 +1,12 @@
 Metadata-Version: 2.4
 Name: veschov
-Version: 0.1.0
+Version: 0.1.1
 Requires-Python: >=3.11
-Requires-Dist: streamlit>=1.40
+License-File: LICENSE
+Requires-Dist: streamlit>=1.52
 Requires-Dist: pandas>=2.2
 Requires-Dist: plotly>=5.20
 Requires-Dist: st-pages>=1.0.1
 Requires-Dist: humanize>=4.15.0
+Requires-Dist: toml>=0.10.2
+Dynamic: license-file

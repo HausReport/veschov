@@ -23,6 +23,8 @@ packages = [{ include = "veschov", from = "src" }]
 [tool.poetry.dependencies]
 python = ">=3.11"
 streamlit = ">=1.52"
+streamlit-extras = ">=0.78"
+streamlit-copy-to-clipboard-button =">1.07"
 pandas = ">=2.2"
 plotly = ">=5.20"
 st-pages = ">=1.0.1"
