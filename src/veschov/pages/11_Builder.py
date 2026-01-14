@@ -4,18 +4,16 @@ import base64
 import json
 import logging
 import lzma
-import os
+import urllib.parse
 import zlib
 from pathlib import Path
 from typing import Callable, Iterable, TypedDict, cast
 import urllib.parse
-import streamlit.components.v1 as components
-
 import streamlit as st
-
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 
 logger = logging.getLogger(__name__)
+
 
 class OfficerNameRecord(TypedDict):
     id: int
@@ -38,6 +36,7 @@ BRIDGE_SLOTS = 3
 EVEN_SLOTS = 10
 STATE_VERSION = 3
 LZMA_PREFIX = "x:"
+PUBLIC_BASE_URL = "https://veschov.streamlit.app/Builder"
 
 ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets"
 
@@ -425,7 +424,7 @@ init_state()
 restore_state_from_query()
 _auto_seed_from_session()
 
-st.title("Share or Save Your Build")
+# st.title("Share or Save Your Build")
 
 # --- Holding text ---
 holding = st.session_state.holding
@@ -434,7 +433,7 @@ if holding is None:
 else:
     st.markdown(f"**Click a position for `{holding}`, or click another officer.**")
 
-st.divider()
+# st.divider()
 
 crew_col, notes_col = st.columns([3, 2])
 
@@ -520,10 +519,6 @@ with notes_col:
     )
 
 
-import streamlit as st
-import urllib.parse
-# from streamlit_extras.copy_to_clipboard import copy_to_clipboard
-PUBLIC_BASE_URL = "https://veschov.streamlit.app/Builder"
 
 submitted = False
 with st.form("state-share"):
