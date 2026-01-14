@@ -4,7 +4,7 @@ version = "0.1.1"
 requires-python = ">=3.13"
 dependencies = [
   "streamlit>=1.52",
-  "streamlit-extras>=0.78",
+  "streamlit-extras>=0.7",
   "st-pages>=1.0.1",
   "streamlit-copy-to-clipboard-button>=1.0",
   "pandas>=2.2",
@@ -25,7 +25,7 @@ packages = [{ include = "veschov", from = "src" }]
 [tool.poetry.dependencies]
 python = ">=3.13"
 streamlit = ">=1.52"
-streamlit-extras = ">=0.78"
+streamlit-extras = ">=0.7"
 st-pages = ">=1.0.1"
 streamlit-copy-to-clipboard-button = ">=1.0"
 pandas = ">=2.2"
