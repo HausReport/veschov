@@ -6,7 +6,7 @@ dependencies = [
   "streamlit>=1.52",
   "streamlit-extras>=0.78",
   "st-pages>=1.0.1",
-  "streamlit-copy-to-clipboard-button>=1.07",
+  "streamlit-copy-to-clipboard-button>=1.0",
   "pandas>=2.2",
   "plotly>=5.20",
   "humanize>=4.15.0",
@@ -27,7 +27,7 @@ python = ">=3.13"
 streamlit = ">=1.52"
 streamlit-extras = ">=0.78"
 st-pages = ">=1.0.1"
-streamlit-copy-to-clipboard-button =">=1.07"
+streamlit-copy-to-clipboard-button = ">=1.0"
 pandas = ">=2.2"
 plotly = ">=5.20"
 humanize = ">=4.15.0"
