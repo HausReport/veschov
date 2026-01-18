@@ -209,9 +209,25 @@ class AttackerTargetStateManager:
             selected_targets: Sequence[SerializedShipSpec],
     ) -> AttackerTargetSelection:
         """Persist the latest selections after rendering widgets."""
+        resolved_attackers = list(selected_attackers)
+        resolved_targets = list(selected_targets)
+        if not resolved_attackers:
+            logger.warning(
+                "No attacker selections supplied; defaulting to roster (%d specs).",
+                len(roster_state.attacker_roster),
+            )
+            resolved_attackers = list(roster_state.attacker_roster)
+            self.request_refresh(source="empty attacker selection")
+        if not resolved_targets:
+            logger.warning(
+                "No target selections supplied; defaulting to roster (%d specs).",
+                len(roster_state.target_roster),
+            )
+            resolved_targets = list(roster_state.target_roster)
+            self.request_refresh(source="empty target selection")
         if self._strict_mode and self._spec_lookup:
-            missing_attackers = [spec for spec in selected_attackers if spec not in self._spec_lookup]
-            missing_targets = [spec for spec in selected_targets if spec not in self._spec_lookup]
+            missing_attackers = [spec for spec in resolved_attackers if spec not in self._spec_lookup]
+            missing_targets = [spec for spec in resolved_targets if spec not in self._spec_lookup]
             if missing_attackers or missing_targets:
                 logger.error(
                     "Strict mode: missing selected specs attackers=%s targets=%s.",
@@ -222,8 +238,8 @@ class AttackerTargetStateManager:
         updated_state = AttackerTargetSelection(
             attacker_roster=list(roster_state.attacker_roster),
             target_roster=list(roster_state.target_roster),
-            selected_attackers=self._dedupe_specs(selected_attackers),
-            selected_targets=self._dedupe_specs(selected_targets),
+            selected_attackers=self._dedupe_specs(resolved_attackers),
+            selected_targets=self._dedupe_specs(resolved_targets),
         )
         self._persist_state(updated_state, origin="user", update_roster=False, update_selected=True)
         return updated_state
