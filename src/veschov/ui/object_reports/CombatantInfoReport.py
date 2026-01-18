@@ -114,7 +114,12 @@ class CombatantInfoReport(AttackerAndTargetReport):
         for spec in specs:
             match = self._match_player_row(players_df, spec)
             if match is None:
-                logger.warning("No player row match found for combatant %s.", spec)
+                logger.warning(
+                    "No player row match found for combatant %s; using fallback row.",
+                    spec,
+                )
+                fallback_row = self._build_fallback_player_row(players_df, spec)
+                cards.append((fallback_row, None))
                 continue
             index, row = match
             fleet_row = None
@@ -122,6 +127,24 @@ class CombatantInfoReport(AttackerAndTargetReport):
                 fleet_row = fleets_df.iloc[index]
             cards.append((row, fleet_row))
         return cards
+
+    def _build_fallback_player_row(
+        self,
+        players_df: pd.DataFrame,
+        spec: ShipSpecifier,
+    ) -> pd.Series:
+        """Build a minimal player metadata row for a combatant spec."""
+        base_columns = list(players_df.columns) if not players_df.empty else []
+        default_columns = ["Player Name", "Ship Name", "Alliance", "Player Alliance"]
+        columns = list(dict.fromkeys(base_columns + default_columns))
+        row_data = {column: pd.NA for column in columns}
+        row_data["Player Name"] = spec.name or pd.NA
+        row_data["Ship Name"] = spec.ship or pd.NA
+        if "Alliance" in row_data:
+            row_data["Alliance"] = spec.alliance or pd.NA
+        if "Player Alliance" in row_data:
+            row_data["Player Alliance"] = spec.alliance or pd.NA
+        return pd.Series(row_data)
 
     def _match_player_row(
         self,
