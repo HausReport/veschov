@@ -161,6 +161,7 @@ def test_attacker_target_swap_updates_checkboxes() -> None:
     expected_attackers, expected_targets = _resolve_default_specs(report, options, players_df)
 
     def render() -> None:
+        report = _StreamlitTestReport()
         report.render(session_info, players_df)
 
     app = AppTest.from_function(render)
