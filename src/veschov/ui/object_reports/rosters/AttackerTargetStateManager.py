@@ -46,6 +46,7 @@ def serialize_spec_key_dict(spec: SerializedShipSpec) -> dict[str, str]:
 class AttackerTargetStateManager:
     """Encapsulate attacker/target state stored in Streamlit session_state."""
     STATE_KEY = "attacker_target_state"
+    REFRESH_KEY = "attacker_target_state_refresh"
 
     def __init__(
             self,
@@ -112,6 +113,7 @@ class AttackerTargetStateManager:
             return []
         resolved: list[SerializedShipSpec] = []
         selected_set = set(selected_specs)
+        refresh_requested = st.session_state.get(self.REFRESH_KEY, False)
         for spec_key in roster_specs:
             spec = self._spec_lookup.get(spec_key)
             if spec is None:
@@ -123,7 +125,8 @@ class AttackerTargetStateManager:
                 continue
             label = self._label_builder(spec, self._outcome_lookup)
             checkbox_key = f"{key_prefix}_{spec_key}"
-            st.session_state[checkbox_key] = spec_key in selected_set
+            if refresh_requested or checkbox_key not in st.session_state:
+                st.session_state[checkbox_key] = spec_key in selected_set
             checked = st.checkbox(label, key=checkbox_key)
             if checked:
                 resolved.append(spec_key)
@@ -167,6 +170,17 @@ class AttackerTargetStateManager:
             len(swapped_state.selected_targets),
         )
         self._persist_state(swapped_state)
+        self.request_refresh()
+
+    def request_refresh(self) -> None:
+        """Request a checkbox refresh from stored selections."""
+        st.session_state[self.REFRESH_KEY] = True
+        logger.debug("Attacker/target checkbox refresh requested.")
+
+    def clear_refresh(self) -> None:
+        """Clear any pending checkbox refresh request."""
+        if st.session_state.pop(self.REFRESH_KEY, None) is not None:
+            logger.debug("Attacker/target checkbox refresh cleared.")
 
     def resolve_ship_specs(
             self,
