@@ -24,7 +24,9 @@ class AttackerTargetStateMeta(TypedDict):
     """Metadata stored alongside attacker/target selection state."""
     version: int
     origin: str
+    last_source: str
     selection_hash: str
+    selection_version: int
 
 
 class AttackerTargetStateSection(TypedDict):
@@ -414,19 +416,19 @@ class AttackerAndTargetReport(AbstractReport):
             self,
             players_df: pd.DataFrame | None,
             options: Sequence[ShipSpecifier],
-    ) -> list[ShipSpecifier]:
+    ) -> tuple[list[ShipSpecifier], str]:
         """Determine a default target selection from player metadata."""
         # FIX12: players_df should not be empty
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
             logger.warning("Player metadata missing; unable to infer default target selection.")
-            return []
+            return [], "missing player metadata"
         matched = self._match_enemy_spec(players_df, options)
         if matched is not None:
-            return [matched]
+            return [matched], "player metadata match"
         if options:
-            return [options[-1]]
+            return [options[-1]], "fallback to last option"
         logger.warning("Unable to determine default target; no ship options provided.")
-        return []
+        return [], "no ship options"
 
     def _build_default_attacker_target_defaults(
             self,
@@ -435,18 +437,23 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> tuple[list[SerializedShipSpec], list[SerializedShipSpec]]:
         """Build default attacker/target selections for state initialization."""
         # FIX12 players_df should not be empty
-        target_fallback = self._default_target_from_players(players_df, options)
+        target_fallback, target_reason = self._default_target_from_players(players_df, options)
         if not target_fallback:
             target_fallback = list(options[-1:])
+            target_reason = target_reason if target_fallback else "no options for fallback"
         attacker_fallback = [spec for spec in options if spec not in target_fallback]
         if not attacker_fallback:
             attacker_fallback = list(options[:1])
+            if not target_fallback:
+                target_fallback = list(options[-1:])
+            target_reason = target_reason if target_reason else "forced fallback to first option"
         default_attacker_specs = [serialize_spec(spec) for spec in attacker_fallback]
         default_target_specs = [serialize_spec(spec) for spec in target_fallback]
         logger.debug(
-            "Default attacker specs=%s; target specs=%s.",
+            "Default attacker specs=%s; target specs=%s (reason=%s).",
             default_attacker_specs,
             default_target_specs,
+            target_reason,
         )
         return default_attacker_specs, default_target_specs
 
@@ -603,6 +610,10 @@ class AttackerAndTargetReport(AbstractReport):
         )
         if players_df is None or players_df.empty:
             stored_state = manager.peek_state()
+            logger.warning(
+                "Player metadata missing for selection resolution (players_df=%s).",
+                "none" if players_df is None else "empty",
+            )
             if stored_state is not None:
                 logger.warning(
                     "Player metadata missing; using stored attacker/target selections without defaults.",

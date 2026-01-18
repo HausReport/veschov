@@ -34,11 +34,17 @@ def serialize_spec_dict(spec: ShipSpecifier) -> dict[str, str]:
     }
 
 
-def deserialize_spec_dict(spec: dict[str, str]) -> SerializedShipSpec:
+def deserialize_spec_dict(spec: dict[str, object]) -> SerializedShipSpec:
     """Deserialize a JSON-friendly mapping into a spec key."""
     missing_keys = [key for key in ("name", "alliance", "ship") if key not in spec]
     if missing_keys:
         logger.warning("Spec dict missing keys %s; using empty strings.", missing_keys)
+    missing_values = [
+        key for key in ("name", "alliance", "ship")
+        if key in spec and spec.get(key) is None
+    ]
+    if missing_values:
+        logger.warning("Spec dict has None values for keys %s; using empty strings.", missing_values)
     return SessionInfo.normalize_spec_key(
         spec.get("name"),
         spec.get("alliance"),
@@ -54,6 +60,7 @@ class AttackerTargetStateManager:
     """Encapsulate attacker/target state stored in Streamlit session_state."""
     STATE_KEY = "attacker_target_state"
     REFRESH_KEY = "attacker_target_state_refresh"
+    STATE_VERSION_KEY = "attacker_target_state_version"
     STATE_VERSION = 1
 
     def __init__(
@@ -68,9 +75,9 @@ class AttackerTargetStateManager:
             strict_mode: bool = False,
     ) -> None:
         self._spec_lookup = spec_lookup
-        self._available_specs = list(available_specs)
-        self._default_attacker_specs = list(default_attacker_specs)
-        self._default_target_specs = list(default_target_specs)
+        self._available_specs = self._dedupe_specs(available_specs)
+        self._default_attacker_specs = self._dedupe_specs(default_attacker_specs)
+        self._default_target_specs = self._dedupe_specs(default_target_specs)
         self._label_builder = label_builder
         self._outcome_lookup = outcome_lookup or {}
         self._strict_mode = strict_mode
@@ -92,9 +99,15 @@ class AttackerTargetStateManager:
                 selected_targets=[],
             )
             self._persist_state(resolved_state, origin=origin)
+            self.request_refresh(source="missing options")
             return resolved_state
         stored_state = self._load_state()
         attacker_roster, target_roster = self._resolve_rosters(stored_state)
+        logger.debug(
+            "Resolved rosters before selections: attacker=%d target=%d.",
+            len(attacker_roster),
+            len(target_roster),
+        )
         selected_attackers = self._resolve_selected_specs(
             stored_state.selected_attackers if stored_state else None,
             attacker_roster,
@@ -105,12 +118,22 @@ class AttackerTargetStateManager:
             target_roster,
             role="target",
         )
+        logger.debug(
+            "Resolved selections before persistence: attacker=%d target=%d.",
+            len(selected_attackers),
+            len(selected_targets),
+        )
         resolved_state = AttackerTargetSelection(
             attacker_roster=attacker_roster,
             target_roster=target_roster,
             selected_attackers=selected_attackers,
             selected_targets=selected_targets,
         )
+        if stored_state is not None and (
+            stored_state.attacker_roster != attacker_roster
+            or stored_state.target_roster != target_roster
+        ):
+            self.request_refresh(source="roster change")
         self._persist_state(resolved_state, origin=origin)
         logger.debug(
             "Resolved attacker/target state: roster(attacker=%d target=%d) selections(attacker=%d target=%d).",
@@ -118,6 +141,14 @@ class AttackerTargetStateManager:
             len(resolved_state.target_roster),
             len(resolved_state.selected_attackers),
             len(resolved_state.selected_targets),
+        )
+        logger.debug(
+            "Render summary: roster(attacker=%d target=%d) selections(attacker=%d target=%d) refresh=%s.",
+            len(resolved_state.attacker_roster),
+            len(resolved_state.target_roster),
+            len(resolved_state.selected_attackers),
+            len(resolved_state.selected_targets),
+            st.session_state.get(self.REFRESH_KEY, False),
         )
         return resolved_state
 
@@ -191,8 +222,8 @@ class AttackerTargetStateManager:
         updated_state = AttackerTargetSelection(
             attacker_roster=list(roster_state.attacker_roster),
             target_roster=list(roster_state.target_roster),
-            selected_attackers=list(selected_attackers),
-            selected_targets=list(selected_targets),
+            selected_attackers=self._dedupe_specs(selected_attackers),
+            selected_targets=self._dedupe_specs(selected_targets),
         )
         self._persist_state(updated_state, origin="user", update_roster=False, update_selected=True)
         return updated_state
@@ -213,18 +244,29 @@ class AttackerTargetStateManager:
             selected_attackers=list(current_state.selected_targets),
             selected_targets=list(current_state.selected_attackers),
         )
+        logger.debug(
+            "Post-swap state: roster(attacker=%d target=%d) selections(attacker=%d target=%d).",
+            len(swapped_state.attacker_roster),
+            len(swapped_state.target_roster),
+            len(swapped_state.selected_attackers),
+            len(swapped_state.selected_targets),
+        )
         logger.warning(
             "Swapping attacker/target state (attackers=%d targets=%d).",
             len(swapped_state.selected_attackers),
             len(swapped_state.selected_targets),
         )
         self._persist_state(swapped_state, origin="swap")
-        self.request_refresh()
+        self.request_refresh(source="swap")
 
-    def request_refresh(self) -> None:
+    def request_refresh(self, *, source: str) -> None:
         """Request a checkbox refresh from stored selections."""
         st.session_state[self.REFRESH_KEY] = True
-        logger.debug(f"Attacker/target checkbox refresh requested. Key = {self.REFRESH_KEY}")
+        logger.debug(
+            "Attacker/target checkbox refresh requested (source=%s, key=%s).",
+            source,
+            self.REFRESH_KEY,
+        )
 
     def clear_refresh(self) -> None:
         """Clear any pending checkbox refresh request."""
@@ -326,6 +368,9 @@ class AttackerTargetStateManager:
             previous_selected = previous_state.get("selected")
             previous_roster = previous_state.get("roster")
             previous_meta = previous_state.get("meta")
+        previous_version = st.session_state.get(self.STATE_VERSION_KEY)
+        if not isinstance(previous_version, int):
+            previous_version = 0
 
         selected_payload = {
             "attacker": serialize_specs(state.selected_attackers),
@@ -342,18 +387,38 @@ class AttackerTargetStateManager:
             roster_payload = previous_roster
 
         selection_hash = self._selection_hash(selected_payload)
-        attacker_target_state: AttackerTargetState = {
+        previous_selection_version = 0
+        if isinstance(previous_meta, dict):
+            selection_version_value = previous_meta.get("selection_version")
+            if isinstance(selection_version_value, int):
+                previous_selection_version = selection_version_value
+        comparison_state: AttackerTargetState = {
             "selected": selected_payload,
             "roster": roster_payload,
             "meta": {
                 "version": self.STATE_VERSION,
                 "origin": origin,
+                "last_source": origin,
                 "selection_hash": selection_hash,
+                "selection_version": previous_selection_version,
             },
         }
 
-        if previous_state != attacker_target_state:
+        if previous_state != comparison_state:
+            selection_version = max(previous_version, previous_selection_version) + 1
+            attacker_target_state: AttackerTargetState = {
+                "selected": selected_payload,
+                "roster": roster_payload,
+                "meta": {
+                    "version": self.STATE_VERSION,
+                    "origin": origin,
+                    "last_source": origin,
+                    "selection_hash": selection_hash,
+                    "selection_version": selection_version,
+                },
+            }
             st.session_state[self.STATE_KEY] = attacker_target_state
+            st.session_state[self.STATE_VERSION_KEY] = selection_version
             if isinstance(previous_meta, dict):
                 previous_hash = previous_meta.get("selection_hash")
                 if previous_hash and previous_hash != selection_hash and origin not in ("user", "swap"):
@@ -364,11 +429,15 @@ class AttackerTargetStateManager:
                         selection_hash,
                     )
             logger.debug(
-                "Attacker/target state updated: %s",
+                "Attacker/target state updated (version=%s): %s",
+                selection_version,
                 json.dumps(attacker_target_state, sort_keys=True),
             )
         else:
-            logger.debug("Attacker/target state unchanged; skipping session update.")
+            logger.debug(
+                "Attacker/target state unchanged; skipping session update (origin=%s).",
+                origin,
+            )
 
     def _resolve_rosters(
             self,
@@ -416,6 +485,7 @@ class AttackerTargetStateManager:
                 "Roster overlap detected; removing from target roster: %s",
                 overlap,
             )
+            logger.warning("Overlap resolution strategy: keep attacker roster, drop from target roster.")
         target_roster = [spec for spec in deduped_target if spec not in attacker_roster]
         missing_specs = [
             spec for spec in self._available_specs
@@ -516,6 +586,12 @@ class AttackerTargetStateManager:
             return []
         deduped = self._dedupe_specs(roster)
         filtered = [spec for spec in deduped if spec in self._spec_lookup]
+        logger.debug(
+            "Filtered %s roster specs: retained=%d dropped=%d.",
+            role,
+            len(filtered),
+            len(deduped) - len(filtered),
+        )
         if len(filtered) < len(deduped):
             dropped = [spec for spec in deduped if spec not in self._spec_lookup]
             available_labels = self._describe_available_specs()
