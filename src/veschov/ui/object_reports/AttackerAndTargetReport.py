@@ -5,7 +5,7 @@ import logging
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, Iterable, Sequence, Set
+from typing import Callable, Iterable, Sequence, Set, TypedDict
 
 import pandas as pd
 import streamlit as st
@@ -19,7 +19,29 @@ from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTa
 from veschov.ui.object_reports.rosters.AttackerTargetStateManager import serialize_spec, AttackerTargetStateManager
 
 SerializedShipSpec = tuple[str, str, str]
-AttackerTargetState = dict[str, dict[str, list[dict[str, str]]]]
+
+
+class AttackerTargetStateMeta(TypedDict):
+    """Metadata stored alongside attacker/target selection state."""
+    version: int
+    origin: str
+    selection_hash: str
+
+
+class AttackerTargetStateSection(TypedDict):
+    """Selected or roster entries for attacker/target state."""
+    attacker: list[dict[str, str]]
+    target: list[dict[str, str]]
+
+
+class AttackerTargetStatePayload(TypedDict):
+    """Full attacker/target selection state payload."""
+    selected: AttackerTargetStateSection
+    roster: AttackerTargetStateSection
+    meta: AttackerTargetStateMeta
+
+
+AttackerTargetState = AttackerTargetStatePayload
 logger = logging.getLogger(__name__)
 
 class AttackerAndTargetReport(AbstractReport):
@@ -69,6 +91,16 @@ class AttackerAndTargetReport(AbstractReport):
             resolved_session_info,
             players_df,
         )
+        logger.debug(
+            "Actor/target selections resolved: attackers=%d targets=%d lens_key=%s.",
+            len(selected_attackers),
+            len(selected_targets),
+            lens_key,
+        )
+        if st.session_state.get("debug_attacker_target_state"):
+            st.sidebar.expander("Debug: Attacker/Target State", expanded=False).json(
+                st.session_state.get(AttackerTargetStateManager.STATE_KEY),
+            )
 
         #
         # Adds the lens indicator
@@ -437,6 +469,12 @@ class AttackerAndTargetReport(AbstractReport):
 
         spec_lookup = {serialize_spec(spec): spec for spec in options}
         available_specs = [serialize_spec(spec) for spec in options]
+        missing_in_lookup = [spec for spec in available_specs if spec not in spec_lookup]
+        if missing_in_lookup:
+            logger.warning(
+                "Available specs missing from lookup during selector render: %s",
+                missing_in_lookup,
+            )
         # FIX12 players_df should not be empty
         default_attacker_specs, default_target_specs = self._build_default_attacker_target_defaults(
             players_df,
@@ -454,8 +492,9 @@ class AttackerAndTargetReport(AbstractReport):
             default_target_specs=default_target_specs,
             label_builder=self._format_ship_spec_label,
             outcome_lookup=outcome_lookup,
+            strict_mode=bool(st.session_state.get("attacker_target_strict_mode")),
         )
-        roster_state = manager.resolve_state()
+        roster_state = manager.resolve_state(origin="defaults")
 
         st.markdown(
             """
@@ -561,6 +600,7 @@ class AttackerAndTargetReport(AbstractReport):
             available_specs=available_specs,
             default_attacker_specs=default_attacker_specs,
             default_target_specs=default_target_specs,
+            strict_mode=bool(st.session_state.get("attacker_target_strict_mode")),
         )
         if players_df is None or players_df.empty:
             stored_state = manager.peek_state()
@@ -572,7 +612,11 @@ class AttackerAndTargetReport(AbstractReport):
                     manager.resolve_ship_specs(stored_state.selected_attackers),
                     manager.resolve_ship_specs(stored_state.selected_targets),
                 )
-        resolved_state = manager.resolve_state()
+            logger.warning(
+                "Player metadata missing and no stored state found; preserving empty selections.",
+            )
+            return [], []
+        resolved_state = manager.resolve_state(origin="defaults")
         return (
             manager.resolve_ship_specs(resolved_state.selected_attackers),
             manager.resolve_ship_specs(resolved_state.selected_targets),
