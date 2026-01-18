@@ -641,29 +641,29 @@ class AttackerAndTargetReport(AbstractReport):
         logger.warning("Outcome lookup unavailable: missing session info and battle df.")
         return {}
 
-    @staticmethod
-    def _outcome_emoji(outcome: object) -> str:
-        """Convert an outcome value into a display emoji."""
-        return SessionInfo.outcome_emoji(outcome)
+    # @staticmethod
+    # def _outcome_emoji(outcome: object) -> str:
+    #     """Convert an outcome value into a display emoji."""
+    #     return SessionInfo.outcome_emoji(outcome)
 
-    @staticmethod
-    def _format_combatant_label(
-            self,
-            row: pd.Series,
-            name_lookup: dict[str, str],
-            ship_lookup: dict[tuple[str, str], str],
-    ) -> str:
-        """Build a display label for a combatant row."""
-        name = ShipSpecifier.normalize_text(row.get("Player Name"))
-        ship = ShipSpecifier.normalize_text(row.get("Ship Name"))
-        alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
-        label = name or "Unknown"
-        if alliance:
-            label = f"{label} [{alliance}]"
-        if ship and ship != name:
-            label = f"{label} — {ship}"
-        return label
-
+    # @staticmethod
+    # def _format_combatant_label(
+    #         self,
+    #         row: pd.Series,
+    #         name_lookup: dict[str, str],
+    #         ship_lookup: dict[tuple[str, str], str],
+    # ) -> str:
+    #     """Build a display label for a combatant row."""
+    #     name = ShipSpecifier.normalize_text(row.get("Player Name"))
+    #     ship = ShipSpecifier.normalize_text(row.get("Ship Name"))
+    #     alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
+    #     label = name or "Unknown"
+    #     if alliance:
+    #         label = f"{label} [{alliance}]"
+    #     if ship and ship != name:
+    #         label = f"{label} — {ship}"
+    #     return label
+    #
     def _format_ship_spec_label(
             self,
             spec: ShipSpecifier,
