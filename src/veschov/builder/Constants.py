@@ -1,0 +1,6 @@
+PUBLIC_BASE_URL = "https://veschov.streamlit.app/Builder"
+STATE_VERSION = 3
+LZMA_PREFIX = "x:"
+BRIDGE_SLOTS = 3
+EVEN_SLOTS = 7
+DEFAULT_SUGGESTIONS = [] # OFFICER_NAMES[:8]
