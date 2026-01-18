@@ -138,14 +138,16 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> None:
         """Render the system/time/rounds banner for the report header."""
         context_lines = self._get_system_time_and_rounds(players_df, battle_df)
-        if context_lines:
-            context_text = " • ".join(context_lines)
-            # FIXME: This, and about 10 lines down, is where system name, date, and time are written.
-            st.markdown(
-                "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
-                f"{context_text}</div>",
-                unsafe_allow_html=True,
-            )
+        for context_line in context_lines:
+            st.markdown(f"* {context_line}\n")
+        # if context_lines:
+        #     context_text = " • ".join(context_lines)
+        #     # FIXME: This, and about 10 lines down, is where system name, date, and time are written.
+        #     st.markdown(
+        #         "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
+        #         f"{context_text}</div>",
+        #         unsafe_allow_html=True,
+        #     )
 
     def _get_system_time_and_rounds(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
         """Collect system name, timestamp, and round count from dataframes."""
@@ -219,11 +221,13 @@ class AttackerAndTargetReport(AbstractReport):
                 if parsed_dt.year != today_year:
                     date_part = f"{date_part} {parsed_dt:%Y}"
                 time_part = f"{parsed_dt:%H:%M}"
-                context_parts.append(f"on {date_part} at {time_part}")
+                context_parts.append(f"{date_part} at {time_part}")
             else:
                 context_parts.append(str(timestamp))
-        if context_parts:
-            lines.append(" ".join(context_parts))
+        for context_part in context_parts:
+            lines.append(context_part)
+        # if context_parts:
+        #     lines.append(" ".join(context_parts))
 
         if isinstance(battle_df, pd.DataFrame) and not battle_df.empty and "round" in battle_df.columns:
             rounds = pd.to_numeric(battle_df["round"], errors="coerce")

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Iterable
-
 import pandas as pd
 
 CANONICAL_COLUMN_STYLE = "snake_case"
@@ -55,11 +53,11 @@ def add_alias_columns(
     return updated
 
 
-def canonicalize_columns(df: pd.DataFrame, *, columns: Iterable[str]) -> pd.DataFrame:
-    """Lowercase column names in-place for a provided list."""
-    updated = df.copy()
-    updated.attrs = df.attrs.copy()
-    mapping = {column: column.lower() for column in columns if column in updated.columns}
-    if mapping:
-        updated = updated.rename(columns=mapping, inplace=False)
-    return updated
+# def canonicalize_columns(df: pd.DataFrame, *, columns: Iterable[str]) -> pd.DataFrame:
+#     """Lowercase column names in-place for a provided list."""
+#     updated = df.copy()
+#     updated.attrs = df.attrs.copy()
+#     mapping = {column: column.lower() for column in columns if column in updated.columns}
+#     if mapping:
+#         updated = updated.rename(columns=mapping, inplace=False)
+#     return updated

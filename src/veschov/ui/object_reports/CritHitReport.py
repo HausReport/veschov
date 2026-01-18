@@ -97,8 +97,8 @@ class CritHitReport(RoundOrShotsReport):
         crit_rate = crit_shots / total_shots if total_shots else 0.0
 
         self.summary_text = (
-            f"**Overall critical hit chance:** {crit_shots}/{total_shots} "
-            f"({crit_rate:.1%}). {self._format_average_shots(shot_df)}"
+            f"* **Overall critical hit chance:** {crit_shots}/{total_shots} ({crit_rate:.1%}).\n  " +
+            f"{self._format_average_shots(shot_df)}"
         )
         self.view_by = self._resolve_view_by()
         self.battle_filename = st.session_state.get("battle_filename") or "Session battle data"
@@ -216,12 +216,12 @@ class CritHitReport(RoundOrShotsReport):
     @staticmethod
     def _format_average_shots(shot_df: pd.DataFrame) -> str:
         if "round" not in shot_df.columns:
-            return "Average shots/round: N/A (round data missing)."
+            return "* **Average shots/round**: N/A (round data missing)."
         round_series = coerce_numeric(shot_df["round"])
         valid_rounds = shot_df.loc[round_series.notna()].copy()
         if valid_rounds.empty:
-            return "Average shots/round: N/A (round data missing)."
+            return "* **Average shots/round**: N/A (round data missing)."
         valid_rounds = valid_rounds.assign(round=round_series.loc[round_series.notna()].astype(int))
         counts = valid_rounds.groupby("round").size()
         average = counts.mean()
-        return f"Average shots/round: {average:.2f}."
+        return f"* **Average shots/round**: {average:.2f}."
