@@ -42,10 +42,15 @@ class AbstractReport(ABC):
         dfs = self.get_derived_dataframes(df, self.lens)
         if dfs is None:
             return
+        self.display_above_plots(dfs)
         self.display_plots(dfs)
         self.display_under_chart()
         self.display_tables(dfs)
         self.render_debug_info(dfs)
+
+    def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
+        """Render optional summary text or metadata above the plot area."""
+        return None
 
     def display_under_chart(self) -> None:
         """Render optional descriptive text beneath the main chart."""
