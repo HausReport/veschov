@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import traceback
 from typing import Iterable, Sequence, Callable
 
 import streamlit as st
@@ -520,6 +521,26 @@ class AttackerTargetStateManager:
             logger.warning("Attacker roster empty after normalization; using default attacker roster.")
             attacker_roster = list(self._default_attacker_specs or self._available_specs[:1])
             target_roster = [spec for spec in self._available_specs if spec not in attacker_roster]
+        if not target_roster:
+            if len(self._available_specs) == 1:
+                lone_spec = self._available_specs[0]
+                logger.warning(
+                    "Only one available spec; using it for both attacker and target rosters."
+                )
+                return [lone_spec], [lone_spec]
+            logger.warning("Target roster empty after normalization; falling back to last available spec.")
+            target_roster = list(self._available_specs[-1:])
+            attacker_roster = [spec for spec in self._available_specs if spec not in target_roster]
+        if not attacker_roster:
+            if len(self._available_specs) == 1:
+                lone_spec = self._available_specs[0]
+                logger.warning(
+                    "Only one available spec; using it for both attacker and target rosters."
+                )
+                return [lone_spec], [lone_spec]
+            logger.warning("Attacker roster empty after normalization; falling back to first available spec.")
+            attacker_roster = list(self._available_specs[:1])
+            target_roster = [spec for spec in self._available_specs if spec not in attacker_roster]
         return attacker_roster, target_roster
 
     def _resolve_selected_specs(
@@ -536,6 +557,7 @@ class AttackerTargetStateManager:
             return list(roster_list)
         if not stored_specs:
             logger.warning("Stored %s selections empty; defaulting to roster.", role)
+            traceback.print_stack()
             return list(roster_list)
         filtered = [spec for spec in self._dedupe_specs(stored_specs) if spec in self._spec_lookup]
         if len(filtered) < len(list(stored_specs)):
