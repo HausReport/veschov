@@ -16,6 +16,10 @@ from veschov.ui.object_reports.AttackerAndTargetReport import (
     AttackerAndTargetReport,
     SerializedShipSpec,
 )
+from veschov.ui.object_reports.rosters.AttackerTargetStateManager import (
+    AttackerTargetStateManager,
+    deserialize_spec_dict,
+)
 
 
 class _StreamlitTestReport(AttackerAndTargetReport):
@@ -109,6 +113,15 @@ def _get_button(app: AppTest, key: str) -> object:
     return matches[0]
 
 
+def _get_selected_specs_from_state(app: AppTest) -> tuple[list[SerializedShipSpec], list[SerializedShipSpec]]:
+    """Return selected attacker/target specs from stored attacker/target state."""
+    state = app.session_state[AttackerTargetStateManager.STATE_KEY]
+    selected = state["selected"]
+    attackers = [deserialize_spec_dict(entry) for entry in selected["attacker"]]
+    targets = [deserialize_spec_dict(entry) for entry in selected["target"]]
+    return attackers, targets
+
+
 def test_attacker_target_selector_toggle_updates_state() -> None:
     """Toggle attacker/target selections and verify session state updates."""
     combat_df = helpers.get_battle_log("1.csv")
@@ -124,11 +137,18 @@ def test_attacker_target_selector_toggle_updates_state() -> None:
     app = AppTest.from_function(render)
     app.run()
 
-    assert set(app.session_state["selected_attacker_specs"]) == set(expected_attackers)
-    assert set(app.session_state["selected_target_specs"]) == set(expected_targets)
+    selected_attackers, selected_targets = _get_selected_specs_from_state(app)
+    assert set(selected_attackers) == set(expected_attackers)
+    assert set(selected_targets) == set(expected_targets)
 
-    attacker_key = f"attacker_include_{expected_attackers[0]}"
-    target_key = f"target_include_{expected_targets[0]}"
+    attacker_key, _ = AttackerTargetStateManager.build_checkbox_keys(
+        key_prefix="attacker_include",
+        spec_key=expected_attackers[0],
+    )
+    target_key, _ = AttackerTargetStateManager.build_checkbox_keys(
+        key_prefix="target_include",
+        spec_key=expected_targets[0],
+    )
 
     attacker_checkbox = _get_checkbox(app, attacker_key)
     attacker_checkbox.set_value(False)
@@ -136,12 +156,14 @@ def test_attacker_target_selector_toggle_updates_state() -> None:
     expected_attackers_after_uncheck = [
         spec for spec in expected_attackers if spec != expected_attackers[0]
     ]
-    assert set(app.session_state["selected_attacker_specs"]) == set(expected_attackers_after_uncheck)
+    selected_attackers, _ = _get_selected_specs_from_state(app)
+    assert set(selected_attackers) == set(expected_attackers_after_uncheck)
 
     attacker_checkbox = _get_checkbox(app, attacker_key)
     attacker_checkbox.set_value(True)
     app.run()
-    assert set(app.session_state["selected_attacker_specs"]) == set(expected_attackers)
+    selected_attackers, _ = _get_selected_specs_from_state(app)
+    assert set(selected_attackers) == set(expected_attackers)
 
     target_checkbox = _get_checkbox(app, target_key)
     target_checkbox.set_value(False)
@@ -149,7 +171,8 @@ def test_attacker_target_selector_toggle_updates_state() -> None:
     expected_targets_after_uncheck = [
         spec for spec in expected_targets if spec != expected_targets[0]
     ]
-    assert set(app.session_state["selected_target_specs"]) == set(expected_targets_after_uncheck)
+    _, selected_targets = _get_selected_specs_from_state(app)
+    assert set(selected_targets) == set(expected_targets_after_uncheck)
 
 
 def test_attacker_target_swap_updates_checkboxes() -> None:
@@ -172,11 +195,18 @@ def test_attacker_target_swap_updates_checkboxes() -> None:
     swap_button.click()
     app.run()
 
-    assert set(app.session_state["selected_attacker_specs"]) == set(expected_targets)
-    assert set(app.session_state["selected_target_specs"]) == set(expected_attackers)
+    selected_attackers, selected_targets = _get_selected_specs_from_state(app)
+    assert set(selected_attackers) == set(expected_targets)
+    assert set(selected_targets) == set(expected_attackers)
 
-    swapped_attacker_key = f"attacker_include_{expected_targets[0]}"
-    swapped_target_key = f"target_include_{expected_attackers[0]}"
+    swapped_attacker_key, _ = AttackerTargetStateManager.build_checkbox_keys(
+        key_prefix="attacker_include",
+        spec_key=expected_targets[0],
+    )
+    swapped_target_key, _ = AttackerTargetStateManager.build_checkbox_keys(
+        key_prefix="target_include",
+        spec_key=expected_attackers[0],
+    )
     swapped_attacker_checkbox = _get_checkbox(app, swapped_attacker_key)
     swapped_target_checkbox = _get_checkbox(app, swapped_target_key)
 
