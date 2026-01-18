@@ -16,6 +16,30 @@ logger = logging.getLogger(__name__)
 DEFAULT_UPLOAD_TYPES: Iterable[str] = ("tsv", "csv", "txt")
 
 
+def _hydrate_battle_metadata(df: pd.DataFrame) -> pd.DataFrame:
+    """Ensure battle metadata dataframes are present in attrs/session state."""
+    players_df = df.attrs.get("players_df")
+    stored_players_df = st.session_state.get("players_df")
+    if isinstance(players_df, pd.DataFrame) and not players_df.empty:
+        if not isinstance(stored_players_df, pd.DataFrame) or stored_players_df.empty:
+            st.session_state["players_df"] = players_df
+    elif isinstance(stored_players_df, pd.DataFrame) and not stored_players_df.empty:
+        df.attrs["players_df"] = stored_players_df
+        logger.debug("Restored players_df from session state into combat df attrs.")
+    else:
+        logger.warning("players_df missing or empty in both combat df attrs and session state.")
+
+    fleets_df = df.attrs.get("fleets_df")
+    stored_fleets_df = st.session_state.get("fleets_df")
+    if isinstance(fleets_df, pd.DataFrame) and not fleets_df.empty:
+        if not isinstance(stored_fleets_df, pd.DataFrame) or stored_fleets_df.empty:
+            st.session_state["fleets_df"] = fleets_df
+    elif isinstance(stored_fleets_df, pd.DataFrame) and not stored_fleets_df.empty:
+        df.attrs["fleets_df"] = stored_fleets_df
+        logger.debug("Restored fleets_df from session state into combat df attrs.")
+    return df
+
+
 def render_sidebar_combat_log_upload(
         title: str,
         description: str,
@@ -34,12 +58,18 @@ def render_sidebar_combat_log_upload(
         help=uploader_help,
     )
     if uploaded is None:
-        return st.session_state.get("battle_df")
+        battle_df = st.session_state.get("battle_df")
+        if isinstance(battle_df, pd.DataFrame):
+            return _hydrate_battle_metadata(battle_df)
+        return battle_df
 
     data = uploaded.getvalue()
     upload_hash = hashlib.md5(data).hexdigest()
     if st.session_state.get("battle_upload_hash") == upload_hash:
-        return st.session_state.get("battle_df")
+        battle_df = st.session_state.get("battle_df")
+        if isinstance(battle_df, pd.DataFrame):
+            return _hydrate_battle_metadata(battle_df)
+        return battle_df
 
     try:
         df = parser(data, uploaded.name)
@@ -57,4 +87,4 @@ def render_sidebar_combat_log_upload(
     st.session_state["fleets_df"] = df.attrs.get("fleets_df")
     st.session_state["session_info"] = SessionInfo(df)
     # st.rerun()
-    return df
+    return _hydrate_battle_metadata(df)
