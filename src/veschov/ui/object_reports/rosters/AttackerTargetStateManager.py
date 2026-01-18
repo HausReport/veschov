@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
     """Serialize a ShipSpecifier into a stable tuple for session storage."""
-    return (spec.name or "", spec.alliance or "", spec.ship or "")
+    return SessionInfo.normalize_spec_key(spec.name, spec.alliance, spec.ship)
 
 
 def serialize_spec_dict(spec: ShipSpecifier) -> dict[str, str]:
