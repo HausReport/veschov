@@ -13,13 +13,16 @@ from veschov.io.SessionInfo import SessionInfo
 if TYPE_CHECKING:
     from veschov.io.SessionInfo import ShipSpecifier
     from veschov.ui.object_reports.AttackerAndTargetReport import SerializedShipSpec, AttackerTargetState
-    from veschov.ui.object_reports.AttackerAndTargetReport import SerializedShipSpec
 
 logger = logging.getLogger(__name__)
 
 def serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
     """Serialize a ShipSpecifier into a stable tuple for session storage."""
-    return SessionInfo.normalize_spec_key(spec.name, spec.alliance, spec.ship)
+    return SessionInfo.normalize_spec_key(
+        (spec.name or "").strip(),
+        (spec.alliance or "").strip(),
+        (spec.ship or "").strip(),
+    )
 
 
 def serialize_spec_dict(spec: ShipSpecifier) -> dict[str, str]:
@@ -379,6 +382,9 @@ class AttackerTargetStateManager:
         target_roster = self._filter_roster(stored_state.target_roster, role="target")
         if not attacker_roster and not target_roster:
             logger.warning("Stored rosters empty after filtering; using defaults.")
+            if self._strict_mode and self._spec_lookup:
+                logger.error("Strict mode: rosters empty after filtering stored state.")
+                raise ValueError("Roster resolution failed in strict mode.")
             return self._default_rosters()
         logger.debug(
             "Resolved rosters attacker=%d target=%d after filtering.",
@@ -447,10 +453,22 @@ class AttackerTargetStateManager:
             return list(roster_list)
         filtered = [spec for spec in self._dedupe_specs(stored_specs) if spec in self._spec_lookup]
         if len(filtered) < len(list(stored_specs)):
+            available_specs = list(self._spec_lookup.keys())
+            available_labels = self._describe_available_specs()
             logger.warning(
                 "Dropping %s selections missing from current options: %s",
                 role,
                 [spec for spec in stored_specs if spec not in self._spec_lookup],
+            )
+            logger.warning(
+                "Available %s spec keys: %s",
+                role,
+                available_specs,
+            )
+            logger.warning(
+                "Available %s spec labels: %s",
+                role,
+                available_labels,
             )
             if self._strict_mode:
                 raise ValueError(f"Stored {role} selections missing from lookup in strict mode.")
@@ -461,6 +479,11 @@ class AttackerTargetStateManager:
                 "Dropping %s selections not in roster: %s",
                 role,
                 missing_in_roster,
+            )
+            logger.warning(
+                "Roster %s spec keys: %s",
+                role,
+                roster_list,
             )
             if self._strict_mode:
                 raise ValueError(f"Stored {role} selections missing from roster in strict mode.")
@@ -495,13 +518,42 @@ class AttackerTargetStateManager:
         filtered = [spec for spec in deduped if spec in self._spec_lookup]
         if len(filtered) < len(deduped):
             dropped = [spec for spec in deduped if spec not in self._spec_lookup]
+            available_labels = self._describe_available_specs()
             logger.warning(
                 "Dropped %d %s roster spec(s) missing from current ship options: %s",
                 len(dropped),
                 role,
                 dropped,
             )
+            logger.warning(
+                "Available %s spec keys: %s",
+                role,
+                list(self._spec_lookup.keys()),
+            )
+            logger.warning(
+                "Available %s spec labels: %s",
+                role,
+                available_labels,
+            )
+            if self._strict_mode:
+                logger.error("Strict mode: roster specs missing from lookup for %s.", role)
+                raise ValueError("Roster specs missing from lookup in strict mode.")
         return filtered
+
+    def _describe_available_specs(self) -> list[str]:
+        """Return readable labels for the current spec lookup."""
+        labels: list[str] = []
+        for spec in self._spec_lookup.values():
+            name = (spec.name or "").strip() or "Unknown"
+            alliance = (spec.alliance or "").strip()
+            ship = (spec.ship or "").strip()
+            label = name
+            if alliance:
+                label = f"{label} [{alliance}]"
+            if ship and ship != name:
+                label = f"{label} — {ship}"
+            labels.append(label)
+        return labels
 
     @staticmethod
     def _selection_hash(selected_payload: dict[str, list[dict[str, str]]]) -> str:
