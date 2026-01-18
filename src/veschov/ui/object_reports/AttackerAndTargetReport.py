@@ -360,9 +360,6 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> ShipSpecifier | None:
         """Match the local player spec from players_df to a ship option."""
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
-            # FIX12: ERROR THIS SHOULD NOT BE REACHED
-            import traceback
-            traceback.print_stack()
             logger.warning("Unable to infer enemy spec: players_df missing or empty.")
             return None
         row = players_df.iloc[-1]
@@ -389,6 +386,9 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> list[ShipSpecifier]:
         """Determine a default target selection from player metadata."""
         # FIX12: players_df should not be empty
+        if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            logger.warning("Player metadata missing; unable to infer default target selection.")
+            return []
         matched = self._match_enemy_spec(players_df, options)
         if matched is not None:
             return [matched]
@@ -547,12 +547,13 @@ class AttackerAndTargetReport(AbstractReport):
         options = self._normalize_specs(session_info)
         if not options:
             return [], []
+        players_df = session_info.players_df if isinstance(session_info, SessionInfo) else None
         spec_lookup = {serialize_spec(spec): spec for spec in options}
         available_specs = [serialize_spec(spec) for spec in options]
         # FIX12 players_df should not be empty
-        # This causes selected attackers/targets to be thrown out.
+        # Missing player metadata can reset selections; guard against it.
         default_attacker_specs, default_target_specs = self._build_default_attacker_target_defaults(
-            None,
+            players_df,
             options,
         )
         manager = AttackerTargetStateManager(
@@ -561,6 +562,16 @@ class AttackerAndTargetReport(AbstractReport):
             default_attacker_specs=default_attacker_specs,
             default_target_specs=default_target_specs,
         )
+        if players_df is None or players_df.empty:
+            stored_state = manager.peek_state()
+            if stored_state is not None:
+                logger.warning(
+                    "Player metadata missing; using stored attacker/target selections without defaults.",
+                )
+                return (
+                    manager.resolve_ship_specs(stored_state.selected_attackers),
+                    manager.resolve_ship_specs(stored_state.selected_targets),
+                )
         resolved_state = manager.resolve_state()
         return (
             manager.resolve_ship_specs(resolved_state.selected_attackers),
