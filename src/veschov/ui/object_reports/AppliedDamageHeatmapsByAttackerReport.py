@@ -110,9 +110,9 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
 
         if self.selected_targets:
             target_names = {
-                self._normalize_text(spec.name)
+                spec.normalized_name()
                 for spec in self.selected_targets
-                if self._normalize_text(spec.name)
+                if spec.normalized_name()
             }
             if target_names:
                 filtered_df = filtered_df.loc[filtered_df[target_column].isin(target_names)]

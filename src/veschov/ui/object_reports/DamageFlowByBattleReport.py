@@ -316,17 +316,10 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
             outcome_lookup: dict[SerializedShipSpec, object] | None = None,
     ) -> str:
         """Format attacker labels without alliance tags."""
-        name = self._normalize_text(spec.name)
-        ship = self._normalize_text(spec.ship)
-        alliance = self._normalize_text(spec.alliance)
-        outcome = None
-        if outcome_lookup is not None:
-            outcome = outcome_lookup.get(self._normalize_spec_key(name, alliance, ship))
-        emoji = self._outcome_emoji(outcome)
-        label = name or "Unknown"
-        if ship and ship != name:
-            label = f"{label} — {ship}"
-        return f"{emoji} {label}"
+        return spec.format_label_with_outcome_lookup(
+            outcome_lookup,
+            include_alliance=False,
+        )
 
     @staticmethod
     def _build_single_attacker_mask(

@@ -259,10 +259,10 @@ class AttackerAndTargetReport(AbstractReport):
             return
 
         players_specs = [
-            spec for spec in combatant_specs if self._normalize_text(spec.alliance)
+            spec for spec in combatant_specs if spec.normalized_alliance()
         ]
         npc_specs = [
-            spec for spec in combatant_specs if not self._normalize_text(spec.alliance)
+            spec for spec in combatant_specs if not spec.normalized_alliance()
         ]
 
         outcome_lookup = {}
@@ -382,7 +382,7 @@ class AttackerAndTargetReport(AbstractReport):
         """Extract a normalized alliance string from a player metadata row."""
         for column in ("Alliance", "Player Alliance"):
             if column in row.index:
-                alliance = self._normalize_text(row.get(column))
+                alliance = ShipSpecifier.normalize_text(row.get(column))
                 if alliance:
                     return alliance
         return ""
@@ -397,19 +397,15 @@ class AttackerAndTargetReport(AbstractReport):
             logger.warning("Unable to infer enemy spec: players_df missing or empty.")
             return None
         row = players_df.iloc[-1]
-        name = self._normalize_text(row.get("Player Name"))
+        name = ShipSpecifier.normalize_text(row.get("Player Name"))
         alliance = self._resolve_player_alliance(row)
-        ship = self._normalize_text(row.get("Ship Name"))
+        ship = ShipSpecifier.normalize_text(row.get("Ship Name"))
         if not any([name, alliance, ship]):
             logger.warning("Unable to infer enemy spec: missing name/alliance/ship values.")
             return None
 
         for spec in options:
-            if (
-                    self._normalize_text(spec.name) == name
-                    and self._normalize_text(spec.alliance) == alliance
-                    and self._normalize_text(spec.ship) == ship
-            ):
+            if spec.matches_normalized(name, alliance, ship):
                 return spec
         return None
 
@@ -651,17 +647,6 @@ class AttackerAndTargetReport(AbstractReport):
         return SessionInfo.outcome_emoji(outcome)
 
     @staticmethod
-    def _normalize_text(value: object) -> str:
-        """Normalize arbitrary values into trimmed strings for comparison."""
-        if pd.isna(value) or value is None:
-            return ""
-        return str(value).strip()
-
-    @staticmethod
-    def _normalize_spec_key(name: object, alliance: object, ship: object) -> SerializedShipSpec:
-        """Normalize and serialize key fields into a ShipSpecifier key."""
-        return SessionInfo.normalize_spec_key(name, alliance, ship)
-
     def _format_combatant_label(
             self,
             row: pd.Series,
@@ -669,8 +654,8 @@ class AttackerAndTargetReport(AbstractReport):
             ship_lookup: dict[tuple[str, str], str],
     ) -> str:
         """Build a display label for a combatant row."""
-        name = self._normalize_text(row.get("Player Name"))
-        ship = self._normalize_text(row.get("Ship Name"))
+        name = ShipSpecifier.normalize_text(row.get("Player Name"))
+        ship = ShipSpecifier.normalize_text(row.get("Ship Name"))
         alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
         label = name or "Unknown"
         if alliance:
@@ -685,16 +670,4 @@ class AttackerAndTargetReport(AbstractReport):
             outcome_lookup: dict[SerializedShipSpec, object] | None = None,
     ) -> str:
         """Build a display label for a ship spec, including outcome emoji."""
-        name = self._normalize_text(spec.name)
-        ship = self._normalize_text(spec.ship)
-        alliance = self._normalize_text(spec.alliance)
-        outcome = None
-        if outcome_lookup is not None:
-            outcome = outcome_lookup.get(self._normalize_spec_key(name, alliance, ship))
-        emoji = self._outcome_emoji(outcome)
-        label = name or "Unknown"
-        if alliance:
-            label = f"{label} [{alliance}]"
-        if ship and ship != name:
-            label = f"{label} — {ship}"
-        return f"{emoji} {label}"
+        return spec.format_label_with_outcome_lookup(outcome_lookup)
