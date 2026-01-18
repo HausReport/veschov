@@ -9,11 +9,10 @@ from typing import TYPE_CHECKING
 
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
+from veschov.io.ShipSpecifier import ShipSpecifier
 from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
 
 if TYPE_CHECKING:
-    from veschov.io.ShipSpecifier import ShipSpecifier
     from veschov.ui.object_reports.AttackerAndTargetReport import SerializedShipSpec, AttackerTargetState
 
 logger = logging.getLogger(__name__)
@@ -21,19 +20,15 @@ logger = logging.getLogger(__name__)
 
 def serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
     """Serialize a ShipSpecifier into a stable tuple for session storage."""
-    return SessionInfo.normalize_spec_key(
-        (spec.name or "").strip(),
-        (spec.alliance or "").strip(),
-        (spec.ship or "").strip(),
-    )
+    return ShipSpecifier.normalize_key(spec.name, spec.alliance, spec.ship)
 
 
 def serialize_spec_dict(spec: ShipSpecifier) -> dict[str, str]:
     """Serialize a ShipSpecifier into a JSON-friendly mapping."""
     return {
-        "name": (spec.name or "").strip(),
-        "alliance": (spec.alliance or "").strip(),
-        "ship": (spec.ship or "").strip(),
+        "name": ShipSpecifier.normalize_text(spec.name),
+        "alliance": ShipSpecifier.normalize_text(spec.alliance),
+        "ship": ShipSpecifier.normalize_text(spec.ship),
     }
 
 
@@ -48,7 +43,7 @@ def deserialize_spec_dict(spec: dict[str, object]) -> SerializedShipSpec:
     ]
     if missing_values:
         logger.warning("Spec dict has None values for keys %s; using empty strings.", missing_values)
-    return SessionInfo.normalize_spec_key(
+    return ShipSpecifier.normalize_key(
         spec.get("name"),
         spec.get("alliance"),
         spec.get("ship"),
