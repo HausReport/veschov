@@ -13,7 +13,6 @@ from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_roun
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
 
-
 SEGMENT_LABELS = {
     "Hull": "Hull Damage",
     "Shield": "Shield Damage",

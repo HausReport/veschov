@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, Iterable, Sequence, Set, TypedDict
+from typing import Iterable, Sequence, Set, TypedDict
 
 import pandas as pd
 import streamlit as st
@@ -14,7 +13,6 @@ from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, TARGET_COLUMN
 from veschov.ui.chirality import Lens, resolve_lens
 from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
-from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
 from veschov.ui.object_reports.rosters.AttackerTargetStateManager import serialize_spec, AttackerTargetStateManager
 
 SerializedShipSpec = tuple[str, str, str]
@@ -373,6 +371,7 @@ class AttackerAndTargetReport(AbstractReport):
         elif isinstance(session_info, set):
             specs = session_info
         else:
+            logger.warning("Making empty set for specs.")
             specs = set()
 
         return sorted(specs, key=lambda spec: str(spec))

@@ -5,11 +5,12 @@ import json
 import logging
 import traceback
 from typing import Iterable, Sequence, Callable
+from typing import TYPE_CHECKING
 
 import streamlit as st
-from typing import TYPE_CHECKING
-from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
+
 from veschov.io.SessionInfo import SessionInfo
+from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
 
 if TYPE_CHECKING:
     from veschov.io.SessionInfo import ShipSpecifier
