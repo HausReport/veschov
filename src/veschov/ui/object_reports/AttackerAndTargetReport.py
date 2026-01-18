@@ -777,17 +777,20 @@ class AttackerAndTargetReport(AbstractReport):
         logger.warning("Outcome lookup unavailable: missing session info and battle df.")
         return {}
 
-    def _outcome_emoji(self, outcome: object) -> str:
+    @staticmethod
+    def _outcome_emoji(outcome: object) -> str:
         """Convert an outcome value into a display emoji."""
         return SessionInfo.outcome_emoji(outcome)
 
-    def _normalize_text(self, value: object) -> str:
+    @staticmethod
+    def _normalize_text(value: object) -> str:
         """Normalize arbitrary values into trimmed strings for comparison."""
         if pd.isna(value) or value is None:
             return ""
         return str(value).strip()
 
-    def _normalize_spec_key(self, name: object, alliance: object, ship: object) -> SerializedShipSpec:
+    @staticmethod
+    def _normalize_spec_key(name: object, alliance: object, ship: object) -> SerializedShipSpec:
         """Normalize and serialize key fields into a ShipSpecifier key."""
         return SessionInfo.normalize_spec_key(name, alliance, ship)
 
