@@ -8,7 +8,8 @@ import pandas as pd
 import pytest
 
 from tests import helpers
-from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from veschov.io.SessionInfo import SessionInfo
+from veschov.io.ShipSpecifier import ShipSpecifier
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 
 

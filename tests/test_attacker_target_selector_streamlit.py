@@ -9,7 +9,8 @@ import pandas as pd
 from streamlit.testing.v1 import AppTest
 
 from tests import helpers
-from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from veschov.io.SessionInfo import SessionInfo
+from veschov.io.ShipSpecifier import ShipSpecifier
 from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.AttackerAndTargetReport import (
     AttackerAndTargetReport,

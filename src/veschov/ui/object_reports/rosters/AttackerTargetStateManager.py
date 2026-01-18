@@ -13,7 +13,7 @@ from veschov.io.SessionInfo import SessionInfo
 from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
 
 if TYPE_CHECKING:
-    from veschov.io.SessionInfo import ShipSpecifier
+    from veschov.io.ShipSpecifier import ShipSpecifier
     from veschov.ui.object_reports.AttackerAndTargetReport import SerializedShipSpec, AttackerTargetState
 
 logger = logging.getLogger(__name__)

@@ -13,7 +13,8 @@ import humanize
 import pandas as pd
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from veschov.io.SessionInfo import SessionInfo
+from veschov.io.ShipSpecifier import ShipSpecifier
 
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
