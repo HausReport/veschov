@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 def serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
     """Serialize a ShipSpecifier into a stable tuple for session storage."""
     return SessionInfo.normalize_spec_key(
@@ -57,6 +58,7 @@ def deserialize_spec_dict(spec: dict[str, object]) -> SerializedShipSpec:
 def serialize_spec_key_dict(spec: SerializedShipSpec) -> dict[str, str]:
     """Serialize a spec key tuple into a JSON-friendly mapping."""
     return {"name": spec[0], "alliance": spec[1], "ship": spec[2]}
+
 
 class AttackerTargetStateManager:
     """Encapsulate attacker/target state stored in Streamlit session_state."""
@@ -132,8 +134,8 @@ class AttackerTargetStateManager:
             selected_targets=selected_targets,
         )
         if stored_state is not None and (
-            stored_state.attacker_roster != attacker_roster
-            or stored_state.target_roster != target_roster
+                stored_state.attacker_roster != attacker_roster
+                or stored_state.target_roster != target_roster
         ):
             self.request_refresh(source="roster change")
         self._persist_state(resolved_state, origin=origin)
@@ -368,6 +370,7 @@ class AttackerTargetStateManager:
             update_selected: bool = True,
     ) -> None:
         """Persist attacker/target state as a JSON-friendly session object."""
+
         def serialize_specs(specs: Sequence[SerializedShipSpec]) -> list[dict[str, str]]:
             serialized: list[dict[str, str]] = []
             for spec_key in specs:

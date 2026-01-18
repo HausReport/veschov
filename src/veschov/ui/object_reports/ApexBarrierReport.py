@@ -63,9 +63,9 @@ class ApexBarrierReport(RoundOrShotsReport):
 
     def get_under_title_text(self) -> Optional[str]:
         return (
-           """Shows effective Apex Barrier for every hit the target takes.  This is useful if, for example, you're using Annorax.  
-              Values are calculated from combat log mitigation fields and correlate to portion of each hit absorbed by the barrier.  To
-              see your Annorax effect, make sure you're in the 'Target' column, and click 'View by shot index.'"""
+            """Shows effective Apex Barrier for every hit the target takes.  This is useful if, for example, you're using Annorax.  
+               Values are calculated from combat log mitigation fields and correlate to portion of each hit absorbed by the barrier.  To
+               see your Annorax effect, make sure you're in the 'Target' column, and click 'View by shot index.'"""
         )
 
     def get_under_chart_text(self) -> Optional[str]:

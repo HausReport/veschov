@@ -135,8 +135,8 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     def get_plot_titles(self) -> list[str]:
         ret: list[str] = []
         for attacker in self.selected_attackers:
-           tmp = f" {attacker.name} raw total damage by shot"
-           ret.append(tmp)
+            tmp = f" {attacker.name} raw total damage by shot"
+            ret.append(tmp)
         return ret
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:

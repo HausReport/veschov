@@ -80,9 +80,9 @@ class CombatantInfoReport(AttackerAndTargetReport):
         return [players_df]
 
     def _resolve_selected_specs(
-        self,
-        lens: Lens | None,
-        session_info: SessionInfo | None,
+            self,
+            lens: Lens | None,
+            session_info: SessionInfo | None,
     ) -> list[ShipSpecifier]:
         specs: list[ShipSpecifier] = []
         if lens is not None:
@@ -105,10 +105,10 @@ class CombatantInfoReport(AttackerAndTargetReport):
         return deduped
 
     def _resolve_selected_cards(
-        self,
-        players_df: pd.DataFrame,
-        fleets_df: pd.DataFrame | None,
-        specs: list[ShipSpecifier],
+            self,
+            players_df: pd.DataFrame,
+            fleets_df: pd.DataFrame | None,
+            specs: list[ShipSpecifier],
     ) -> list[tuple[pd.Series, pd.Series | None]]:
         cards: list[tuple[pd.Series, pd.Series | None]] = []
         for spec in specs:
@@ -129,9 +129,9 @@ class CombatantInfoReport(AttackerAndTargetReport):
         return cards
 
     def _build_fallback_player_row(
-        self,
-        players_df: pd.DataFrame,
-        spec: ShipSpecifier,
+            self,
+            players_df: pd.DataFrame,
+            spec: ShipSpecifier,
     ) -> pd.Series:
         """Build a minimal player metadata row for a combatant spec."""
         base_columns = list(players_df.columns) if not players_df.empty else []
@@ -147,9 +147,9 @@ class CombatantInfoReport(AttackerAndTargetReport):
         return pd.Series(row_data)
 
     def _match_player_row(
-        self,
-        players_df: pd.DataFrame,
-        spec: ShipSpecifier,
+            self,
+            players_df: pd.DataFrame,
+            spec: ShipSpecifier,
     ) -> tuple[int, pd.Series] | None:
         spec_name = self._normalize_text(spec.name)
         spec_ship = self._normalize_text(spec.ship)

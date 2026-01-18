@@ -55,7 +55,6 @@ class CritHitReport(RoundOrShotsReport):
         else:
             return "This odd view shows each hit, bright red for criticals and darker red for non-criticals."
 
-
     def get_log_title(self) -> str:
         kind = self._resolve_view_by().title()
         return f"Hits per {kind}"

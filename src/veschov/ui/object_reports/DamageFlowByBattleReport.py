@@ -209,18 +209,18 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
                 )
         self.edges.extend(
             [
-            ("Iso Non-Crit", "Raw Iso", iso_noncrit_raw),
-            ("Iso Crit", "Raw Iso", iso_crit_raw),
-            ("Regular Non-Crit", "Raw Regular", reg_noncrit_raw),
-            ("Regular Crit", "Raw Regular", reg_crit_raw),
-            ("Raw Iso", "Iso Mitigation", iso_mitigated_total),
-            ("Raw Regular", "Regular Mitigation", reg_mitigated_total),
-            ("Raw Iso", "Apex Mitigation", apex_from_iso),
-            ("Raw Regular", "Apex Mitigation", apex_from_reg),
-            ("Raw Iso", "Shield Dmg", shield_from_iso),
-            ("Raw Regular", "Shield Dmg", shield_from_reg),
-            ("Raw Iso", "Hull Dmg", hull_from_iso),
-            ("Raw Regular", "Hull Dmg", hull_from_reg),
+                ("Iso Non-Crit", "Raw Iso", iso_noncrit_raw),
+                ("Iso Crit", "Raw Iso", iso_crit_raw),
+                ("Regular Non-Crit", "Raw Regular", reg_noncrit_raw),
+                ("Regular Crit", "Raw Regular", reg_crit_raw),
+                ("Raw Iso", "Iso Mitigation", iso_mitigated_total),
+                ("Raw Regular", "Regular Mitigation", reg_mitigated_total),
+                ("Raw Iso", "Apex Mitigation", apex_from_iso),
+                ("Raw Regular", "Apex Mitigation", apex_from_reg),
+                ("Raw Iso", "Shield Dmg", shield_from_iso),
+                ("Raw Regular", "Shield Dmg", shield_from_reg),
+                ("Raw Iso", "Hull Dmg", hull_from_iso),
+                ("Raw Regular", "Hull Dmg", hull_from_reg),
             ]
         )
 
@@ -441,12 +441,12 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
 
         text_color_dark = "rgba(245,245,245,0.95)"
         text_color_light = "rgba(20,20,20,0.90)"
-        #link_color = text_color_light
+        # link_color = text_color_light
         fig = go.Figure(
             data=[
                 go.Sankey(
                     node=node_config,
-                    link={"source": sources, "target": targets, "value": values}, #, "color": link_color},
+                    link={"source": sources, "target": targets, "value": values},  # , "color": link_color},
                     textfont={"color": text_color_light},
                     arrangement="fixed"
                 )

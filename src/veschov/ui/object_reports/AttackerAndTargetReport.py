@@ -43,6 +43,7 @@ class AttackerTargetStatePayload(TypedDict):
 AttackerTargetState = AttackerTargetStatePayload
 logger = logging.getLogger(__name__)
 
+
 class AttackerAndTargetReport(AbstractReport):
     """Base report that adds attacker/target selection and lens filtering.
 
@@ -148,12 +149,14 @@ class AttackerAndTargetReport(AbstractReport):
 
     def _get_system_time_and_rounds(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
         """Collect system name, timestamp, and round count from dataframes."""
+
         def resolve_metadata_value(
                 df: pd.DataFrame,
                 candidates: Sequence[str],
         ) -> tuple[str | None, object | None]:
             if df.empty:
                 return None, None
+
             def first_non_empty(column: object) -> tuple[str, object | None]:
                 series = df[column]
                 non_null = series[series.notna()]
@@ -362,7 +365,6 @@ class AttackerAndTargetReport(AbstractReport):
         self.number_format = number_format
         return lens
 
-
     @staticmethod
     def _normalize_specs(session_info: SessionInfo | Set[ShipSpecifier] | None) -> Sequence[ShipSpecifier]:
         """Return a sorted list of ship specs from session info or a set."""
@@ -455,7 +457,6 @@ class AttackerAndTargetReport(AbstractReport):
             target_reason,
         )
         return default_attacker_specs, default_target_specs
-
 
     def render_actor_target_selector(
             self,
