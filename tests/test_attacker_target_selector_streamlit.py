@@ -10,6 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 from tests import helpers
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.AttackerAndTargetReport import (
     AttackerAndTargetReport,
     SerializedShipSpec,
@@ -24,37 +25,53 @@ class _StreamlitTestReport(AttackerAndTargetReport):
         self.render_actor_target_selector(session_info, players_df)
 
     def get_under_title_text(self) -> Optional[str]:
-        pass
+        """Return optional under-title text for the report."""
+        return None
 
     def get_log_title(self) -> str:
-        pass
+        """Return the sidebar log title for this report."""
+        return "Test Log"
 
     def get_log_description(self) -> str:
-        pass
+        """Return the sidebar log description for this report."""
+        return "Test-only report for attacker/target selection."
 
-    def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
-        pass
+    def get_derived_dataframes(
+        self,
+        df: pd.DataFrame,
+        lens: Lens | None,
+    ) -> Optional[list[pd.DataFrame]]:
+        """Return derived dataframes for the report lifecycle."""
+        _ = lens
+        return [df]
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
-        pass
+        """No-op plot rendering for tests."""
+        _ = dfs
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
-        pass
+        """No-op table rendering for tests."""
+        _ = dfs
 
-    def render_debug_info(self, df: pd.DataFrame) -> None:
-        pass
+    def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
+        """No-op debug output for tests."""
+        _ = dfs
 
     def get_x_axis_text(self) -> Optional[str]:
-        pass
+        """Return optional x-axis text for charts."""
+        return None
 
     def get_y_axis_text(self) -> Optional[str]:
-        pass
+        """Return optional y-axis text for charts."""
+        return None
 
     def get_title_text(self) -> Optional[str]:
-        pass
+        """Return the report title text."""
+        return None
 
     def get_under_chart_text(self) -> Optional[str]:
-        pass
+        """Return optional under-chart text."""
+        return None
 
     def get_lens_key(self) -> str:
         return "test"
