@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from typing import Iterable, Sequence, Callable
@@ -24,14 +25,17 @@ def serialize_spec(spec: ShipSpecifier) -> SerializedShipSpec:
 def serialize_spec_dict(spec: ShipSpecifier) -> dict[str, str]:
     """Serialize a ShipSpecifier into a JSON-friendly mapping."""
     return {
-        "name": spec.name or "",
-        "alliance": spec.alliance or "",
-        "ship": spec.ship or "",
+        "name": (spec.name or "").strip(),
+        "alliance": (spec.alliance or "").strip(),
+        "ship": (spec.ship or "").strip(),
     }
 
 
 def deserialize_spec_dict(spec: dict[str, str]) -> SerializedShipSpec:
     """Deserialize a JSON-friendly mapping into a spec key."""
+    missing_keys = [key for key in ("name", "alliance", "ship") if key not in spec]
+    if missing_keys:
+        logger.warning("Spec dict missing keys %s; using empty strings.", missing_keys)
     return SessionInfo.normalize_spec_key(
         spec.get("name"),
         spec.get("alliance"),
@@ -47,6 +51,7 @@ class AttackerTargetStateManager:
     """Encapsulate attacker/target state stored in Streamlit session_state."""
     STATE_KEY = "attacker_target_state"
     REFRESH_KEY = "attacker_target_state_refresh"
+    STATE_VERSION = 1
 
     def __init__(
             self,
@@ -57,6 +62,7 @@ class AttackerTargetStateManager:
             default_target_specs: Sequence[SerializedShipSpec],
             label_builder: Callable[[ShipSpecifier, dict[SerializedShipSpec, object] | None], str] | None = None,
             outcome_lookup: dict[SerializedShipSpec, object] | None = None,
+            strict_mode: bool = False,
     ) -> None:
         self._spec_lookup = spec_lookup
         self._available_specs = list(available_specs)
@@ -64,8 +70,9 @@ class AttackerTargetStateManager:
         self._default_target_specs = list(default_target_specs)
         self._label_builder = label_builder
         self._outcome_lookup = outcome_lookup or {}
+        self._strict_mode = strict_mode
 
-    def resolve_state(self) -> AttackerTargetSelection:
+    def resolve_state(self, *, origin: str = "defaults") -> AttackerTargetSelection:
         """Resolve and persist the current attacker/target state."""
         logger.debug(
             "Resolving attacker/target state (options=%d, defaults=attacker:%d target:%d).",
@@ -73,6 +80,16 @@ class AttackerTargetStateManager:
             len(self._default_attacker_specs),
             len(self._default_target_specs),
         )
+        if not self._available_specs:
+            logger.warning("No available specs provided; returning empty attacker/target state.")
+            resolved_state = AttackerTargetSelection(
+                attacker_roster=[],
+                target_roster=[],
+                selected_attackers=[],
+                selected_targets=[],
+            )
+            self._persist_state(resolved_state, origin=origin)
+            return resolved_state
         stored_state = self._load_state()
         attacker_roster, target_roster = self._resolve_rosters(stored_state)
         selected_attackers = self._resolve_selected_specs(
@@ -91,7 +108,14 @@ class AttackerTargetStateManager:
             selected_attackers=selected_attackers,
             selected_targets=selected_targets,
         )
-        self._persist_state(resolved_state)
+        self._persist_state(resolved_state, origin=origin)
+        logger.debug(
+            "Resolved attacker/target state: roster(attacker=%d target=%d) selections(attacker=%d target=%d).",
+            len(resolved_state.attacker_roster),
+            len(resolved_state.target_roster),
+            len(resolved_state.selected_attackers),
+            len(resolved_state.selected_targets),
+        )
         return resolved_state
 
     def peek_state(self) -> AttackerTargetSelection | None:
@@ -151,18 +175,35 @@ class AttackerTargetStateManager:
             selected_targets: Sequence[SerializedShipSpec],
     ) -> AttackerTargetSelection:
         """Persist the latest selections after rendering widgets."""
+        if self._strict_mode and self._spec_lookup:
+            missing_attackers = [spec for spec in selected_attackers if spec not in self._spec_lookup]
+            missing_targets = [spec for spec in selected_targets if spec not in self._spec_lookup]
+            if missing_attackers or missing_targets:
+                logger.error(
+                    "Strict mode: missing selected specs attackers=%s targets=%s.",
+                    missing_attackers,
+                    missing_targets,
+                )
+                raise ValueError("Selected specs missing from lookup in strict mode.")
         updated_state = AttackerTargetSelection(
             attacker_roster=list(roster_state.attacker_roster),
             target_roster=list(roster_state.target_roster),
             selected_attackers=list(selected_attackers),
             selected_targets=list(selected_targets),
         )
-        self._persist_state(updated_state)
+        self._persist_state(updated_state, origin="user", update_roster=False, update_selected=True)
         return updated_state
 
     def swap(self) -> None:
         """Swap attacker/target roster and selection state."""
-        current_state = self.resolve_state()
+        current_state = self.resolve_state(origin="swap")
+        logger.debug(
+            "Pre-swap state: roster(attacker=%d target=%d) selections(attacker=%d target=%d).",
+            len(current_state.attacker_roster),
+            len(current_state.target_roster),
+            len(current_state.selected_attackers),
+            len(current_state.selected_targets),
+        )
         swapped_state = AttackerTargetSelection(
             attacker_roster=list(current_state.target_roster),
             target_roster=list(current_state.attacker_roster),
@@ -174,7 +215,7 @@ class AttackerTargetStateManager:
             len(swapped_state.selected_attackers),
             len(swapped_state.selected_targets),
         )
-        self._persist_state(swapped_state)
+        self._persist_state(swapped_state, origin="swap")
         self.request_refresh()
 
     def request_refresh(self) -> None:
@@ -192,6 +233,9 @@ class AttackerTargetStateManager:
             selected_specs: Sequence[SerializedShipSpec],
     ) -> list[ShipSpecifier]:
         """Resolve selected spec keys into ShipSpecifiers."""
+        missing_specs = [item for item in selected_specs if item not in self._spec_lookup]
+        if missing_specs:
+            logger.warning("Selected specs missing from lookup: %s", missing_specs)
         return [self._spec_lookup[item] for item in selected_specs if item in self._spec_lookup]
 
     def _load_state(self) -> AttackerTargetSelection | None:
@@ -202,6 +246,22 @@ class AttackerTargetStateManager:
             return None
         if not isinstance(state, dict):
             logger.warning("Attacker/target state has unexpected type: %s", type(state).__name__)
+            return None
+        meta = state.get("meta")
+        if meta is not None:
+            if not isinstance(meta, dict):
+                logger.warning("Attacker/target state metadata has unexpected type: %s", type(meta).__name__)
+            else:
+                version = meta.get("version")
+                if version != self.STATE_VERSION:
+                    logger.warning(
+                        "Attacker/target state version mismatch: expected=%s found=%s.",
+                        self.STATE_VERSION,
+                        version,
+                    )
+                    return None
+        else:
+            logger.warning("Attacker/target state missing metadata; ignoring stored state.")
             return None
         selected = state.get("selected")
         roster = state.get("roster")
@@ -236,7 +296,14 @@ class AttackerTargetStateManager:
             selected_targets=selected_targets,
         )
 
-    def _persist_state(self, state: AttackerTargetSelection) -> None:
+    def _persist_state(
+            self,
+            state: AttackerTargetSelection,
+            *,
+            origin: str,
+            update_roster: bool = True,
+            update_selected: bool = True,
+    ) -> None:
         """Persist attacker/target state as a JSON-friendly session object."""
         def serialize_specs(specs: Sequence[SerializedShipSpec]) -> list[dict[str, str]]:
             serialized: list[dict[str, str]] = []
@@ -248,24 +315,57 @@ class AttackerTargetStateManager:
                     serialized.append(serialize_spec_key_dict(spec_key))
             return serialized
 
+        previous_state = st.session_state.get(self.STATE_KEY)
+        previous_selected = None
+        previous_roster = None
+        previous_meta = None
+        if isinstance(previous_state, dict):
+            previous_selected = previous_state.get("selected")
+            previous_roster = previous_state.get("roster")
+            previous_meta = previous_state.get("meta")
+
+        selected_payload = {
+            "attacker": serialize_specs(state.selected_attackers),
+            "target": serialize_specs(state.selected_targets),
+        }
+        roster_payload = {
+            "attacker": serialize_specs(state.attacker_roster),
+            "target": serialize_specs(state.target_roster),
+        }
+
+        if not update_selected and isinstance(previous_selected, dict):
+            selected_payload = previous_selected
+        if not update_roster and isinstance(previous_roster, dict):
+            roster_payload = previous_roster
+
+        selection_hash = self._selection_hash(selected_payload)
         attacker_target_state: AttackerTargetState = {
-            "selected": {
-                "attacker": serialize_specs(state.selected_attackers),
-                "target": serialize_specs(state.selected_targets),
-            },
-            "roster": {
-                "attacker": serialize_specs(state.attacker_roster),
-                "target": serialize_specs(state.target_roster),
+            "selected": selected_payload,
+            "roster": roster_payload,
+            "meta": {
+                "version": self.STATE_VERSION,
+                "origin": origin,
+                "selection_hash": selection_hash,
             },
         }
 
-        previous_state = st.session_state.get(self.STATE_KEY)
         if previous_state != attacker_target_state:
             st.session_state[self.STATE_KEY] = attacker_target_state
+            if isinstance(previous_meta, dict):
+                previous_hash = previous_meta.get("selection_hash")
+                if previous_hash and previous_hash != selection_hash and origin not in ("user", "swap"):
+                    logger.warning(
+                        "Selection hash changed without user action (origin=%s, prior=%s, current=%s).",
+                        origin,
+                        previous_hash,
+                        selection_hash,
+                    )
             logger.debug(
                 "Attacker/target state updated: %s",
                 json.dumps(attacker_target_state, sort_keys=True),
             )
+        else:
+            logger.debug("Attacker/target state unchanged; skipping session update.")
 
     def _resolve_rosters(
             self,
@@ -280,6 +380,11 @@ class AttackerTargetStateManager:
         if not attacker_roster and not target_roster:
             logger.warning("Stored rosters empty after filtering; using defaults.")
             return self._default_rosters()
+        logger.debug(
+            "Resolved rosters attacker=%d target=%d after filtering.",
+            len(attacker_roster),
+            len(target_roster),
+        )
         return self._normalize_rosters(attacker_roster, target_roster)
 
     def _default_rosters(self) -> tuple[list[SerializedShipSpec], list[SerializedShipSpec]]:
@@ -298,7 +403,14 @@ class AttackerTargetStateManager:
     ) -> tuple[list[SerializedShipSpec], list[SerializedShipSpec]]:
         """Ensure rosters are disjoint and cover all available specs."""
         attacker_roster = self._dedupe_specs(attacker_roster)
-        target_roster = [spec for spec in self._dedupe_specs(target_roster) if spec not in attacker_roster]
+        deduped_target = self._dedupe_specs(target_roster)
+        overlap = [spec for spec in deduped_target if spec in attacker_roster]
+        if overlap:
+            logger.warning(
+                "Roster overlap detected; removing from target roster: %s",
+                overlap,
+            )
+        target_roster = [spec for spec in deduped_target if spec not in attacker_roster]
         missing_specs = [
             spec for spec in self._available_specs
             if spec not in attacker_roster and spec not in target_roster
@@ -340,6 +452,8 @@ class AttackerTargetStateManager:
                 role,
                 [spec for spec in stored_specs if spec not in self._spec_lookup],
             )
+            if self._strict_mode:
+                raise ValueError(f"Stored {role} selections missing from lookup in strict mode.")
         in_roster = [spec for spec in filtered if spec in roster_list]
         missing_in_roster = [spec for spec in filtered if spec not in roster_list]
         if missing_in_roster:
@@ -348,6 +462,8 @@ class AttackerTargetStateManager:
                 role,
                 missing_in_roster,
             )
+            if self._strict_mode:
+                raise ValueError(f"Stored {role} selections missing from roster in strict mode.")
         if not in_roster:
             logger.warning("No %s selections remained; defaulting to roster.", role)
             return list(roster_list)
@@ -386,3 +502,9 @@ class AttackerTargetStateManager:
                 dropped,
             )
         return filtered
+
+    @staticmethod
+    def _selection_hash(selected_payload: dict[str, list[dict[str, str]]]) -> str:
+        """Compute a stable hash for selected specs."""
+        payload = json.dumps(selected_payload, sort_keys=True)
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
