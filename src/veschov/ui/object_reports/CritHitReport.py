@@ -96,9 +96,11 @@ class CritHitReport(RoundOrShotsReport):
         crit_shots = int(crit_flags.sum())
         crit_rate = crit_shots / total_shots if total_shots else 0.0
 
-        self.summary_text = (
-            f"* **Overall critical hit chance:** {crit_shots}/{total_shots} ({crit_rate:.1%}).\n  " +
-            f"{self._format_average_shots(shot_df)}"
+        self.summary_text = "\n".join(
+            [
+                f"* **Overall critical hit chance:** {crit_shots}/{total_shots} ({crit_rate:.1%}).",
+                self._format_average_shots(shot_df),
+            ]
         )
         self.view_by = self._resolve_view_by()
         self.battle_filename = st.session_state.get("battle_filename") or "Session battle data"
