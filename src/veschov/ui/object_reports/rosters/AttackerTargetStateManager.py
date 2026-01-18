@@ -256,12 +256,6 @@ class AttackerTargetStateManager:
                 logger.warning("Attacker/target state metadata has unexpected type: %s", type(meta).__name__)
             else:
                 version = meta.get("version")
-                origin = meta.get("origin")
-                logger.debug(
-                    "Loaded attacker/target state metadata version=%s origin=%s.",
-                    version,
-                    origin,
-                )
                 if version != self.STATE_VERSION:
                     logger.warning(
                         "Attacker/target state version mismatch: expected=%s found=%s.",
