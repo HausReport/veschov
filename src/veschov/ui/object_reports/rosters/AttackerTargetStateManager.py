@@ -94,6 +94,11 @@ class AttackerTargetStateManager:
         self._persist_state(resolved_state)
         return resolved_state
 
+    def peek_state(self) -> AttackerTargetSelection | None:
+        """Return stored attacker/target state without applying defaults."""
+        logger.debug("Peeking attacker/target state without resolving defaults.")
+        return self._load_state()
+
     def render_role_panel(
             self,
             *,
