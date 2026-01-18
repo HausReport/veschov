@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from abc import abstractmethod
 from datetime import datetime
@@ -16,6 +17,7 @@ from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 
 SerializedShipSpec = tuple[str, str, str]
+AttackerTargetState = dict[str, dict[str, list[dict[str, str]]]]
 logger = logging.getLogger(__name__)
 
 
@@ -334,7 +336,115 @@ class AttackerAndTargetReport(AbstractReport):
         return (spec.name or "", spec.alliance or "", spec.ship or "")
 
     @staticmethod
-    def _swap_selected_specs() -> None:
+    def _serialize_spec_dict(spec: ShipSpecifier) -> dict[str, str]:
+        """Serialize a ShipSpecifier into a JSON-friendly mapping."""
+        return {
+            "name": spec.name or "",
+            "alliance": spec.alliance or "",
+            "ship": spec.ship or "",
+        }
+
+    @classmethod
+    def _deserialize_spec_dict(cls, spec: dict[str, str]) -> SerializedShipSpec:
+        """Deserialize a JSON-friendly mapping into a spec key."""
+        return cls._normalize_spec_key(
+            spec.get("name"),
+            spec.get("alliance"),
+            spec.get("ship"),
+        )
+
+    @staticmethod
+    def _serialize_spec_key_dict(spec: SerializedShipSpec) -> dict[str, str]:
+        """Serialize a spec key tuple into a JSON-friendly mapping."""
+        return {"name": spec[0], "alliance": spec[1], "ship": spec[2]}
+
+    @classmethod
+    def _load_attacker_target_state(cls) -> AttackerTargetState | None:
+        """Load attacker/target state from session storage, if present."""
+        state = st.session_state.get("attacker_target_state")
+        if not isinstance(state, dict):
+            return None
+        selected = state.get("selected")
+        roster = state.get("roster")
+        if not isinstance(selected, dict) or not isinstance(roster, dict):
+            return None
+
+        def normalize_specs(section: dict[str, object], role: str) -> list[dict[str, str]] | None:
+            entries = section.get(role)
+            if not isinstance(entries, list):
+                return None
+            normalized: list[dict[str, str]] = []
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                normalized.append(
+                    {
+                        "name": str(entry.get("name", "") or ""),
+                        "alliance": str(entry.get("alliance", "") or ""),
+                        "ship": str(entry.get("ship", "") or ""),
+                    },
+                )
+            return normalized
+
+        selected_attackers = normalize_specs(selected, "attacker")
+        selected_targets = normalize_specs(selected, "target")
+        roster_attackers = normalize_specs(roster, "attacker")
+        roster_targets = normalize_specs(roster, "target")
+        if None in (selected_attackers, selected_targets, roster_attackers, roster_targets):
+            return None
+        return {
+            "selected": {
+                "attacker": selected_attackers,
+                "target": selected_targets,
+            },
+            "roster": {
+                "attacker": roster_attackers,
+                "target": roster_targets,
+            },
+        }
+
+    @classmethod
+    def _persist_attacker_target_state(
+            cls,
+            attacker_roster_specs: Sequence[SerializedShipSpec],
+            target_roster_specs: Sequence[SerializedShipSpec],
+            selected_attacker_specs: Sequence[SerializedShipSpec],
+            selected_target_specs: Sequence[SerializedShipSpec],
+            *,
+            spec_lookup: dict[SerializedShipSpec, ShipSpecifier] | None = None,
+    ) -> None:
+        """Persist attacker/target state as a JSON-friendly session object."""
+        def serialize_specs(specs: Sequence[SerializedShipSpec]) -> list[dict[str, str]]:
+            serialized: list[dict[str, str]] = []
+            for spec_key in specs:
+                spec = spec_lookup.get(spec_key) if spec_lookup else None
+                if spec is not None:
+                    serialized.append(cls._serialize_spec_dict(spec))
+                else:
+                    serialized.append(cls._serialize_spec_key_dict(spec_key))
+            return serialized
+
+        attacker_target_state: AttackerTargetState = {
+            "selected": {
+                "attacker": serialize_specs(selected_attacker_specs),
+                "target": serialize_specs(selected_target_specs),
+            },
+            "roster": {
+                "attacker": serialize_specs(attacker_roster_specs),
+                "target": serialize_specs(target_roster_specs),
+            },
+        }
+
+        previous_state = st.session_state.get("attacker_target_state")
+        if previous_state != attacker_target_state:
+            st.session_state["attacker_target_state"] = attacker_target_state
+            logger.debug(
+                "Attacker/target state updated: %s",
+                json.dumps(attacker_target_state, sort_keys=True),
+            )
+
+    @classmethod
+    def _swap_selected_specs(cls) -> None:
         """Swap the attacker and target selection state."""
         attackers = st.session_state.get("selected_attacker_specs", [])
         targets = st.session_state.get("selected_target_specs", [])
@@ -344,6 +454,12 @@ class AttackerAndTargetReport(AbstractReport):
         st.session_state["selected_target_specs"] = attackers
         st.session_state["attacker_roster_specs"] = target_roster
         st.session_state["target_roster_specs"] = attacker_roster
+        cls._persist_attacker_target_state(
+            attacker_roster_specs=target_roster,
+            target_roster_specs=attacker_roster,
+            selected_attacker_specs=targets,
+            selected_target_specs=attackers,
+        )
 
     @staticmethod
     def _normalize_specs(session_info: SessionInfo | Set[ShipSpecifier] | None) -> Sequence[ShipSpecifier]:
@@ -579,12 +695,35 @@ class AttackerAndTargetReport(AbstractReport):
         default_target_specs = [self._serialize_spec(spec) for spec in target_fallback]
         default_attacker_specs = [self._serialize_spec(spec) for spec in attacker_fallback]
 
+        attacker_target_state = self._load_attacker_target_state()
+        attacker_roster_state: list[SerializedShipSpec] | None = None
+        target_roster_state: list[SerializedShipSpec] | None = None
+        selected_attacker_state: list[SerializedShipSpec] | None = None
+        selected_target_state: list[SerializedShipSpec] | None = None
+        if attacker_target_state is not None:
+            attacker_roster_state = [
+                self._deserialize_spec_dict(spec)
+                for spec in attacker_target_state["roster"]["attacker"]
+            ]
+            target_roster_state = [
+                self._deserialize_spec_dict(spec)
+                for spec in attacker_target_state["roster"]["target"]
+            ]
+            selected_attacker_state = [
+                self._deserialize_spec_dict(spec)
+                for spec in attacker_target_state["selected"]["attacker"]
+            ]
+            selected_target_state = [
+                self._deserialize_spec_dict(spec)
+                for spec in attacker_target_state["selected"]["target"]
+            ]
+
         attacker_roster_specs = self._filter_roster(
-            st.session_state.get("attacker_roster_specs"),
+            attacker_roster_state if attacker_target_state is not None else st.session_state.get("attacker_roster_specs"),
             spec_lookup,
         )
         target_roster_specs = self._filter_roster(
-            st.session_state.get("target_roster_specs"),
+            target_roster_state if attacker_target_state is not None else st.session_state.get("target_roster_specs"),
             spec_lookup,
         )
         if not attacker_roster_specs and not target_roster_specs:
@@ -611,8 +750,16 @@ class AttackerAndTargetReport(AbstractReport):
         st.session_state["attacker_roster_specs"] = attacker_roster_specs
         st.session_state["target_roster_specs"] = target_roster_specs
 
-        stored_attacker_specs = st.session_state.get("selected_attacker_specs") or list(attacker_roster_specs)
-        stored_target_specs = st.session_state.get("selected_target_specs") or list(target_roster_specs)
+        stored_attacker_specs = (
+            selected_attacker_state
+            if attacker_target_state is not None
+            else st.session_state.get("selected_attacker_specs")
+        ) or list(attacker_roster_specs)
+        stored_target_specs = (
+            selected_target_state
+            if attacker_target_state is not None
+            else st.session_state.get("selected_target_specs")
+        ) or list(target_roster_specs)
         st.session_state["selected_attacker_specs"] = list(stored_attacker_specs)
         st.session_state["selected_target_specs"] = list(stored_target_specs)
         selected_attacker_specs = self._filter_roster(
@@ -744,6 +891,13 @@ class AttackerAndTargetReport(AbstractReport):
 
         st.session_state["selected_attacker_specs"] = list(selected_attacker_specs)
         st.session_state["selected_target_specs"] = list(selected_target_specs)
+        self._persist_attacker_target_state(
+            attacker_roster_specs=attacker_roster_specs,
+            target_roster_specs=target_roster_specs,
+            selected_attacker_specs=selected_attacker_specs,
+            selected_target_specs=selected_target_specs,
+            spec_lookup=spec_lookup,
+        )
 
         selected_attackers = [spec_lookup[item] for item in selected_attacker_specs if item in spec_lookup]
         selected_targets = [spec_lookup[item] for item in selected_target_specs if item in spec_lookup]
@@ -758,8 +912,19 @@ class AttackerAndTargetReport(AbstractReport):
         if not options:
             return [], []
         spec_lookup = {self._serialize_spec(spec): spec for spec in options}
-        attacker_specs = st.session_state.get("selected_attacker_specs", [])
-        target_specs = st.session_state.get("selected_target_specs", [])
+        attacker_target_state = self._load_attacker_target_state()
+        if attacker_target_state is not None:
+            attacker_specs = [
+                self._deserialize_spec_dict(spec)
+                for spec in attacker_target_state["selected"]["attacker"]
+            ]
+            target_specs = [
+                self._deserialize_spec_dict(spec)
+                for spec in attacker_target_state["selected"]["target"]
+            ]
+        else:
+            attacker_specs = st.session_state.get("selected_attacker_specs", [])
+            target_specs = st.session_state.get("selected_target_specs", [])
         selected_attackers = [spec_lookup[item] for item in attacker_specs if item in spec_lookup]
         selected_targets = [spec_lookup[item] for item in target_specs if item in spec_lookup]
         return selected_attackers, selected_targets
