@@ -97,7 +97,7 @@ class CombatantInfoReport(AttackerAndTargetReport):
         seen: set[tuple[str, str, str]] = set()
         deduped: list[ShipSpecifier] = []
         for spec in specs:
-            key = self._normalize_spec_key(spec.name, spec.alliance, spec.ship)
+            key = spec.normalized_key()
             if key in seen:
                 continue
             seen.add(key)
@@ -151,9 +151,9 @@ class CombatantInfoReport(AttackerAndTargetReport):
             players_df: pd.DataFrame,
             spec: ShipSpecifier,
     ) -> tuple[int, pd.Series] | None:
-        spec_name = self._normalize_text(spec.name)
-        spec_ship = self._normalize_text(spec.ship)
-        spec_alliance = self._normalize_text(spec.alliance)
+        spec_name = spec.normalized_name()
+        spec_ship = spec.normalized_ship()
+        spec_alliance = spec.normalized_alliance()
         if not any([spec_name, spec_ship, spec_alliance]):
             logger.warning("Empty combatant spec encountered while matching player rows.")
             return None
@@ -161,8 +161,8 @@ class CombatantInfoReport(AttackerAndTargetReport):
         best_match: tuple[int, pd.Series] | None = None
         best_score = -1
         for index, row in players_df.iterrows():
-            row_name = self._normalize_text(row.get("Player Name"))
-            row_ship = self._normalize_text(row.get("Ship Name"))
+            row_name = ShipSpecifier.normalize_text(row.get("Player Name"))
+            row_ship = ShipSpecifier.normalize_text(row.get("Ship Name"))
             row_alliance = self._resolve_player_alliance(row)
 
             if spec_name and row_name != spec_name:
@@ -194,7 +194,7 @@ class CombatantInfoReport(AttackerAndTargetReport):
         for position, (row, fleet_row) in enumerate(self._selected_cards):
             if position:
                 st.divider()
-            name = self._normalize_text(row.get("Player Name"))
+            name = ShipSpecifier.normalize_text(row.get("Player Name"))
             render_player_card(
                 row,
                 number_format,
