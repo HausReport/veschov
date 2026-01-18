@@ -57,6 +57,8 @@ class AttackerAndTargetReport(AbstractReport):
     from data filtered via :meth:`apply_combat_lens`.
     """
     number_format: str | None = None
+    players_df: pd.DataFrame | None = None
+    battle_df: pd.DataFrame | None = None
 
     def render_combat_log_header(
             self,
@@ -117,19 +119,15 @@ class AttackerAndTargetReport(AbstractReport):
                 target_label = "Target ships" if len(selected_targets) != 1 else "Target ship"
                 # st.caption(f"Lens: {attacker_label} → {target_label}")
 
-        #
-        # Adds the system/time/and rounds line
-        #
-        #
-        # Adds the combatants lines
-        #
-        if isinstance(players_df, pd.DataFrame) and not players_df.empty:
-            self._render_system_time_and_rounds(players_df, battle_df)
-            # self.render_combatants(resolved_session_info, battle_df)
-        else:
-            st.info("No player metadata found in this file.")
-
         return number_format, lens
+
+    def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
+        """Render context metadata above the charts."""
+        if isinstance(self.players_df, pd.DataFrame) and not self.players_df.empty:
+            self._render_system_time_and_rounds(self.players_df, self.battle_df)
+        else:
+            logger.warning("No player metadata found for system/time header.")
+            st.info("No player metadata found in this file.")
 
     def _render_system_time_and_rounds(
             self,
@@ -138,8 +136,8 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> None:
         """Render the system/time/rounds banner for the report header."""
         context_lines = self._get_system_time_and_rounds(players_df, battle_df)
-        for context_line in context_lines:
-            st.markdown(f"* {context_line}\n")
+        if context_lines:
+            st.markdown("\n".join(f"* {context_line}" for context_line in context_lines))
         # if context_lines:
         #     context_text = " • ".join(context_lines)
         #     # FIXME: This, and about 10 lines down, is where system name, date, and time are written.
@@ -360,6 +358,8 @@ class AttackerAndTargetReport(AbstractReport):
         """Render the combat-log header and persist the number format."""
         players_df = df.attrs.get("players_df")
         fleets_df = df.attrs.get("fleets_df")
+        self.players_df = players_df
+        self.battle_df = df
         number_format, lens = self.render_combat_log_header(
             players_df,
             fleets_df,

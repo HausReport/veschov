@@ -160,10 +160,13 @@ class CritHitReport(RoundOrShotsReport):
         kind = self._resolve_view_by().title()
         return [f"Effective Apex Barrier of Attacker by {kind}"]
 
-    def display_plots(self, dfs: list[pd.DataFrame]) -> None:
-        long_df = dfs[0]
+    def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
+        super().display_above_plots(dfs)
         if self.summary_text:
             st.markdown(self.summary_text)
+
+    def display_plots(self, dfs: list[pd.DataFrame]) -> None:
+        long_df = dfs[0]
         fig = px.area(
             long_df,
             x=self.x_axis,
