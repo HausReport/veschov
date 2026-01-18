@@ -11,6 +11,7 @@ import streamlit as st
 
 from veschov.io.ShipSpecifier import ShipSpecifier
 from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
+from veschov.ui.components import widget_state
 
 if TYPE_CHECKING:
     from veschov.ui.object_reports.AttackerAndTargetReport import SerializedShipSpec, AttackerTargetState
@@ -61,6 +62,12 @@ class AttackerTargetStateManager:
     REFRESH_KEY = "attacker_target_state_refresh"
     STATE_VERSION_KEY = "attacker_target_state_version"
     STATE_VERSION = 1
+    CHECKBOX_TEMP_PREFIX = "_at_"
+    CHECKBOX_PERSIST_PREFIX = "attacker_target_persist_"
+
+    # Streamlit multipage widgets are page-scoped; widget keys can be cleaned up
+    # between page navigations. We store roster selection state in attacker_target_state
+    # and rehydrate temporary widget keys from stable persistent keys each run.
 
     def __init__(
             self,
@@ -176,6 +183,13 @@ class AttackerTargetStateManager:
         resolved: list[SerializedShipSpec] = []
         selected_set = set(selected_specs)
         refresh_requested = st.session_state.get(self.REFRESH_KEY, False)
+        logger.debug(
+            "Rendering %s panel (roster=%d selected=%d refresh=%s).",
+            role,
+            len(roster_specs),
+            len(selected_set),
+            refresh_requested,
+        )
         for spec_key in roster_specs:
             spec = self._spec_lookup.get(spec_key)
             if spec is None:
@@ -186,17 +200,68 @@ class AttackerTargetStateManager:
                 )
                 continue
             label = self._label_builder(spec, self._outcome_lookup)
-            checkbox_key = f"{key_prefix}_{spec_key}"
-            if refresh_requested or checkbox_key not in st.session_state:
-                st.session_state[checkbox_key] = spec_key in selected_set
-            checked = st.checkbox(label, key=checkbox_key)
+            temp_key, persistent_key = self.build_checkbox_keys(
+                key_prefix=key_prefix,
+                spec_key=spec_key,
+            )
+            temp_exists_before = temp_key in st.session_state
+            persistent_exists_before = persistent_key in st.session_state
+            selected = spec_key in selected_set
+            if not temp_exists_before and selected:
+                logger.debug(
+                    "Checkbox key missing; rehydrating selected spec (key=%s, spec=%s).",
+                    temp_key,
+                    spec_key,
+                )
+                if not refresh_requested:
+                    self.request_refresh(source="missing widget key")
+            if not persistent_exists_before:
+                logger.debug(
+                    "Persistent checkbox key missing; seeding from stored state (key=%s).",
+                    persistent_key,
+                )
+            if refresh_requested:
+                logger.debug(
+                    "Refresh requested; forcing checkbox default from stored selections (key=%s).",
+                    temp_key,
+                )
+            if st.session_state.get(persistent_key) != selected:
+                logger.debug(
+                    "Persistent checkbox value mismatch; overwriting (key=%s stored=%s selected=%s).",
+                    persistent_key,
+                    st.session_state.get(persistent_key),
+                    selected,
+                )
+            st.session_state[persistent_key] = selected
+            widget_state.load_widget_state(
+                temp_key=temp_key,
+                persistent_key=persistent_key,
+                default=selected,
+                force_default=False,
+            )
+            checked = st.checkbox(
+                label,
+                key=temp_key,
+                on_change=self._on_checkbox_change,
+                args=(role, spec_key, temp_key, persistent_key),
+            )
+            logger.debug(
+                "Checkbox rendered (role=%s spec=%s temp_key=%s persistent_key=%s value=%s temp_before=%s).",
+                role,
+                spec_key,
+                temp_key,
+                persistent_key,
+                checked,
+                temp_exists_before,
+            )
             if checked:
                 resolved.append(spec_key)
         logger.debug(
-            "Rendered %s panel with %d roster specs; selected=%d.",
+            "Rendered %s panel with %d roster specs; selected=%d refresh=%s.",
             role,
             len(roster_specs),
             len(resolved),
+            refresh_requested,
         )
         return resolved
 
@@ -212,18 +277,26 @@ class AttackerTargetStateManager:
         resolved_targets = list(selected_targets)
         if not resolved_attackers:
             logger.warning(
-                "No attacker selections supplied; defaulting to roster (%d specs).",
+                "No attacker selections supplied; rehydrating from stored state or roster (%d specs).",
                 len(roster_state.attacker_roster),
             )
-            resolved_attackers = list(roster_state.attacker_roster)
-            self.request_refresh(source="empty attacker selection")
+            stored_state = self._load_state()
+            if stored_state and stored_state.selected_attackers:
+                resolved_attackers = list(stored_state.selected_attackers)
+            else:
+                resolved_attackers = list(roster_state.attacker_roster)
+                self.request_refresh(source="empty attacker selection")
         if not resolved_targets:
             logger.warning(
-                "No target selections supplied; defaulting to roster (%d specs).",
+                "No target selections supplied; rehydrating from stored state or roster (%d specs).",
                 len(roster_state.target_roster),
             )
-            resolved_targets = list(roster_state.target_roster)
-            self.request_refresh(source="empty target selection")
+            stored_state = self._load_state()
+            if stored_state and stored_state.selected_targets:
+                resolved_targets = list(stored_state.selected_targets)
+            else:
+                resolved_targets = list(roster_state.target_roster)
+                self.request_refresh(source="empty target selection")
         if self._strict_mode and self._spec_lookup:
             missing_attackers = [spec for spec in resolved_attackers if spec not in self._spec_lookup]
             missing_targets = [spec for spec in resolved_targets if spec not in self._spec_lookup]
@@ -233,6 +306,7 @@ class AttackerTargetStateManager:
                     missing_attackers,
                     missing_targets,
                 )
+                st.error("Selection contains ships missing from the current roster in strict mode.")
                 raise ValueError("Selected specs missing from lookup in strict mode.")
         updated_state = AttackerTargetSelection(
             attacker_roster=list(roster_state.attacker_roster),
@@ -273,6 +347,21 @@ class AttackerTargetStateManager:
         )
         self._persist_state(swapped_state, origin="swap")
         self.request_refresh(source="swap")
+
+    def reset(self) -> None:
+        """Reset attacker/target selections and request a refresh."""
+        removed_keys = []
+        for key in list(st.session_state.keys()):
+            if key.startswith(self.CHECKBOX_TEMP_PREFIX) or key.startswith(self.CHECKBOX_PERSIST_PREFIX):
+                removed_keys.append(key)
+                st.session_state.pop(key, None)
+        st.session_state.pop(self.STATE_KEY, None)
+        st.session_state.pop(self.STATE_VERSION_KEY, None)
+        self.request_refresh(source="reset")
+        logger.warning(
+            "Reset attacker/target selections; removed %d checkbox keys.",
+            len(removed_keys),
+        )
 
     def request_refresh(self, *, source: str) -> None:
         """Request a checkbox refresh from stored selections."""
@@ -449,6 +538,12 @@ class AttackerTargetStateManager:
                 selection_version,
                 json.dumps(attacker_target_state, sort_keys=True),
             )
+            if st.session_state.get(self.REFRESH_KEY, False):
+                logger.debug(
+                    "Refresh pending after state update (selection_hash=%s selection_version=%s).",
+                    selection_hash,
+                    selection_version,
+                )
         else:
             logger.debug(
                 "Attacker/target state unchanged; skipping session update (origin=%s).",
@@ -578,6 +673,7 @@ class AttackerTargetStateManager:
                 available_labels,
             )
             if self._strict_mode:
+                st.error(f"Stored {role} selections missing from current ship options in strict mode.")
                 raise ValueError(f"Stored {role} selections missing from lookup in strict mode.")
         in_roster = [spec for spec in filtered if spec in roster_list]
         missing_in_roster = [spec for spec in filtered if spec not in roster_list]
@@ -593,6 +689,7 @@ class AttackerTargetStateManager:
                 roster_list,
             )
             if self._strict_mode:
+                st.error(f"Stored {role} selections missing from roster in strict mode.")
                 raise ValueError(f"Stored {role} selections missing from roster in strict mode.")
         if not in_roster:
             logger.warning("No %s selections remained; defaulting to roster.", role)
@@ -650,6 +747,7 @@ class AttackerTargetStateManager:
             )
             if self._strict_mode:
                 logger.error("Strict mode: roster specs missing from lookup for %s.", role)
+                st.error(f"Roster specs missing from lookup for {role} in strict mode.")
                 raise ValueError("Roster specs missing from lookup in strict mode.")
         return filtered
 
@@ -673,3 +771,87 @@ class AttackerTargetStateManager:
         """Compute a stable hash for selected specs."""
         payload = json.dumps(selected_payload, sort_keys=True)
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _spec_widget_id(spec_key: SerializedShipSpec) -> str:
+        """Generate a stable short ID for a serialized spec key."""
+        payload = json.dumps(serialize_spec_key_dict(spec_key), sort_keys=True)
+        return hashlib.md5(payload.encode("utf-8")).hexdigest()[:12]
+
+    @classmethod
+    def build_checkbox_keys(
+            cls,
+            *,
+            key_prefix: str,
+            spec_key: SerializedShipSpec,
+    ) -> tuple[str, str]:
+        """Build temporary and persistent checkbox keys for a spec."""
+        spec_id = cls._spec_widget_id(spec_key)
+        base_key = f"{key_prefix}_{spec_id}"
+        temp_key = f"{cls.CHECKBOX_TEMP_PREFIX}{base_key}"
+        persistent_key = f"{cls.CHECKBOX_PERSIST_PREFIX}{base_key}"
+        return temp_key, persistent_key
+
+    def _on_checkbox_change(
+            self,
+            role: str,
+            spec_key: SerializedShipSpec,
+            temp_key: str,
+            persistent_key: str,
+    ) -> None:
+        """Persist checkbox changes into session state and selection state."""
+        widget_state.store_widget_state(
+            temp_key=temp_key,
+            persistent_key=persistent_key,
+        )
+        checked = bool(st.session_state.get(temp_key, False))
+        logger.debug(
+            "Checkbox change detected (role=%s spec=%s checked=%s temp_key=%s).",
+            role,
+            spec_key,
+            checked,
+            temp_key,
+        )
+        self._update_selection_from_widget(
+            role=role,
+            spec_key=spec_key,
+            checked=checked,
+        )
+
+    def _update_selection_from_widget(
+            self,
+            *,
+            role: str,
+            spec_key: SerializedShipSpec,
+            checked: bool,
+    ) -> None:
+        """Update stored selections in response to a widget change."""
+        stored_state = self._load_state()
+        if stored_state is None:
+            logger.warning(
+                "Widget change received without stored state; resolving defaults before update."
+            )
+            stored_state = self.resolve_state(origin="widget change")
+        selected_attackers = list(stored_state.selected_attackers)
+        selected_targets = list(stored_state.selected_targets)
+        if role == "attacker":
+            selection_list = selected_attackers
+        else:
+            selection_list = selected_targets
+        if checked and spec_key not in selection_list:
+            selection_list.append(spec_key)
+        if not checked and spec_key in selection_list:
+            selection_list.remove(spec_key)
+        updated_state = AttackerTargetSelection(
+            attacker_roster=list(stored_state.attacker_roster),
+            target_roster=list(stored_state.target_roster),
+            selected_attackers=self._dedupe_specs(selected_attackers),
+            selected_targets=self._dedupe_specs(selected_targets),
+        )
+        self._persist_state(updated_state, origin="widget change", update_roster=False, update_selected=True)
+        logger.debug(
+            "Widget change persisted (role=%s spec=%s checked=%s).",
+            role,
+            spec_key,
+            checked,
+        )

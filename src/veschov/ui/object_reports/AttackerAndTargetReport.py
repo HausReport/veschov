@@ -496,6 +496,11 @@ class AttackerAndTargetReport(AbstractReport):
             outcome_lookup=outcome_lookup,
             strict_mode=bool(st.session_state.get("attacker_target_strict_mode")),
         )
+        if st.session_state.get("debug_attacker_target_state_keys"):
+            logger.debug(
+                "Attacker/target session keys at selector start: %s",
+                sorted(st.session_state.keys()),
+            )
         roster_state = manager.resolve_state(origin="defaults")
 
         st.markdown(
@@ -561,6 +566,12 @@ class AttackerAndTargetReport(AbstractReport):
                 on_click=manager.swap,
                 # width=125,
             )
+            st.button(
+                "Reset selections",
+                help="Reset attacker/target selections to defaults.",
+                key="reset_attacker_target_specs",
+                on_click=manager.reset,
+            )
             st.markdown("</div>", unsafe_allow_html=True)
         with selector_right:
             selected_target_specs = manager.render_role_panel(
@@ -578,6 +589,11 @@ class AttackerAndTargetReport(AbstractReport):
         )
         selected_attackers = manager.resolve_ship_specs(updated_state.selected_attackers)
         selected_targets = manager.resolve_ship_specs(updated_state.selected_targets)
+        if st.session_state.get("debug_attacker_target_state_keys"):
+            logger.debug(
+                "Attacker/target session keys at selector end: %s",
+                sorted(st.session_state.keys()),
+            )
         return selected_attackers, selected_targets
 
     def _resolve_selected_specs_from_state(

@@ -61,6 +61,16 @@ Additional guidance for contributors and tools can be found in `AGENTS.md`.
 
 ## Project structure (high level)
 
+## Streamlit multipage widget state
+
+Streamlit 1.0.1 cleans up widget keys when a multipage app navigates away from a page. That means
+page-scoped widgets (such as the attacker/target roster checkboxes) lose their values unless we
+persist them separately. To avoid page-switch resets, roster selections are stored in
+`attacker_target_state` and widget values are rehydrated from stable, persistent keys on each run.
+This follows Streamlit's multipage guidance (Option 2/3) and keeps page navigation from wiping
+checkbox selections. If you add new page-scoped widgets that should survive navigation, use the
+same persistent-key pattern instead of relying on widget keys alone.
+
 ## Status
 
 This is an **actively evolving personal/research tool**.
