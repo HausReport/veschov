@@ -528,6 +528,7 @@ class AttackerAndTargetReport(AbstractReport):
             selected_attackers=selected_attacker_specs,
             selected_targets=selected_target_specs,
         )
+        manager.clear_refresh()
         selected_attackers = manager.resolve_ship_specs(updated_state.selected_attackers)
         selected_targets = manager.resolve_ship_specs(updated_state.selected_targets)
         return selected_attackers, selected_targets
