@@ -360,6 +360,9 @@ class AttackerAndTargetReport(AbstractReport):
     ) -> ShipSpecifier | None:
         """Match the local player spec from players_df to a ship option."""
         if not isinstance(players_df, pd.DataFrame) or players_df.empty:
+            # FIX12: ERROR THIS SHOULD NOT BE REACHED
+            import traceback
+            traceback.print_stack()
             logger.warning("Unable to infer enemy spec: players_df missing or empty.")
             return None
         row = players_df.iloc[-1]
@@ -385,6 +388,7 @@ class AttackerAndTargetReport(AbstractReport):
             options: Sequence[ShipSpecifier],
     ) -> list[ShipSpecifier]:
         """Determine a default target selection from player metadata."""
+        # FIX12: players_df should not be empty
         matched = self._match_enemy_spec(players_df, options)
         if matched is not None:
             return [matched]
@@ -399,6 +403,7 @@ class AttackerAndTargetReport(AbstractReport):
             options: Sequence[ShipSpecifier],
     ) -> tuple[list[SerializedShipSpec], list[SerializedShipSpec]]:
         """Build default attacker/target selections for state initialization."""
+        # FIX12 players_df should not be empty
         target_fallback = self._default_target_from_players(players_df, options)
         if not target_fallback:
             target_fallback = list(options[-1:])
@@ -432,6 +437,7 @@ class AttackerAndTargetReport(AbstractReport):
 
         spec_lookup = {serialize_spec(spec): spec for spec in options}
         available_specs = [serialize_spec(spec) for spec in options]
+        # FIX12 players_df should not be empty
         default_attacker_specs, default_target_specs = self._build_default_attacker_target_defaults(
             players_df,
             options,
@@ -543,6 +549,8 @@ class AttackerAndTargetReport(AbstractReport):
             return [], []
         spec_lookup = {serialize_spec(spec): spec for spec in options}
         available_specs = [serialize_spec(spec) for spec in options]
+        # FIX12 players_df should not be empty
+        # This causes selected attackers/targets to be thrown out.
         default_attacker_specs, default_target_specs = self._build_default_attacker_target_defaults(
             None,
             options,

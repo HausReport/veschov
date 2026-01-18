@@ -108,7 +108,7 @@ class AttackerTargetStateManager:
             raise ValueError("Label builder is required to render role panels.")
         st.markdown(f"**{title}**")
         if not roster_specs:
-            logger.warning("No roster specs available for %s selection.", title)
+            logger.warning(f"No roster specs available for {title} selection, key = {key_prefix}.")
             st.caption("None listed in the current log.")
             return []
         resolved: list[SerializedShipSpec] = []
@@ -175,12 +175,12 @@ class AttackerTargetStateManager:
     def request_refresh(self) -> None:
         """Request a checkbox refresh from stored selections."""
         st.session_state[self.REFRESH_KEY] = True
-        logger.debug("Attacker/target checkbox refresh requested.")
+        logger.debug(f"Attacker/target checkbox refresh requested. Key = {self.REFRESH_KEY}")
 
     def clear_refresh(self) -> None:
         """Clear any pending checkbox refresh request."""
         if st.session_state.pop(self.REFRESH_KEY, None) is not None:
-            logger.debug("Attacker/target checkbox refresh cleared.")
+            logger.debug(f"Attacker/target checkbox refresh cleared. Key = {self.REFRESH_KEY}")
 
     def resolve_ship_specs(
             self,
