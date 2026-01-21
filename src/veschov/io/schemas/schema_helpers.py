@@ -1,5 +1,6 @@
 """Schema-driven normalization helpers for battle log dataframes."""
 
+import importlib
 
 import pandas as pd
 from pandera.api.pandas.model import DataFrameModel
@@ -7,11 +8,10 @@ from pandera.api.pandas.model import DataFrameModel
 from veschov.io.columns import add_alias_columns
 from veschov.io.schemas.SchemaValidation import reorder_columns
 
-import importlib
-import pandas as pd
-from pandera.api.dataframe.model import DataFrameModel
 
-def _get_schema_metadata(schema: type[DataFrameModel]) -> tuple[dict[str, str], dict[str, str], list[str]]:
+def _get_schema_metadata(
+    schema: type[DataFrameModel],
+) -> tuple[dict[str, str], dict[str, str], list[str]]:
     """
     Look for module-level constants next to the schema class:
       <PREFIX>_COLUMN_RENAMES
@@ -27,7 +27,10 @@ def _get_schema_metadata(schema: type[DataFrameModel]) -> tuple[dict[str, str], 
     order = getattr(mod, f"{prefix}_COLUMN_ORDER", []) or []
     return dict(renames), dict(aliases), list(order)
 
-def normalize_dataframe_for_schema(df: pd.DataFrame, schema: type[DataFrameModel]) -> pd.DataFrame:
+def normalize_dataframe_for_schema(
+    df: pd.DataFrame,
+    schema: type[DataFrameModel],
+) -> pd.DataFrame:
     """Apply schema column renames, aliases, and ordering."""
     updated = df.copy()
     updated.attrs = df.attrs.copy()
