@@ -10,7 +10,6 @@ from veschov.io.BattleSectionParser import BattleSectionParser
 from veschov.io.FleetSectionParser import FleetSectionParser
 from veschov.io.LootSectionParser import LootSectionParser
 from veschov.io.PlayerSectionParser import PlayerSectionParser
-from veschov.io.StartsWhen import extract_sections
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +21,7 @@ def parse_battle_log(file_bytes: bytes, filename: str) -> pd.DataFrame:
       - 'total_normal'
     """
     del filename
-    text = BattleSectionParser(file_bytes)._read_text(file_bytes)
-    sections = extract_sections(text)
-    df, raw_df = BattleSectionParser(text).parse()
+    df, raw_df, sections = BattleSectionParser(file_bytes).parse_with_sections()
     validated_players_df = PlayerSectionParser(sections.get("players"), df).parse()
     validated_fleets_df = FleetSectionParser(sections.get("fleets")).parse()
     validated_loot_df = LootSectionParser(sections.get("rewards")).parse()
