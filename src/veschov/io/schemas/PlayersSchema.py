@@ -1,5 +1,6 @@
 """Pandera schema for player metadata dataframes."""
 
+from __future__ import annotations
 
 from typing import ClassVar
 
@@ -20,15 +21,13 @@ class PlayersSchema(pa.DataFrameModel):
     """Schema definition for player metadata rows."""
 
     player_name: Series[str] = pa.Field(alias="Player Name", nullable=True)
-    player_level: Series[int] = pa.Field(alias="Player Level", nullable=True)
+    player_level: Series[pa.Int64] = pa.Field(alias="Player Level", nullable=True)
     outcome: Series[str] = pa.Field(alias="Outcome", nullable=True)
 
     ship_name: Series[str] = pa.Field(alias="Ship Name", nullable=True)
     location: Series[str] = pa.Field(alias="Location", nullable=True)
     timestamp: Series[str] = pa.Field(alias="Timestamp", nullable=True)
     alliance: Series[str] = pa.Field(alias="Alliance", nullable=True)
-
-
 
     class Config:
         """Enable dtype coercion while allowing extra columns."""
