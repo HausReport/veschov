@@ -9,7 +9,7 @@ from typing import IO, Any
 import pandas as pd
 
 from veschov.io.AbstractSectionParser import AbstractSectionParser
-from veschov.io.StartsWhen import StartsWhen
+from veschov.io.StartsWhen import StartsWhen, extract_sections
 from veschov.io.columns import resolve_event_type
 from veschov.io.schemas import CombatSchema, normalize_dataframe_for_schema, validate_dataframe
 from veschov.transforms.derive_metrics import add_shot_index
@@ -57,6 +57,15 @@ class BattleSectionParser(AbstractSectionParser):
         df = add_shot_index(df)
         df = validate_dataframe(df, CombatSchema, soft=soft, context="combat section")
         return df, raw_df
+
+    def parse_with_sections(
+        self, *, soft: bool = False
+    ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
+        """Return the validated combat dataframe, raw copy, and extracted sections."""
+        text = self._read_text(self.file_bytes)
+        sections = extract_sections(text)
+        df, raw_df = BattleSectionParser(text).parse(soft=soft)
+        return df, raw_df, sections
 
     def _normalize_combat_df(self, df: pd.DataFrame) -> pd.DataFrame:
         cleaned = self._normalize_dataframe(df)

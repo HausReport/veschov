@@ -158,16 +158,20 @@ class SessionInfo:
             missing = required_columns - set(df.columns)
             logger.warning("Combat df missing attacker columns for alliances: %s", sorted(missing))
             return {}
-        lookup: dict[tuple[str, str], set[str]] = {}
-        for _, row in df.iterrows():
-            name = self.normalize_text(row.get("attacker_name"))
-            ship = self.normalize_text(row.get("attacker_ship"))
-            alliance = self.normalize_text(row.get("attacker_alliance"))
-            if not name or not ship or not alliance:
-                continue
-            key = (name, ship)
-            lookup.setdefault(key, set()).add(alliance)
-        return lookup
+        subset = df.loc[:, ["attacker_name", "attacker_ship", "attacker_alliance"]].copy()
+        subset = subset.fillna("").astype(str)
+        subset = subset.apply(lambda col: col.str.strip())
+        subset = subset[
+            (subset["attacker_name"] != "")
+            & (subset["attacker_ship"] != "")
+            & (subset["attacker_alliance"] != "")
+        ]
+        grouped = (
+            subset.groupby(["attacker_name", "attacker_ship"])["attacker_alliance"]
+            .agg(lambda values: set(values))
+            .to_dict()
+        )
+        return {key: set(values) for key, values in grouped.items()}
 
     def build_outcome_lookup(self) -> dict[tuple[str, str, str], object]:
         """Return a lookup of normalized ship specs to Outcome values."""
