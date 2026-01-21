@@ -8,6 +8,7 @@ dependencies = [
   "st-pages>=1.0.1",
   "streamlit-copy-to-clipboard-button>=1.0",
   "pandas>=2.2",
+  "pandera>=0.28.1",
   "plotly>=5.20",
   "humanize>=4.15.0",
   "toml>=0.10.2",
@@ -29,6 +30,7 @@ streamlit-extras = ">=0.7"
 st-pages = ">=1.0.1"
 streamlit-copy-to-clipboard-button = ">=1.0"
 pandas = ">=2.2"
+pandera = ">=0.28.1"
 plotly = ">=5.20"
 humanize = ">=4.15.0"
 toml = ">=0.10.2"
