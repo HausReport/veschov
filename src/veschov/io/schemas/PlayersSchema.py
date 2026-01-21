@@ -15,10 +15,10 @@ class PlayersSchema(pa.DataFrameModel):
     player_level: Series[float] = pa.Field(alias="Player Level", nullable=True)
     outcome: Series[str] = pa.Field(alias="Outcome", nullable=True)
 
-    ship_name: Series[str] = pa.Field(alias="Ship Name", nullable=True, required=False)
-    location: Series[str] = pa.Field(alias="Location", nullable=True, required=False)
-    timestamp: Series[str] = pa.Field(alias="Timestamp", nullable=True, required=False)
-    alliance: Series[str] = pa.Field(alias="Alliance", nullable=True, required=False)
+    ship_name: Series[str] = pa.Field(alias="Ship Name", nullable=True)
+    location: Series[str] = pa.Field(alias="Location", nullable=True)
+    timestamp: Series[str] = pa.Field(alias="Timestamp", nullable=True)
+    alliance: Series[str] = pa.Field(alias="Alliance", nullable=True)
 
     COLUMN_ORDER: ClassVar[list[str]] = [
         "Player Name",

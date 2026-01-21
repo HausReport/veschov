@@ -18,13 +18,13 @@ class CombatSchema(pa.DataFrameModel):
 
     attacker_name: Series[str] = pa.Field(nullable=True)
     attacker_ship: Series[str] = pa.Field(nullable=True)
-    attacker_alliance: Series[str] = pa.Field(nullable=True, required=False)
-    attacker_is_armada: Series[bool] = pa.Field(nullable=True, required=False)
+    attacker_alliance: Series[str] = pa.Field(nullable=True)
+    attacker_is_armada: Series[bool] = pa.Field(nullable=True)
 
     target_name: Series[str] = pa.Field(nullable=True)
     target_ship: Series[str] = pa.Field(nullable=True)
-    target_alliance: Series[str] = pa.Field(nullable=True, required=False)
-    target_is_armada: Series[bool] = pa.Field(nullable=True, required=False)
+    target_alliance: Series[str] = pa.Field(nullable=True)
+    target_is_armada: Series[bool] = pa.Field(nullable=True)
 
     applied_damage: Series[float] = pa.Field(nullable=True)
     damage_after_apex: Series[float] = pa.Field(nullable=True)
@@ -43,12 +43,12 @@ class CombatSchema(pa.DataFrameModel):
     remain_before_apex: Series[float] = pa.Field(nullable=True)
     accounting_delta: Series[float] = pa.Field(nullable=True)
 
-    ability_type: Series[str] = pa.Field(nullable=True, required=False)
-    ability_value: Series[float] = pa.Field(nullable=True, required=False)
-    ability_name: Series[str] = pa.Field(nullable=True, required=False)
-    ability_owner_name: Series[str] = pa.Field(nullable=True, required=False)
-    target_defeated: Series[str] = pa.Field(nullable=True, required=False)
-    target_destroyed: Series[str] = pa.Field(nullable=True, required=False)
+    ability_type: Series[str] = pa.Field(nullable=True)
+    ability_value: Series[float] = pa.Field(nullable=True)
+    ability_name: Series[str] = pa.Field(nullable=True)
+    ability_owner_name: Series[str] = pa.Field(nullable=True)
+    target_defeated: Series[str] = pa.Field(nullable=True)
+    target_destroyed: Series[str] = pa.Field(nullable=True)
 
     COLUMN_RENAMES: ClassVar[dict[str, str]] = {
         "Critical Hit?": "is_crit",
