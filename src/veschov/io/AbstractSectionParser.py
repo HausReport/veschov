@@ -78,6 +78,10 @@ class AbstractSectionParser:
             "target_ship",
         }
         if not required_columns.issubset(combat_df.columns):
+            missing = sorted(required_columns - set(combat_df.columns))
+            logger.warning(
+                "Combat df missing columns for fallback players: %s", missing
+            )
             return pd.DataFrame(columns=["Player Name", "Ship Name"])
 
         frames: list[pd.DataFrame] = []

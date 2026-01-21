@@ -85,6 +85,8 @@ def validate_dataframe(
     context: str,
 ) -> pd.DataFrame:
     """Validate a dataframe and optionally soften errors with warnings/coercion."""
+    from veschov.io.schemas.schema_helpers import normalize_dataframe_for_schema
+
     updated = _add_missing_schema_columns(df, schema, context=context)
     try:
         validated = schema.validate(updated, lazy=True)
@@ -98,5 +100,4 @@ def validate_dataframe(
             exc.failure_cases.to_string(index=False),
         )
         validated = _coerce_to_schema(updated, schema)
-    column_order = getattr(schema, "COLUMN_ORDER", [])
-    return reorder_columns(validated, column_order)
+    return normalize_dataframe_for_schema(validated, schema)
