@@ -8,6 +8,7 @@ from typing import IO, Any
 
 import pandas as pd
 
+from veschov.io.LootSectionParser import LootSectionParser
 from veschov.io.StartsWhen import extract_sections, section_to_dataframe, SECTION_HEADERS, StartsWhen
 from veschov.io.columns import resolve_event_type, add_alias_columns
 from veschov.transforms.derive_metrics import add_shot_index
@@ -320,6 +321,7 @@ def parse_battle_log(file_bytes: bytes, filename: str) -> pd.DataFrame:
     sections = extract_sections(text)
     players_df = section_to_dataframe(sections.get("players"), SECTION_HEADERS["players"])
     fleets_df = section_to_dataframe(sections.get("fleets"), SECTION_HEADERS["fleets"])
+    loot_df = LootSectionParser(sections.get("rewards")).parse()
 
     wrapped = StartsWhen(f, "Round\t")
     df = pd.read_csv(wrapped, sep="\t", dtype=str, na_values=NA_TOKENS)
@@ -334,5 +336,6 @@ def parse_battle_log(file_bytes: bytes, filename: str) -> pd.DataFrame:
     fleets_df = _coerce_yes_no_columns(fleets_df, FLEET_BOOLEAN_COLUMNS)
     df.attrs["players_df"] = players_df
     df.attrs["fleets_df"] = fleets_df
+    df.attrs["loot_df"] = loot_df
     df.attrs["raw_combat_df"] = raw_df
     return df
