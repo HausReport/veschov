@@ -11,6 +11,7 @@ import pandas as pd
 from veschov.io.AbstractSectionParser import AbstractSectionParser
 from veschov.io.StartsWhen import StartsWhen
 from veschov.io.columns import add_alias_columns, resolve_event_type
+from veschov.io.schemas import CombatSchema, validate_dataframe
 from veschov.transforms.derive_metrics import add_shot_index
 
 logger = logging.getLogger(__name__)
@@ -109,14 +110,15 @@ class BattleSectionParser(AbstractSectionParser):
     def __init__(self, file_bytes: bytes | str | IO[Any]) -> None:
         self.file_bytes = file_bytes
 
-    def parse(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """Return the normalized combat dataframe plus a raw copy."""
+    def parse(self, *, soft: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Return the validated combat dataframe plus a raw copy."""
         text = self._read_text(self.file_bytes)
         wrapped = StartsWhen(io.StringIO(text), "Round\t")
         df = pd.read_csv(wrapped, sep="\t", dtype=str, na_values=self.NA_TOKENS)
         raw_df = df.copy()
         df = self._normalize_combat_df(df)
         df = add_shot_index(df)
+        df = validate_dataframe(df, CombatSchema, soft=soft, context="combat section")
         return df, raw_df
 
     def _normalize_combat_df(self, df: pd.DataFrame) -> pd.DataFrame:

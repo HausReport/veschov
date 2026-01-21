@@ -25,11 +25,15 @@ def parse_battle_log(file_bytes: bytes, filename: str) -> pd.DataFrame:
     text = BattleSectionParser(file_bytes)._read_text(file_bytes)
     sections = extract_sections(text)
     df, raw_df = BattleSectionParser(text).parse()
-    players_df = PlayerSectionParser(sections.get("players"), df).parse()
-    fleets_df = FleetSectionParser(sections.get("fleets")).parse()
-    loot_df = LootSectionParser(sections.get("rewards")).parse()
-    df.attrs["players_df"] = players_df
-    df.attrs["fleets_df"] = fleets_df
-    df.attrs["loot_df"] = loot_df
-    df.attrs["raw_combat_df"] = raw_df
+    validated_players_df = PlayerSectionParser(sections.get("players"), df).parse()
+    validated_fleets_df = FleetSectionParser(sections.get("fleets")).parse()
+    validated_loot_df = LootSectionParser(sections.get("rewards")).parse()
+    df.attrs.update(
+        {
+            "players_df": validated_players_df,
+            "fleets_df": validated_fleets_df,
+            "loot_df": validated_loot_df,
+            "raw_combat_df": raw_df,
+        }
+    )
     return df
