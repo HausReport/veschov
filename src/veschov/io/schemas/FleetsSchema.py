@@ -16,8 +16,8 @@ class FleetsSchema(pa.DataFrameModel):
     defense: Series[float] = pa.Field(alias="Defense", nullable=True)
     health: Series[float] = pa.Field(alias="Health", nullable=True)
 
-    buff_applied: Series[bool] = pa.Field(nullable=True, required=False)
-    debuff_applied: Series[bool] = pa.Field(nullable=True, required=False)
+    buff_applied: Series[bool] = pa.Field(nullable=True)
+    debuff_applied: Series[bool] = pa.Field(nullable=True)
 
     COLUMN_ORDER: ClassVar[list[str]] = [
         "Fleet Type",
