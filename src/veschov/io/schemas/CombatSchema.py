@@ -50,6 +50,36 @@ class CombatSchema(pa.DataFrameModel):
     target_defeated: Series[str] = pa.Field(nullable=True, required=False)
     target_destroyed: Series[str] = pa.Field(nullable=True, required=False)
 
+    COLUMN_RENAMES: ClassVar[dict[str, str]] = {
+        "Critical Hit?": "is_crit",
+        "Hull Damage": "hull_damage",
+        "Shield Damage": "shield_damage",
+        "Mitigated Damage": "mitigated_normal",
+        "Mitigated Isolytic Damage": "mitigated_iso",
+        "Mitigated Apex Barrier": "mitigated_apex",
+        "Total Damage": "total_normal",
+        "Total Isolytic Damage": "total_iso",
+        "Round": "round",
+        "Battle Event": "battle_event",
+        "Type": "event_type",
+        "Attacker Name": "attacker_name",
+        "Attacker Alliance": "attacker_alliance",
+        "Attacker Ship": "attacker_ship",
+        "Attacker - Is Armada?": "attacker_is_armada",
+        "Target Name": "target_name",
+        "Target Alliance": "target_alliance",
+        "Target Ship": "target_ship",
+        "Target - Is Armada?": "target_is_armada",
+        "Ability Type": "ability_type",
+        "Ability Value": "ability_value",
+        "Ability Name": "ability_name",
+        "Ability Owner Name": "ability_owner_name",
+        "Target Defeated": "target_defeated",
+        "Target Destroyed": "target_destroyed",
+    }
+    COLUMN_ALIASES: ClassVar[dict[str, str]] = {
+        "damage_after_apex": "applied_damage",
+    }
     COLUMN_ORDER: ClassVar[list[str]] = [
         "round",
         "battle_event",
