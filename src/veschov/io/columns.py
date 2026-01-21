@@ -6,13 +6,6 @@ import pandas as pd
 
 CANONICAL_COLUMN_STYLE = "snake_case"
 
-# Alias columns are supported for compatibility with legacy/derived names.
-# These aliases should be created in one place so transforms can rely on them.
-DAMAGE_ALIASES: dict[str, str] = {
-    "damage_after_apex": "applied_damage",
-}
-
-
 def resolve_event_type(
     df: pd.DataFrame,
     *,
@@ -39,12 +32,12 @@ def resolve_event_type(
 def add_alias_columns(
     df: pd.DataFrame,
     *,
-    aliases: dict[str, str] | None = None,
+    aliases: dict[str, str] | None,
 ) -> pd.DataFrame:
     """Add alias columns for canonical sources (does not drop originals)."""
     updated = df.copy()
     updated.attrs = df.attrs.copy()
-    alias_map = aliases or DAMAGE_ALIASES
+    alias_map = aliases or {}
     for alias, source in alias_map.items():
         if alias in updated.columns:
             continue

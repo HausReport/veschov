@@ -7,6 +7,7 @@ from veschov.io.schemas.FleetsSchema import FleetsSchema
 from veschov.io.schemas.LootSchema import LootSchema
 from veschov.io.schemas.PlayersSchema import PlayersSchema
 from veschov.io.schemas.SchemaValidation import reorder_columns, validate_dataframe
+from veschov.io.schemas.schema_helpers import normalize_dataframe_for_schema
 
 __all__ = [
     "CombatSchema",
@@ -15,4 +16,5 @@ __all__ = [
     "PlayersSchema",
     "reorder_columns",
     "validate_dataframe",
+    "normalize_dataframe_for_schema",
 ]
