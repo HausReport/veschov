@@ -101,13 +101,32 @@ class AbstractSectionParser:
         combined = pd.concat(frames, ignore_index=True).drop_duplicates().reset_index(drop=True)
         if npc_name:
             combined = combined[combined["Player Name"].str.strip() != npc_name]
+        name_series = combined["Player Name"].fillna("").astype(str).str.strip()
+        ship_series = combined["Ship Name"].fillna("").astype(str).str.strip()
+        missing_name = (name_series == "") & (ship_series != "")
+        if missing_name.any():
+            logger.warning(
+                "Dropping %s player rows with ship names but no player names.",
+                int(missing_name.sum()),
+            )
+        combined = combined[name_series != ""]
+        if combined.empty:
+            return pd.DataFrame(columns=["Player Name", "Ship Name"])
 
-        combined = combined[
-            (combined["Player Name"].str.strip() != "")
-            | (combined["Ship Name"].str.strip() != "")
-        ]
         combined = combined.replace({"": pd.NA})
-        return combined.loc[:, ["Player Name", "Ship Name"]].reset_index(drop=True)
+        duplicate_players = combined["Player Name"].duplicated()
+        if duplicate_players.any():
+            logger.warning(
+                "Multiple ships found for players %s; keeping first ship name.",
+                ", ".join(combined.loc[duplicate_players, "Player Name"].unique()),
+            )
+
+        deduped = (
+            combined.groupby("Player Name", sort=False)["Ship Name"]
+            .apply(lambda series: series.dropna().iloc[0] if not series.dropna().empty else pd.NA)
+            .reset_index()
+        )
+        return deduped.loc[:, ["Player Name", "Ship Name"]].reset_index(drop=True)
 
     def _align_players_columns(self, source_df: pd.DataFrame, columns: pd.Index) -> pd.DataFrame:
         """Align inferred player data to the export metadata columns."""
