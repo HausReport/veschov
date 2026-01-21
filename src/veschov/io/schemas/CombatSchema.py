@@ -11,8 +11,8 @@ from pandera.typing import Series
 class CombatSchema(pa.DataFrameModel):
     """Schema definition for normalized combat log rows."""
 
-    round: Series[float] = pa.Field(nullable=True)
-    battle_event: Series[str] = pa.Field(nullable=True)
+    round: Series[int] = pa.Field(nullable=False)
+    battle_event: Series[int] = pa.Field(nullable=False)
     event_type: Series[str] = pa.Field(nullable=True)
     is_crit: Series[pd.BooleanDtype] = pa.Field(nullable=True)
 

@@ -3,6 +3,7 @@
 
 from typing import ClassVar
 
+import pandas as pd
 import pandera as pa
 from pandera.typing import Series
 
@@ -23,8 +24,8 @@ class FleetsSchema(pa.DataFrameModel):
     defense: Series[float] = pa.Field(alias="Defense", nullable=True)
     health: Series[float] = pa.Field(alias="Health", nullable=True)
 
-    buff_applied: Series[pa.Bool] = pa.Field(nullable=True)
-    debuff_applied: Series[pa.Bool] = pa.Field(nullable=True)
+    buff_applied: Series[pd.BooleanDtype] = pa.Field(nullable=True)
+    debuff_applied: Series[pd.BooleanDtype] = pa.Field(nullable=True)
 
     class Config:
         """Enable dtype coercion while allowing extra columns."""
