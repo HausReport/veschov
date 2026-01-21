@@ -7,13 +7,15 @@ from typing import IO, Any
 
 import pandas as pd
 
+from veschov.io.StartsWhen import NA_TOKENS as STARTSWHEN_NA_TOKENS
+
 logger = logging.getLogger(__name__)
 
 
 class AbstractSectionParser:
     """Provide shared parsing helpers for sectioned battle log exports."""
 
-    NA_TOKENS = ("--", "—", "–", "")
+    NA_TOKENS = STARTSWHEN_NA_TOKENS
 
     def _read_text(self, file_bytes: bytes | str | IO[Any]) -> str:
         """Return a UTF-8 decoded string from a bytes, str, or file-like input."""

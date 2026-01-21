@@ -4,13 +4,14 @@ import logging
 
 import pandas as pd
 
-from veschov.io.StartsWhen import NA_TOKENS, SECTION_HEADERS, section_to_dataframe
+from veschov.io.AbstractSectionParser import AbstractSectionParser
+from veschov.io.StartsWhen import SECTION_HEADERS, section_to_dataframe
 from veschov.io.schemas import LootSchema, validate_dataframe
 
 logger = logging.getLogger(__name__)
 
 
-class LootSectionParser:
+class LootSectionParser(AbstractSectionParser):
     """Parse the rewards section of a combat log into a normalized dataframe."""
 
     def __init__(self, section_text: str | None) -> None:
@@ -28,14 +29,3 @@ class LootSectionParser:
             soft=soft,
             context="loot section",
         )
-
-    @staticmethod
-    def _normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-        cleaned = df.copy()
-        for column in cleaned.columns:
-            if pd.api.types.is_object_dtype(cleaned[column]) or pd.api.types.is_string_dtype(
-                cleaned[column]
-            ):
-                cleaned[column] = cleaned[column].astype("string").str.strip()
-        cleaned = cleaned.replace(list(NA_TOKENS), pd.NA)
-        return cleaned
