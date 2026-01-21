@@ -1,16 +1,41 @@
 """Helpers for validating battle log dataframes against pandera schemas."""
 
-from __future__ import annotations
 
+import inspect
 import logging
 from typing import Iterable, Type
 
 import pandas as pd
 import pandera as pa
 from pandera.api.pandas.model import DataFrameModel
+# import veschov.io.schemas.CombatSchema as cs  # adjust import to your actual module
 
 logger = logging.getLogger(__name__)
 
+import inspect
+import importlib
+
+# # Import the *package* module, not the CombatSchema class
+# schemas_pkg = importlib.import_module("veschov.io.schemas")
+#
+# print("schemas package file:", getattr(schemas_pkg, "__file__", None))
+# print("schemas package contents has CombatSchema:", hasattr(schemas_pkg, "CombatSchema"))
+#
+# CombatSchema = getattr(schemas_pkg, "CombatSchema")
+# print("CombatSchema object:", CombatSchema)
+# print("CombatSchema defined in module:", CombatSchema.__module__)
+#
+# # Now import the module that *actually defines* the class
+# combat_mod = importlib.import_module(CombatSchema.__module__)
+# print("CombatSchema defining module file:", getattr(combat_mod, "__file__", None))
+#
+# ann = getattr(CombatSchema, "__annotations__", {})
+# print("COLUMN_RENAMES annotated:", "COLUMN_RENAMES" in ann)
+# print("COLUMN_RENAMES annotation:", ann.get("COLUMN_RENAMES"))
+# print("COLUMN_RENAMES type:", type(getattr(CombatSchema, "COLUMN_RENAMES", None)))
+# print("COLUMN_RENAMES sample:", repr(getattr(CombatSchema, "COLUMN_RENAMES", None))[:200])
+# ann = CombatSchema.__annotations__["COLUMN_RENAMES"]
+# print("annotation python type:", type(ann), repr(ann)[:80])
 
 def reorder_columns(df: pd.DataFrame, column_order: Iterable[str]) -> pd.DataFrame:
     """Return a dataframe with columns ordered to match the provided list."""

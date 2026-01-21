@@ -1,12 +1,20 @@
 """Pandera schema for player metadata dataframes."""
 
-from __future__ import annotations
 
 from typing import ClassVar
 
 import pandera as pa
 from pandera.typing import Series
 
+COLUMN_ORDER: ClassVar[list[str]] = [
+    "Player Name",
+    "Player Level",
+    "Outcome",
+    "Ship Name",
+    "Alliance",
+    "Location",
+    "Timestamp",
+]
 
 class PlayersSchema(pa.DataFrameModel):
     """Schema definition for player metadata rows."""
@@ -20,15 +28,7 @@ class PlayersSchema(pa.DataFrameModel):
     timestamp: Series[str] = pa.Field(alias="Timestamp", nullable=True)
     alliance: Series[str] = pa.Field(alias="Alliance", nullable=True)
 
-    COLUMN_ORDER: ClassVar[list[str]] = [
-        "Player Name",
-        "Player Level",
-        "Outcome",
-        "Ship Name",
-        "Alliance",
-        "Location",
-        "Timestamp",
-    ]
+
 
     class Config:
         """Enable dtype coercion while allowing extra columns."""

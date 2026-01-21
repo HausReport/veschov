@@ -1,9 +1,9 @@
 """Pandera schema for normalized combat log data."""
 
-from __future__ import annotations
 
 from typing import ClassVar
 
+import pandas as pd
 import pandera as pa
 from pandera.typing import Series
 
@@ -14,17 +14,17 @@ class CombatSchema(pa.DataFrameModel):
     round: Series[float] = pa.Field(nullable=True)
     battle_event: Series[str] = pa.Field(nullable=True)
     event_type: Series[str] = pa.Field(nullable=True)
-    is_crit: Series[bool] = pa.Field(nullable=True)
+    is_crit: Series[pd.BooleanDtype] = pa.Field(nullable=True)
 
     attacker_name: Series[str] = pa.Field(nullable=True)
     attacker_ship: Series[str] = pa.Field(nullable=True)
     attacker_alliance: Series[str] = pa.Field(nullable=True)
-    attacker_is_armada: Series[bool] = pa.Field(nullable=True)
+    attacker_is_armada: Series[pa.Bool] = pa.Field(nullable=True)
 
     target_name: Series[str] = pa.Field(nullable=True)
     target_ship: Series[str] = pa.Field(nullable=True)
     target_alliance: Series[str] = pa.Field(nullable=True)
-    target_is_armada: Series[bool] = pa.Field(nullable=True)
+    target_is_armada: Series[pa.Bool] = pa.Field(nullable=True)
 
     applied_damage: Series[float] = pa.Field(nullable=True)
     damage_after_apex: Series[float] = pa.Field(nullable=True)
@@ -50,9 +50,9 @@ class CombatSchema(pa.DataFrameModel):
     target_defeated: Series[str] = pa.Field(nullable=True)
     target_destroyed: Series[str] = pa.Field(nullable=True)
 
-    COLUMN_RENAMES: ClassVar[dict[str, str]] = {}
-    COLUMN_ALIASES: ClassVar[dict[str, str]] = {}
-    COLUMN_ORDER: ClassVar[list[str]] = []
+    # COLUMN_RENAMES: ClassVar[dict[str, str]] = {}
+    # COLUMN_ALIASES: ClassVar[dict[str, str]] = {}
+    # COLUMN_ORDER: ClassVar[list[str]] = []
 
     class Config:
         """Enable dtype coercion while allowing extra columns."""
@@ -128,6 +128,6 @@ COMBAT_COLUMN_ORDER: ClassVar[list[str]] = [
     "target_destroyed",
 ]
 
-CombatSchema.COLUMN_RENAMES = COMBAT_COLUMN_RENAMES
-CombatSchema.COLUMN_ALIASES = COMBAT_COLUMN_ALIASES
-CombatSchema.COLUMN_ORDER = COMBAT_COLUMN_ORDER
+# CombatSchema.COLUMN_RENAMES = COMBAT_COLUMN_RENAMES
+# CombatSchema.COLUMN_ALIASES = COMBAT_COLUMN_ALIASES
+# CombatSchema.COLUMN_ORDER = COMBAT_COLUMN_ORDER
