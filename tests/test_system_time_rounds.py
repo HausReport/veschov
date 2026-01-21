@@ -77,24 +77,15 @@ def _expected_context_line(location: str, timestamp: str) -> str:
     [
         (
             "4-partial.csv",
-            [
-                _expected_context_line("Corialsis", "1/12/2026 1:18:58 PM"),
-                "Battle Rounds: 1",
-            ],
+            ['Corialsis System', 'Mon 12 Jan at 13:18', 'Battle Rounds: 1']
         ),
         (
             "5-kren.csv",
-            [
-                _expected_context_line("Kyana", "11/25/2025 7:20:59 PM"),
-                "Battle Rounds: 5",
-            ],
+            ['Kyana System', 'Tue 25 Nov 2025 at 19:20', 'Battle Rounds: 5']
         ),
         (
             "2-outpost-retal.csv",
-            [
-                _expected_context_line("Draxyl", "12/31/2025 8:02:44 PM"),
-                "Battle Rounds: 11",
-            ],
+            ['Draxyl System', 'Wed 31 Dec 2025 at 20:02', 'Battle Rounds: 11']
         ),
     ],
 )

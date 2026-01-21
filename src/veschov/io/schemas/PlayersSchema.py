@@ -21,7 +21,7 @@ class PlayersSchema(pa.DataFrameModel):
     """Schema definition for player metadata rows."""
 
     player_name: Series[str] = pa.Field(alias="Player Name", nullable=True)
-    player_level: Series[pa.Int64] = pa.Field(alias="Player Level", nullable=True)
+    player_level: Series[str] = pa.Field(alias="Player Level", nullable=True)
     outcome: Series[str] = pa.Field(alias="Outcome", nullable=True)
 
     ship_name: Series[str] = pa.Field(alias="Ship Name", nullable=True)
