@@ -50,6 +50,10 @@ class CombatSchema(pa.DataFrameModel):
     target_defeated: Series[str] = pa.Field(nullable=True)
     target_destroyed: Series[str] = pa.Field(nullable=True)
 
+    COLUMN_RENAMES: ClassVar[dict[str, str]] = {}
+    COLUMN_ALIASES: ClassVar[dict[str, str]] = {}
+    COLUMN_ORDER: ClassVar[list[str]] = []
+
     class Config:
         """Enable dtype coercion while allowing extra columns."""
 
