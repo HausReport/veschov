@@ -510,6 +510,9 @@ class AttackerAndTargetReport(AbstractReport):
         st.markdown(
             """
 <style>
+  /* --- band wrapper around Attackers / buttons / Targets --- */
+
+  
   /* scope to just this wrapper */
   .attacker-target-swap {
     width: 110px !important;
@@ -552,39 +555,42 @@ class AttackerAndTargetReport(AbstractReport):
             """,
             unsafe_allow_html=True,
         )
-        selector_left, selector_swap, selector_right = st.columns([7, 3, 7])
-        with selector_left:
-            selected_attacker_specs = manager.render_role_panel(
-                title="Attackers",
-                roster_specs=roster_state.attacker_roster,
-                selected_specs=roster_state.selected_attackers,
-                role="attacker",
-                key_prefix="attacker_include",
-            )
-        with selector_swap:
-            st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
-            st.button(
-                "🔄\nSwap",
-                help="Swap attacker/target selections.",
-                key="swap_attacker_target_specs",
-                on_click=manager.swap,
-                # width=125,
-            )
-            st.button(
-                "Reset selections",
-                help="Reset attacker/target selections to defaults.",
-                key="reset_attacker_target_specs",
-                on_click=manager.reset,
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-        with selector_right:
-            selected_target_specs = manager.render_role_panel(
-                title="Targets",
-                roster_specs=roster_state.target_roster,
-                selected_specs=roster_state.selected_targets,
-                role="target",
-                key_prefix="target_include",
-            )
+        with st.container(border=True):
+
+            selector_left, selector_swap, selector_right = st.columns([7, 3, 7])
+            with selector_left:
+                selected_attacker_specs = manager.render_role_panel(
+                    title="Attackers",
+                    roster_specs=roster_state.attacker_roster,
+                    selected_specs=roster_state.selected_attackers,
+                    role="attacker",
+                    key_prefix="attacker_include",
+                )
+            with selector_swap:
+                st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
+                st.button(
+                    "↔️️\nSwap", # 🔄↔
+                    help="Swap attacker/target selections.",
+                    key="swap_attacker_target_specs",
+                    on_click=manager.swap,
+                    # width=125,
+                )
+                st.button(
+                    "↩️\nReset",
+                    help="Reset attacker/target selections to defaults.",
+                    key="reset_attacker_target_specs",
+                    on_click=manager.reset,
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+            with selector_right:
+                selected_target_specs = manager.render_role_panel(
+                    title="Targets",
+                    roster_specs=roster_state.target_roster,
+                    selected_specs=roster_state.selected_targets,
+                    role="target",
+                    key_prefix="target_include",
+                )
+
         manager.clear_refresh()
         updated_state = manager.update_from_render(
             roster_state=roster_state,
