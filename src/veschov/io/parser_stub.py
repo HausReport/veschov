@@ -4,18 +4,17 @@ from __future__ import annotations
 
 import io
 import logging
-from typing import IO, Any
 
 import pandas as pd
 
-from veschov.io.LootSectionParser import LootSectionParser
+from veschov.io.AbstractSectionParser import AbstractSectionParser
 from veschov.io.StartsWhen import extract_sections, section_to_dataframe, SECTION_HEADERS, StartsWhen
 from veschov.io.columns import resolve_event_type, add_alias_columns
 from veschov.transforms.derive_metrics import add_shot_index
 
 logger = logging.getLogger(__name__)
 
-NA_TOKENS = ("--", "—", "–", "")
+PARSER_UTILS = AbstractSectionParser()
 
 POOL_DAMAGE_COLUMNS = ("Shield Damage", "Hull Damage")
 RAW_NUMERIC_COLUMNS = (
@@ -115,50 +114,6 @@ COLUMN_ORDER = [
 ]
 
 
-def _read_text(file_bytes: bytes | str | IO[Any]) -> str:
-    if isinstance(file_bytes, bytes):
-        return file_bytes.decode("utf-8", errors="replace")
-    if isinstance(file_bytes, str):
-        return file_bytes
-    if hasattr(file_bytes, "read"):
-        content = file_bytes.read()
-        if isinstance(content, bytes):
-            return content.decode("utf-8", errors="replace")
-        return str(content)
-    return str(file_bytes)
-
-
-def _normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    cleaned = df.copy()
-    for column in cleaned.columns:
-        if pd.api.types.is_object_dtype(cleaned[column]) or pd.api.types.is_string_dtype(
-                cleaned[column]
-        ):
-            cleaned[column] = cleaned[column].astype("string").str.strip()
-    cleaned = cleaned.replace(list(NA_TOKENS), pd.NA)
-    return cleaned
-
-
-def _coerce_numeric_columns(df: pd.DataFrame, columns: tuple[str, ...]) -> pd.DataFrame:
-    updated = df.copy()
-    for column in columns:
-        if column not in updated.columns:
-            continue
-        cleaned = updated[column].astype("string").str.replace(",", "", regex=False).str.strip()
-        updated[column] = pd.to_numeric(cleaned, errors="coerce")
-    return updated
-
-
-def _coerce_yes_no_columns(df: pd.DataFrame, columns: tuple[str, ...]) -> pd.DataFrame:
-    updated = df.copy()
-    for column in columns:
-        if column not in updated.columns:
-            continue
-        cleaned = updated[column].astype("string").str.strip().str.upper()
-        updated[column] = cleaned.map({"YES": True, "NO": False}).astype("boolean")
-    return updated
-
-
 def _fallback_players_df(
         combat_df: pd.DataFrame, npc_name: str | None
 ) -> pd.DataFrame:
@@ -230,18 +185,12 @@ def _augment_players_df(players_df: pd.DataFrame, combat_df: pd.DataFrame) -> pd
     return combined.reindex(columns=players_df.columns)
 
 
-def _numeric_series(df: pd.DataFrame, column: str) -> pd.Series:
-    if column not in df.columns:
-        return pd.Series(pd.NA, index=df.index, dtype="Float64")
-    return pd.to_numeric(df[column], errors="coerce")
-
-
 def _normalize_combat_df(df: pd.DataFrame) -> pd.DataFrame:
-    cleaned = _normalize_dataframe(df)
-    cleaned = _coerce_numeric_columns(cleaned, RAW_NUMERIC_COLUMNS)
+    cleaned = PARSER_UTILS._normalize_dataframe(df)
+    cleaned = PARSER_UTILS._coerce_numeric_columns(cleaned, RAW_NUMERIC_COLUMNS)
     renamed = cleaned.rename(columns=COMBAT_COLUMN_RENAMES, inplace=False)
-    renamed = _coerce_numeric_columns(renamed, NORMALIZED_NUMERIC_COLUMNS)
-    renamed = _coerce_yes_no_columns(renamed, COMBAT_BOOLEAN_COLUMNS)
+    renamed = PARSER_UTILS._coerce_numeric_columns(renamed, NORMALIZED_NUMERIC_COLUMNS)
+    renamed = PARSER_UTILS._coerce_yes_no_columns(renamed, COMBAT_BOOLEAN_COLUMNS)
     resolved_event_type = resolve_event_type(renamed)
     if resolved_event_type is not None:
         renamed["event_type"] = resolved_event_type
@@ -256,33 +205,33 @@ def _normalize_combat_df(df: pd.DataFrame) -> pd.DataFrame:
     #    damage_after_apex = damage_before_apex - mitigated_apex.
     # 6) Pool split after Apex: applied_damage = shield_damage + hull_damage,
     #    and observed applied_damage ≈ damage_after_apex (rounding).
-    shield_damage = _numeric_series(renamed, "shield_damage")
-    hull_damage = _numeric_series(renamed, "hull_damage")
+    shield_damage = PARSER_UTILS._numeric_series(renamed, "shield_damage")
+    hull_damage = PARSER_UTILS._numeric_series(renamed, "hull_damage")
     # applied_damage: final damage applied to pools (after all mitigation).
     renamed["applied_damage"] = shield_damage + hull_damage
     renamed = add_alias_columns(renamed)
 
-    mitigated_apex = _numeric_series(renamed, "mitigated_apex")
+    mitigated_apex = PARSER_UTILS._numeric_series(renamed, "mitigated_apex")
     # damage_before_apex: undo Apex (damage_before_apex = damage_after_apex + mitigated_apex).
     renamed["damage_before_apex"] = renamed["damage_after_apex"] + mitigated_apex
 
-    total_iso = _numeric_series(renamed, "total_iso")
-    mitigated_iso = _numeric_series(renamed, "mitigated_iso")
+    total_iso = PARSER_UTILS._numeric_series(renamed, "total_iso")
+    mitigated_iso = PARSER_UTILS._numeric_series(renamed, "mitigated_iso")
     # iso_remain: isolytic lane remainder after iso mitigation (total_iso - mitigated_iso).
     renamed["iso_remain"] = total_iso - mitigated_iso
 
     # total_normal is *pre-Apex* raw normal-lane damage, not final applied damage.
     # It is the normal-lane "total" before normal mitigation or pool split.
-    total_normal = _numeric_series(renamed, "total_normal")
-    mitigated_normal = _numeric_series(renamed, "mitigated_normal")
+    total_normal = PARSER_UTILS._numeric_series(renamed, "total_normal")
+    mitigated_normal = PARSER_UTILS._numeric_series(renamed, "mitigated_normal")
     # normal_remain: normal lane remainder after normal mitigation.
     renamed["normal_remain"] = total_normal - mitigated_normal
 
     # remain_before_apex: combined lane remainders (iso_remain + normal_remain).
     renamed["remain_before_apex"] = renamed["iso_remain"] + renamed["normal_remain"]
 
-    damage_before_apex = _numeric_series(renamed, "damage_before_apex")
-    damage_after_apex = _numeric_series(renamed, "damage_after_apex")
+    damage_before_apex = PARSER_UTILS._numeric_series(renamed, "damage_before_apex")
+    damage_after_apex = PARSER_UTILS._numeric_series(renamed, "damage_after_apex")
     # apex_r: fraction of pre-Apex remainder that survives Apex (damage_after / damage_before).
     renamed["apex_r"] = damage_after_apex.div(damage_before_apex).where(
         damage_before_apex != 0
@@ -315,7 +264,7 @@ def parse_battle_log(file_bytes: bytes, filename: str) -> pd.DataFrame:
       - 'mitigated_apex'
       - 'total_normal'
     """
-    text = _read_text(file_bytes)
+    text = PARSER_UTILS._read_text(file_bytes)
     f = io.StringIO(text)
 
     sections = extract_sections(text)
@@ -324,16 +273,16 @@ def parse_battle_log(file_bytes: bytes, filename: str) -> pd.DataFrame:
     loot_df = LootSectionParser(sections.get("rewards")).parse()
 
     wrapped = StartsWhen(f, "Round\t")
-    df = pd.read_csv(wrapped, sep="\t", dtype=str, na_values=NA_TOKENS)
+    df = pd.read_csv(wrapped, sep="\t", dtype=str, na_values=PARSER_UTILS.NA_TOKENS)
     raw_df = df.copy()
     df = _normalize_combat_df(df)
     df = add_shot_index(df)
 
-    players_df = _normalize_dataframe(players_df)
+    players_df = PARSER_UTILS._normalize_dataframe(players_df)
     players_df = _augment_players_df(players_df, df)
-    fleets_df = _normalize_dataframe(fleets_df)
+    fleets_df = PARSER_UTILS._normalize_dataframe(fleets_df)
     fleets_df = fleets_df.rename(columns=FLEET_COLUMN_RENAMES, inplace=False)
-    fleets_df = _coerce_yes_no_columns(fleets_df, FLEET_BOOLEAN_COLUMNS)
+    fleets_df = PARSER_UTILS._coerce_yes_no_columns(fleets_df, FLEET_BOOLEAN_COLUMNS)
     df.attrs["players_df"] = players_df
     df.attrs["fleets_df"] = fleets_df
     df.attrs["loot_df"] = loot_df
