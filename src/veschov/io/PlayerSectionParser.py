@@ -8,6 +8,7 @@ import pandas as pd
 
 from veschov.io.AbstractSectionParser import AbstractSectionParser
 from veschov.io.StartsWhen import SECTION_HEADERS, section_to_dataframe
+from veschov.io.schemas import PlayersSchema, validate_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +20,14 @@ class PlayerSectionParser(AbstractSectionParser):
         self.section_text = section_text
         self.combat_df = combat_df
 
-    def parse(self) -> pd.DataFrame:
+    def parse(self, *, soft: bool = False) -> pd.DataFrame:
         """Return a normalized players dataframe, with inferred entries as needed."""
         players_df = section_to_dataframe(self.section_text, SECTION_HEADERS["players"])
         players_df = self._normalize_dataframe(players_df)
-        return self._augment_players_df(players_df, self.combat_df)
+        players_df = self._augment_players_df(players_df, self.combat_df)
+        return validate_dataframe(
+            players_df,
+            PlayersSchema,
+            soft=soft,
+            context="player section",
+        )
