@@ -13,7 +13,6 @@ from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
-from veschov.utils.series import coerce_numeric
 
 logger = logging.getLogger(__name__)
 
@@ -61,21 +60,10 @@ class RawDamageReport(RoundOrShotsReport):
         display_df = df.copy()
         display_df.attrs = {}
 
-        required_columns = ("event_type", "is_crit", "total_normal", "total_iso")
-        missing_columns = [col for col in required_columns if col not in display_df.columns]
-        if missing_columns:
-            st.error(f"Missing required columns: {', '.join(missing_columns)}")
-            return None
-
-        try:
-            typ = display_df["event_type"].astype(str).str.strip().str.lower()
-            total_normal = coerce_numeric(display_df["total_normal"]).fillna(0)
-            total_iso = coerce_numeric(display_df["total_iso"]).fillna(0)
-        except KeyError as exc:
-            st.error(f"Missing required column: {exc.args[0]}")
-            return None
-
-        damage_mask = (typ == "attack") & ((total_normal > 0) | (total_iso > 0))
+        typ = display_df["event_type"].astype("string").str.strip().str.lower()
+        total_normal = display_df["total_normal"].fillna(0)
+        total_iso = display_df["total_iso"].fillna(0)
+        damage_mask = typ.eq("attack") & ((total_normal > 0) | (total_iso > 0))
         shot_df = display_df.loc[damage_mask].copy()
         shot_df["total_normal"] = total_normal.loc[damage_mask].fillna(0)
         shot_df["total_iso"] = total_iso.loc[damage_mask].fillna(0)
@@ -150,8 +138,8 @@ class RawDamageReport(RoundOrShotsReport):
             var_name="series_name",
             value_name="amount",
         )
-        long_df["amount"] = coerce_numeric(long_df["amount"]).fillna(0)
-        long_df[self.x_axis] = coerce_numeric(long_df[self.x_axis]).astype(int)
+        long_df["amount"] = long_df["amount"].fillna(0)
+        long_df[self.x_axis] = long_df[self.x_axis].astype(int)
         return [long_df, series_df, shot_df]
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
