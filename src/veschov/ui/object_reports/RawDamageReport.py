@@ -9,6 +9,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
@@ -56,7 +57,7 @@ class RawDamageReport(RoundOrShotsReport):
     def get_lens_key(self) -> str:
         return "raw_damage"
 
-    def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
+    def get_derived_dataframes(self, df: pd.DataFrame, lens: Lens | None) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
         display_df.attrs = {}
 

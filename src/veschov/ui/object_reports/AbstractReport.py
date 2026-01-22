@@ -15,7 +15,7 @@ class AbstractReport(ABC):
     """Shared lifecycle for combat-log reports.
 
     Reports follow the same rendering pipeline:
-    1. Optional introductory markdown under the title.
+    1. Optional introductory Markdown under the title.
     2. Sidebar upload of a combat log, parsed into a dataframe.
     3. Header controls to establish context (e.g., lens selection).
     4. Derived dataframes for charts/tables.
@@ -60,12 +60,12 @@ class AbstractReport(ABC):
 
     @abstractmethod
     def get_under_title_text(self) -> Optional[str]:
-        """Return optional markdown shown beneath the page title."""
+        """Return optional Markdown shown beneath the page title."""
         return None
 
     @abstractmethod
     def get_under_chart_text(self) -> Optional[str]:
-        """Return optional markdown shown beneath the chart section."""
+        """Return optional Markdown shown beneath the chart section."""
         return None
 
     @abstractmethod
