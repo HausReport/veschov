@@ -8,7 +8,6 @@ from typing import Iterable, Optional, override
 import pandas as pd
 import streamlit as st
 
-from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, TARGET_COLUMN_CANDIDATES
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 
 logger = logging.getLogger(__name__)
@@ -256,14 +255,7 @@ class OfficersAndTechReport(AttackerAndTargetReport):
             st.warning(f"Missing required columns: {', '.join(missing_columns)}")
             return None
 
-        display_df = self.apply_combat_lens(
-            display_df,
-            lens,
-            attacker_column_candidates=ATTACKER_COLUMN_CANDIDATES,
-            target_column_candidates=TARGET_COLUMN_CANDIDATES,
-            include_nan_attackers=True,
-            include_nan_targets=True,
-        )
+        display_df = self.apply_combat_lens(display_df, lens)
         _debug_proc_counts("display_df after lens", display_df)
         return [display_df]
 

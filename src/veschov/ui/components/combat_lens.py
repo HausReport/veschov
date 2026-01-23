@@ -27,7 +27,6 @@ import pandas as pd
 import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo
-from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, TARGET_COLUMN_CANDIDATES, resolve_column
 from veschov.ui.chirality import Lens
 
 
@@ -44,14 +43,12 @@ def apply_combat_lens(
        * If `st.session_state["session_info"]` is a :class:`SessionInfo` and the lens
          includes `attacker_specs`, filter by the index set of combat rows that match
          those ship specifiers (this is the most authoritative match).
-       * Otherwise, try to resolve an attacker column and match against the name set
-         derived from the lens (`Lens.attacker_names()`), which uses spec names first
-         and falls back to the lens actor label.
-       * Optionally include rows where the attacker column is ``NaN``.
+       * Otherwise, leave attacker rows unfiltered.
     2. **Target filtering**:
-       * Resolve a target column and filter by `Lens.target_names()`, again falling
-         back from spec names to lens target labels.
-       * Optionally include rows where the target column is ``NaN``.
+       * If `st.session_state["session_info"]` is a :class:`SessionInfo` and the lens
+         includes `target_specs`, filter by the index set of combat rows that match
+         those ship specifiers.
+       * Otherwise, leave target rows unfiltered.
 
     If a column cannot be resolved or the lens does not provide matching names/specs,
     the function leaves that dimension unfiltered.
@@ -70,26 +67,20 @@ def apply_combat_lens(
     session_info = st.session_state.get("session_info")
     filtered = df
 
-    attacker_column = resolve_column(filtered, ATTACKER_COLUMN_CANDIDATES)
-    target_column = resolve_column(filtered, TARGET_COLUMN_CANDIDATES)
-
     attacker_mask = pd.Series(True, index=filtered.index)
     attacker_specs = lens.attacker_specs
     if isinstance(session_info, SessionInfo) and attacker_specs:
         attacker_df = session_info.get_combat_df_filtered_by_attackers(attacker_specs)
         attacker_mask = filtered.index.isin(attacker_df.index)
-    elif attacker_column:
-        attacker_names = lens.attacker_names()
-        if attacker_names:
-            attacker_mask = filtered[attacker_column].isin(attacker_names)
 
     filtered = filtered.loc[attacker_mask]
 
-    if target_column:
-        target_names = lens.target_names()
-        if target_names:
-            target_series = filtered[target_column]
-            target_mask = target_series.isin(target_names)
-            filtered = filtered.loc[target_mask]
+    target_mask = pd.Series(True, index=filtered.index)
+    target_specs = lens.target_specs
+    if isinstance(session_info, SessionInfo) and target_specs:
+        target_df = session_info.get_combat_df_filtered_by_targets(target_specs)
+        target_mask = filtered.index.isin(target_df.index)
+
+    filtered = filtered.loc[target_mask]
 
     return filtered
