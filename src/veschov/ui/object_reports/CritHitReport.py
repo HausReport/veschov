@@ -159,22 +159,30 @@ class CritHitReport(RoundOrShotsReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
-        fig = px.area(
-            long_df,
-            x=self.x_axis,
-            y="count",
-            color="series_name",
-            title=f"{self.get_title_text()} — {self.battle_filename}",
-            category_orders={"series_name": [NON_CRIT_LABEL, CRIT_LABEL]},
-            color_discrete_map={
+        n_rounds = long_df[self.x_axis].nunique()
+        plot_args = {
+            "data_frame": long_df,
+            "x": self.x_axis,
+            "y": "count",
+            "color": "series_name",
+            "title": f"{self.get_title_text()} — {self.battle_filename}",
+            "category_orders": {"series_name": [NON_CRIT_LABEL, CRIT_LABEL]},
+            "color_discrete_map": {
                 NON_CRIT_LABEL: NONCRIT_COLOR,
                 CRIT_LABEL: CRIT_COLOR,
             },
-        )
+        }
+        if self.view_by == "Round" and n_rounds == 1:
+            fig = px.bar(**plot_args, barmode="stack")
+        else:
+            fig = px.area(**plot_args)
 
-        max_value = long_df[self.x_axis].max()
-        if pd.notna(max_value):
-            fig.update_xaxes(range=[1, int(max_value)])
+        if self.view_by == "Round" and n_rounds == 1:
+            fig.update_xaxes(range=[0.5, 1.5])
+        else:
+            max_value = long_df[self.x_axis].max()
+            if pd.notna(max_value):
+                fig.update_xaxes(range=[1, int(max_value)])
         st.plotly_chart(fig, width="stretch")
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
