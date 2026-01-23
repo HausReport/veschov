@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import humanize
 import pandas as pd
 import streamlit as st
 
@@ -135,3 +136,17 @@ class AbstractReport(ABC):
     def get_title_text(self) -> Optional[str]:
         """Return the main title text for the report page."""
         return None
+
+    def _format_large_number(self, value: object, number_format: str) -> str:
+        if pd.isna(value):
+            return "—"
+        numeric = pd.to_numeric(value, errors="coerce")
+        if pd.isna(numeric):
+            return str(value)
+        if abs(numeric) >= 1_000_000:
+            if number_format == "Human":
+                return humanize.intword(numeric)
+            return f"{numeric:,.0f}"
+        if float(numeric).is_integer():
+            return f"{int(numeric)}"
+        return str(value)

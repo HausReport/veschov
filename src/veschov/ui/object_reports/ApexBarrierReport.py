@@ -24,22 +24,6 @@ OPTIONAL_PREVIEW_COLUMNS = (
     "Weapon",
 )
 
-
-def _format_large_number(value: object, number_format: str) -> str:
-    if pd.isna(value):
-        return "—"
-    numeric = pd.to_numeric(value, errors="coerce")
-    if pd.isna(numeric):
-        return str(value)
-    if abs(numeric) >= 1_000_000:
-        if number_format == "Human":
-            return humanize.intword(numeric)
-        return f"{numeric:,.0f}"
-    if float(numeric).is_integer():
-        return f"{int(numeric)}"
-    return str(value)
-
-
 class ApexBarrierReport(RoundOrShotsReport):
     """Render the Apex Barrier report."""
 
@@ -203,7 +187,7 @@ class ApexBarrierReport(RoundOrShotsReport):
         )
 
         formatted_total = (
-            _format_large_number(self.total_mitigation, self.number_format)
+            self._format_large_number(self.total_mitigation, self.number_format)
             if self.total_mitigation is not None
             else "—"
         )
