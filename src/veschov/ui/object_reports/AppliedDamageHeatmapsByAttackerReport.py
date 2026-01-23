@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, override
+import math
+from typing import Optional, Sequence, override
 
 import humanize
 import numpy as np
@@ -21,6 +22,206 @@ from veschov.utils.series import coerce_numeric
 
 logger = logging.getLogger(__name__)
 
+EPSILON = 1e-6
+T_CRITICAL_95 = {
+    1: 12.706,
+    2: 4.303,
+    3: 3.182,
+    4: 2.776,
+    5: 2.571,
+    6: 2.447,
+    7: 2.365,
+    8: 2.306,
+    9: 2.262,
+    10: 2.228,
+    11: 2.201,
+    12: 2.179,
+    13: 2.160,
+    14: 2.145,
+    15: 2.131,
+    16: 2.120,
+    17: 2.110,
+    18: 2.101,
+    19: 2.093,
+    20: 2.086,
+    21: 2.080,
+    22: 2.074,
+    23: 2.069,
+    24: 2.064,
+    25: 2.060,
+    26: 2.056,
+    27: 2.052,
+    28: 2.048,
+    29: 2.045,
+    30: 2.042,
+}
+
+
+def detect_npc(players_df: pd.DataFrame | None) -> ShipSpecifier | None:
+    """Return the NPC ship spec when the players metadata indicates one exists."""
+    if players_df is None or players_df.empty:
+        logger.warning("NPC detection skipped: players_df missing or empty.")
+        return None
+
+    npc_row = players_df.iloc[-1]
+    alliance_value = ""
+    for column in ("Alliance", "Player Alliance"):
+        if column in players_df.columns:
+            alliance_value = ShipSpecifier.normalize_text(npc_row.get(column))
+            break
+    if alliance_value:
+        return None
+
+    npc_name = ShipSpecifier.normalize_text(npc_row.get("Player Name"))
+    npc_ship = ShipSpecifier.normalize_text(npc_row.get("Ship Name"))
+    if not npc_name and not npc_ship:
+        logger.warning("NPC detection skipped: missing name/ship in players_df.")
+        return None
+    return ShipSpecifier(name=npc_name or None, alliance=None, ship=npc_ship or None)
+
+
+def compute_shots_per_round(
+    df: pd.DataFrame,
+    shooter_spec: ShipSpecifier,
+) -> tuple[list[int], list[int]]:
+    """Return shots-per-round and round labels for the shooter spec."""
+    if df.empty:
+        return [], []
+    attacker_column = resolve_column(df, ATTACKER_COLUMN_CANDIDATES)
+    if attacker_column is None:
+        logger.warning("Shots-per-round missing attacker column candidates.")
+        return [], []
+
+    shooter_mask = _build_spec_mask(df, shooter_spec, attacker_column)
+    shooter_df = df.loc[shooter_mask]
+    if shooter_df.empty:
+        return [], []
+
+    rounds = pd.to_numeric(shooter_df["round"], errors="coerce").dropna()
+    if rounds.empty:
+        return [], []
+
+    min_round = int(rounds.min())
+    max_round = int(rounds.max())
+    if max_round < min_round:
+        return [], []
+
+    round_counts = shooter_df.groupby("round").size().to_dict()
+    round_labels = list(range(min_round, max_round + 1))
+    shots_per_round = [
+        int(round_counts.get(round_value, 0)) for round_value in round_labels
+    ]
+    return shots_per_round, round_labels
+
+
+def compute_0th_order_metrics(shots_per_round: Sequence[int]) -> dict[str, float]:
+    """Compute baseline-vs-observed suppression metrics."""
+    if not shots_per_round:
+        return {}
+    shot_values = np.asarray(shots_per_round, dtype=float)
+    total_rounds = len(shot_values)
+    k_rounds = min(3, total_rounds)
+    baseline = float(np.mean(shot_values[:k_rounds]))
+    observed_total = float(shot_values.sum())
+    expected_total = baseline * total_rounds
+    lost_shots = max(0.0, expected_total - observed_total)
+    lost_pct = lost_shots / max(expected_total, EPSILON)
+    observed_avg = observed_total / total_rounds if total_rounds else 0.0
+    return {
+        "baseline": baseline,
+        "observed_avg": observed_avg,
+        "observed_total": observed_total,
+        "expected_total": expected_total,
+        "lost_shots": lost_shots,
+        "lost_pct": lost_pct,
+    }
+
+
+def compute_1st_order_metrics(
+    shots_per_round: Sequence[int],
+) -> dict[str, float | bool | None]:
+    """Compute slope metrics and detection confidence for suppression trends."""
+    if not (shots_per_round and len(shots_per_round) >= 2):
+        return {}
+
+    shot_values = np.asarray(shots_per_round, dtype=float)
+    nonzero_rounds = int(np.sum(shot_values > 0))
+    if nonzero_rounds < 2:
+        return {}
+
+    x_values = np.arange(len(shot_values), dtype=float)
+    x_mean = float(x_values.mean())
+    y_mean = float(shot_values.mean())
+    sxx = float(np.sum((x_values - x_mean) ** 2))
+    if sxx <= 0:
+        return {}
+
+    sxy = float(np.sum((x_values - x_mean) * (shot_values - y_mean)))
+    slope = sxy / sxx
+    intercept = y_mean - slope * x_mean
+    residuals = shot_values - (slope * x_values + intercept)
+    sse = float(np.sum(residuals ** 2))
+    degrees_freedom = len(shot_values) - 2
+    slope_se = None
+    ci_low = None
+    ci_high = None
+    suppression_detected = False
+    if degrees_freedom > 0:
+        sigma2 = sse / degrees_freedom
+        slope_se = math.sqrt(sigma2 / sxx)
+        t_critical = t_critical_95(degrees_freedom)
+        ci_low = slope - t_critical * slope_se
+        ci_high = slope + t_critical * slope_se
+        suppression_detected = ci_high < 0
+    else:
+        logger.warning("Not enough degrees of freedom for slope confidence interval.")
+
+    slope_norm = None
+    if abs(intercept) > EPSILON:
+        slope_norm = slope / max(abs(intercept), EPSILON)
+
+    return {
+        "slope": slope,
+        "intercept": intercept,
+        "slope_se": slope_se,
+        "ci_low": ci_low,
+        "ci_high": ci_high,
+        "slope_norm": slope_norm,
+        "suppression_detected": suppression_detected,
+        "nonzero_rounds": nonzero_rounds,
+    }
+
+
+def t_critical_95(degrees_freedom: int) -> float:
+    """Return a 95% two-tailed t critical value for the given degrees of freedom."""
+    if degrees_freedom <= 0:
+        return float("nan")
+    if degrees_freedom > 30:
+        return 1.96
+    return T_CRITICAL_95.get(degrees_freedom, 1.96)
+
+
+def _build_spec_mask(
+    df: pd.DataFrame,
+    spec: ShipSpecifier,
+    attacker_column: str,
+) -> pd.Series:
+    """Return a dataframe mask for rows matching a ship spec."""
+    mask = pd.Series(True, index=df.index)
+    if spec.name:
+        mask &= df[attacker_column] == spec.name
+    if "attacker_alliance" in df.columns and spec.alliance:
+        mask &= df["attacker_alliance"] == spec.alliance
+    if "attacker_ship" in df.columns and spec.ship:
+        mask &= df["attacker_ship"] == spec.ship
+    return mask
+
+
+def _format_metric(value: float | None, *, precision: int = 2) -> str:
+    """Return formatted metric strings for display."""
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return "N/A"
+    return f"{value:.{precision}f}"
 
 class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     """Render per-attacker applied damage heatmaps by round and shot index."""
@@ -33,6 +234,10 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         self.global_zmin: float | None = None
         self.global_zmax: float | None = None
         self.number_format = "Human"
+        self.session_info: SessionInfo | None = None
+        self.suppression_df: pd.DataFrame | None = None
+        self.attacker_column: str | None = None
+        self.target_column: str | None = None
 
     def get_x_axis_text(self) -> Optional[str]:
         return "Round"
@@ -64,6 +269,9 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         display_df = df.copy()
         display_df.attrs = {}
         self._refresh_selection_state(display_df)
+        self.suppression_df = None
+        self.attacker_column = None
+        self.target_column = None
 
         required_columns = ("round", "shot_index", "applied_damage")
         missing_columns = [col for col in required_columns if col not in display_df.columns]
@@ -85,6 +293,8 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
             logger.warning("Applied damage heatmaps missing target column candidates.")
             st.error("Missing target column for filtering.")
             return None
+        self.attacker_column = attacker_column
+        self.target_column = target_column
 
         if not self.selected_attackers:
             logger.warning("Applied damage heatmaps has no selected attackers.")
@@ -104,6 +314,19 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         display_df["round"] = display_df["round"].astype(int)
         display_df["shot_index"] = display_df["shot_index"].astype(int)
         display_df = display_df.loc[display_df["shot_index"] >= 0]
+
+        suppression_df = display_df
+        if self.selected_targets:
+            target_names = {
+                spec.normalized_name()
+                for spec in self.selected_targets
+                if spec.normalized_name()
+            }
+            if target_names:
+                suppression_df = suppression_df.loc[
+                    suppression_df[target_column].isin(target_names)
+                ]
+        self.suppression_df = suppression_df
 
         attacker_mask = self._build_attacker_mask(display_df, attacker_column)
         filtered_df = display_df.loc[attacker_mask]
@@ -141,6 +364,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         filtered_df = dfs[0]
+        self._display_firing_suppression_panel()
         # all_rounds = sorted(filtered_df["round"].unique())
         # all integers between min and max - want to see holes
         rmin = int(filtered_df["round"].min())
@@ -265,17 +489,17 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     def _refresh_selection_state(self, df: pd.DataFrame) -> None:
         self.number_format = get_number_format()
         resolved_session_info = st.session_state.get("session_info")
+        self.session_info = (
+            resolved_session_info
+            if isinstance(resolved_session_info, SessionInfo)
+            else None
+        )
         selected_attackers, selected_targets = self._resolve_selected_specs_from_state(
             resolved_session_info,
         )
         self.selected_attackers = list(selected_attackers)
         self.selected_targets = list(selected_targets)
-        resolved_session_info = (
-            resolved_session_info
-            if isinstance(resolved_session_info, SessionInfo)
-            else None
-        )
-        self.outcome_lookup = self._build_outcome_lookup(resolved_session_info, df)
+        self.outcome_lookup = self._build_outcome_lookup(self.session_info, df)
 
     def _format_applied_damage_value(self, value: object) -> str:
         if value is None or pd.isna(value):
@@ -286,3 +510,122 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         if numeric_value.is_integer():
             return f"{int(numeric_value):,}"
         return f"{numeric_value:,}"
+
+    def _display_firing_suppression_panel(self) -> None:
+        if self.suppression_df is None or self.suppression_df.empty:
+            return
+
+        shooter_spec, shooter_label = self._resolve_suppression_shooter()
+        if shooter_spec is None:
+            return
+
+        shots_per_round, round_labels = compute_shots_per_round(
+            self.suppression_df,
+            shooter_spec,
+        )
+        st.subheader("Firing Suppression")
+        st.caption(f"Shooter: {shooter_label}")
+        if not shots_per_round:
+            logger.warning("Firing suppression has no events for shooter %s.", shooter_label)
+            st.caption("No applied-damage events found for this shooter.")
+            return
+
+        zeroth_metrics = compute_0th_order_metrics(shots_per_round)
+        first_metrics = compute_1st_order_metrics(shots_per_round)
+
+        metric_cols = st.columns(4)
+        metric_cols[0].metric(
+            "Baseline shots/round",
+            _format_metric(zeroth_metrics.get("baseline")),
+        )
+        metric_cols[1].metric(
+            "Observed avg shots/round",
+            _format_metric(zeroth_metrics.get("observed_avg")),
+        )
+        metric_cols[2].metric(
+            "Lost shots (0th)",
+            _format_metric(zeroth_metrics.get("lost_shots")),
+        )
+        lost_pct_value = zeroth_metrics.get("lost_pct")
+        lost_pct_label = "N/A"
+        if isinstance(lost_pct_value, float):
+            lost_pct_label = f"{lost_pct_value:.1%}"
+        metric_cols[3].metric("Lost shots (%)", lost_pct_label)
+
+        trend_cols = st.columns(4)
+        trend_cols[0].metric("Slope (m)", _format_metric(first_metrics.get("slope"), precision=3))
+        trend_cols[1].metric(
+            "Normalized slope",
+            _format_metric(first_metrics.get("slope_norm"), precision=3),
+        )
+        detection_label = "Insufficient rounds"
+        if first_metrics:
+            detection_label = (
+                "Detected" if first_metrics.get("suppression_detected") else "Inconclusive"
+            )
+        trend_cols[2].metric("Suppression trend", detection_label)
+        trend_cols[3].metric(
+            "Nonzero rounds",
+            _format_metric(first_metrics.get("nonzero_rounds"), precision=0),
+        )
+
+        self._render_shots_sparkline(shots_per_round, round_labels, first_metrics)
+
+    def _render_shots_sparkline(
+        self,
+        shots_per_round: Sequence[int],
+        round_labels: Sequence[int],
+        first_metrics: dict[str, float | bool | None],
+    ) -> None:
+        x_rounds = list(round_labels)
+        fig = go.Figure()
+        fig.add_trace(
+            go.Bar(
+                x=x_rounds,
+                y=shots_per_round,
+                name="Shots per round",
+                marker_color="#4C78A8",
+            )
+        )
+        slope = first_metrics.get("slope")
+        intercept = first_metrics.get("intercept")
+        if isinstance(slope, float) and isinstance(intercept, float):
+            fit_values = [
+                slope * round_index + intercept for round_index in range(len(x_rounds))
+            ]
+            fig.add_trace(
+                go.Scatter(
+                    x=x_rounds,
+                    y=fit_values,
+                    mode="lines",
+                    name="OLS fit",
+                    line=dict(color="#F58518", width=2),
+                )
+            )
+        fig.update_layout(
+            height=220,
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis_title="Round",
+            yaxis_title="Shots",
+            legend=dict(orientation="h"),
+        )
+        st.plotly_chart(fig, width="stretch")
+
+    def _resolve_suppression_shooter(self) -> tuple[ShipSpecifier | None, str]:
+        npc_spec = detect_npc(self.session_info.players_df if self.session_info else None)
+        if npc_spec is not None:
+            npc_label = self._format_ship_spec_label(npc_spec, self.outcome_lookup)
+            return npc_spec, f"NPC (auto-detected) — {npc_label}"
+
+        if not self.selected_attackers:
+            logger.warning("Firing suppression skipped: no attackers selected.")
+            return None, ""
+
+        shooter_spec = self.selected_attackers[0]
+        if len(self.selected_attackers) > 1:
+            logger.warning(
+                "Multiple attackers selected; using first for suppression analysis: %s",
+                shooter_spec,
+            )
+        shooter_label = self._format_ship_spec_label(shooter_spec, self.outcome_lookup)
+        return shooter_spec, shooter_label
