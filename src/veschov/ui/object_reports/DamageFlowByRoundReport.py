@@ -7,7 +7,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
@@ -99,7 +98,7 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
 
         shot_df = display_df.loc[damage_mask].copy()
         shot_df = shot_df[shot_df["shot_index"].notna()]
-        shot_df = apply_combat_lens(shot_df, lens)
+        shot_df = self.apply_combat_lens(shot_df, lens)
 
         if shot_df.empty:
             st.warning("No matching damage events found for this selection.")

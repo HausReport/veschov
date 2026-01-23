@@ -9,7 +9,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
@@ -85,7 +84,7 @@ class CritHitReport(RoundOrShotsReport):
         if "battle_event" in shot_df.columns:
             shot_df = shot_df.sort_values("battle_event", kind="stable")
 
-        shot_df = apply_combat_lens(shot_df, lens)
+        shot_df = self.apply_combat_lens(shot_df, lens)
 
         if shot_df.empty:
             st.warning("No matching attack events found for this selection.")
