@@ -9,6 +9,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
@@ -64,22 +65,14 @@ class CritHitReport(RoundOrShotsReport):
     def get_lens_key(self) -> str:
         return "crit_hit"
 
-    def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
+    def get_derived_dataframes(self, df: pd.DataFrame, lens: Lens | None) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
         display_df.attrs = {}
 
-        required_columns = ("event_type", "is_crit")
-        missing_columns = [col for col in required_columns if col not in display_df.columns]
-        if missing_columns:
-            st.error(f"Missing required columns: {', '.join(missing_columns)}")
-            return None
-
-        try:
-            attack_mask = self._build_attack_mask(display_df)
-        except KeyError as exc:
-            st.error(f"Missing required column: {exc.args[0]}")
-            return None
-
+        typ = display_df["event_type"].astype("string").str.strip().str.lower()
+        total_normal = display_df["total_normal"].fillna(0)
+        total_iso = display_df["total_iso"].fillna(0)
+        attack_mask = typ.eq("attack") & ((total_normal > 0) | (total_iso > 0))
         shot_df = display_df.loc[attack_mask].copy()
         if "battle_event" in shot_df.columns:
             shot_df = shot_df.sort_values("battle_event", kind="stable")
@@ -204,18 +197,6 @@ class CritHitReport(RoundOrShotsReport):
     @override
     def render_debug_info(self, df: pd.DataFrame) -> None:
         return None
-
-    @staticmethod
-    def _build_attack_mask(df: pd.DataFrame) -> pd.Series:
-        if "event_type" not in df.columns:
-            raise KeyError("event_type")
-        typ = df["event_type"].astype(str).str.strip().str.lower()
-        mask = typ == "attack"
-        if "total_normal" in df.columns or "total_iso" in df.columns:
-            total_normal = coerce_numeric(df.get("total_normal", pd.Series(0, index=df.index)))
-            total_iso = coerce_numeric(df.get("total_iso", pd.Series(0, index=df.index)))
-            mask &= (total_normal > 0) | (total_iso > 0)
-        return mask
 
     @staticmethod
     def _format_average_shots(shot_df: pd.DataFrame) -> str:
