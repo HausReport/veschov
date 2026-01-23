@@ -303,9 +303,15 @@ class AttackerAndTargetReport(AbstractReport):
             self,
             df: pd.DataFrame,
             lens: Lens | None,
+            *,
+            skip_target_filter_for_procs: bool = False,
     ) -> pd.DataFrame:
         """Filter combat data using the selected attacker specs and targets."""
-        return apply_combat_lens(df, lens)
+        return apply_combat_lens(
+            df,
+            lens,
+            skip_target_filter_for_procs=skip_target_filter_for_procs,
+        )
 
     @abstractmethod
     def get_lens_key(self) -> str:

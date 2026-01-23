@@ -255,7 +255,11 @@ class OfficersAndTechReport(AttackerAndTargetReport):
             st.warning(f"Missing required columns: {', '.join(missing_columns)}")
             return None
 
-        display_df = self.apply_combat_lens(display_df, lens)
+        display_df = self.apply_combat_lens(
+            display_df,
+            lens,
+            skip_target_filter_for_procs=True,
+        )
         _debug_proc_counts("display_df after lens", display_df)
         return [display_df]
 
