@@ -29,10 +29,14 @@ import streamlit as st
 from veschov.io.SessionInfo import SessionInfo
 from veschov.ui.chirality import Lens
 
+PROC_EVENT_TYPES = {"officer", "forbiddentechability"}
+
 
 def apply_combat_lens(
         df: pd.DataFrame,
-        lens: Lens | None
+        lens: Lens | None,
+        *,
+        skip_target_filter_for_procs: bool = False,
 ) -> pd.DataFrame:
     """Filter combat data using a resolved combat lens.
 
@@ -57,6 +61,8 @@ def apply_combat_lens(
         df: Input dataframe containing combat events.
         lens: The resolved lens from :mod:`veschov.ui.chirality`. If ``None``, the
             dataframe is returned unmodified.
+        skip_target_filter_for_procs: When ``True``, proc event rows (Officer/ForbiddenTechAbility)
+            bypass target filtering so they remain visible even when target metadata is blank.
 
     Returns:
         The filtered dataframe, constrained by the lens selection if possible.
@@ -80,6 +86,12 @@ def apply_combat_lens(
     if isinstance(session_info, SessionInfo) and target_specs:
         target_df = session_info.get_combat_df_filtered_by_targets(target_specs)
         target_mask = filtered.index.isin(target_df.index)
+
+    if skip_target_filter_for_procs and "event_type" in filtered.columns:
+        event_types = filtered["event_type"].fillna("").astype(str).str.strip().str.lower()
+        proc_mask = event_types.isin(PROC_EVENT_TYPES)
+        if proc_mask.any():
+            target_mask = target_mask | proc_mask
 
     filtered = filtered.loc[target_mask]
 
