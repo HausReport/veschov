@@ -150,19 +150,22 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
         for index, label in enumerate(hover_display_labels, start=1):
             hover_lines.append(f"{label}: %{{customdata[{index}]}}")
         hover_template = "<br>".join(hover_lines) + "<extra></extra>"
-        fig = px.area(
-            plot_df,
-            x=self.x_axis,
-            y="amount",
-            color="segment_display",
-            # facet_col="round",
-            # facet_col_wrap=4,
-            color_discrete_map=segment_display_colors,
-            category_orders={"segment_display": segment_display_order},
-            title=self.get_plot_titles()[0],
-            custom_data=custom_data_columns,
-            labels={"segment_display": LEGEND_TITLE},
-        )
+        n_rounds = plot_df[self.x_axis].nunique()
+        plot_args = {
+            "data_frame": plot_df,
+            "x": self.x_axis,
+            "y": "amount",
+            "color": "segment_display",
+            "color_discrete_map": segment_display_colors,
+            "category_orders": {"segment_display": segment_display_order},
+            "title": self.get_plot_titles()[0],
+            "custom_data": custom_data_columns,
+            "labels": {"segment_display": LEGEND_TITLE},
+        }
+        if self.view_by == "Round" and n_rounds == 1:
+            fig = px.bar(**plot_args, barmode="stack")
+        else:
+            fig = px.area(**plot_args)
         fig.update_traces(hovertemplate=hover_template)
         fig.update_layout(legend_title_text=LEGEND_TITLE)
         max_value = long_df[self.x_axis].max()
