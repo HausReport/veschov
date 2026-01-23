@@ -42,25 +42,39 @@ class SessionInfo:
         self.players_df = players_df
         self.fleets_df = fleets_df
 
-    def get_combat_df_filtered_by_attacker(self, spec: ShipSpecifier) -> pd.DataFrame:
-        """Return combat rows matching a single attacker spec."""
+    def _get_combat_df_filtered_by_specs(
+        self,
+        specs: Sequence[ShipSpecifier],
+        role: str,
+    ) -> pd.DataFrame:
+        """Return combat rows for any provided ship specs for a given role."""
+        if not specs:
+            return self.combat_df
         df = self.combat_df
-        for column in ("attacker_name", "attacker_alliance", "attacker_ship"):
+        required_columns = (
+            f"{role}_name",
+            f"{role}_alliance",
+            f"{role}_ship",
+        )
+        for column in required_columns:
             if column not in df.columns:
                 logger.warning(
-                    "Combat df missing %s column; cannot filter by attacker.",
+                    "Combat df missing %s column; cannot filter by %s.",
                     column,
+                    role,
                 )
                 return df.iloc[0:0]
 
-        mask = pd.Series(True, index=df.index)
-
-        if spec.name:
-            mask &= df["attacker_name"] == spec.name
-        if spec.alliance:
-            mask &= df["attacker_alliance"] == spec.alliance
-        if spec.ship:
-            mask &= df["attacker_ship"] == spec.ship
+        mask = pd.Series(False, index=df.index)
+        for spec in specs:
+            spec_mask = pd.Series(True, index=df.index)
+            if spec.name:
+                spec_mask &= df[f"{role}_name"] == spec.name
+            if spec.alliance:
+                spec_mask &= df[f"{role}_alliance"] == spec.alliance
+            if spec.ship:
+                spec_mask &= df[f"{role}_ship"] == spec.ship
+            mask |= spec_mask
 
         return df.loc[mask]
 
@@ -69,15 +83,14 @@ class SessionInfo:
         specs: Sequence[ShipSpecifier],
     ) -> pd.DataFrame:
         """Return combat rows for any of the provided attacker specs."""
-        if not specs:
-            return self.combat_df
+        return self._get_combat_df_filtered_by_specs(specs, "attacker")
 
-        mask = pd.Series(False, index=self.combat_df.index)
-        for spec in specs:
-            filtered_df = self.get_combat_df_filtered_by_attacker(spec)
-            mask |= self.combat_df.index.isin(filtered_df.index)
-
-        return self.combat_df.loc[mask]
+    def get_combat_df_filtered_by_targets(
+        self,
+        specs: Sequence[ShipSpecifier],
+    ) -> pd.DataFrame:
+        """Return combat rows for any of the provided target specs."""
+        return self._get_combat_df_filtered_by_specs(specs, "target")
 
     @staticmethod
     def normalize_text(value: object) -> str:
