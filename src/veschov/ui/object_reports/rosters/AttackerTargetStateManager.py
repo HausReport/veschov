@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import traceback
 from typing import Iterable, Sequence, Callable
 from typing import TYPE_CHECKING
 
@@ -526,7 +525,11 @@ class AttackerTargetStateManager:
             st.session_state[self.STATE_VERSION_KEY] = selection_version
             if isinstance(previous_meta, dict):
                 previous_hash = previous_meta.get("selection_hash")
-                if previous_hash and previous_hash != selection_hash and origin not in ("user", "swap"):
+                if (
+                        previous_hash
+                        and previous_hash != selection_hash
+                        and origin not in ("user", "swap", "widget change", "defaults")
+                ):
                     logger.warning(
                         "Selection hash changed without user action (origin=%s, prior=%s, current=%s).",
                         origin,
@@ -651,7 +654,6 @@ class AttackerTargetStateManager:
             return list(roster_list)
         if not stored_specs:
             logger.warning("Stored %s selections empty; defaulting to roster.", role)
-            traceback.print_stack()
             return list(roster_list)
         filtered = [spec for spec in self._dedupe_specs(stored_specs) if spec in self._spec_lookup]
         if len(filtered) < len(list(stored_specs)):
