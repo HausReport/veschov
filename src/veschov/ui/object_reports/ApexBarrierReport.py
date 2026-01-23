@@ -169,15 +169,20 @@ class ApexBarrierReport(RoundOrShotsReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         plot_df = dfs[0]
-        fig = px.line(
-            plot_df,
-            x=self.x_axis,
-            y="apex_barrier_hit",
-            markers=True,
-        )
-        max_value = plot_df[self.x_axis].max()
-        if pd.notna(max_value):
-            fig.update_xaxes(range=[1, int(max_value)])
+        n_rounds = plot_df[self.x_axis].nunique()
+        plot_args = {
+            "data_frame": plot_df,
+            "x": self.x_axis,
+            "y": "apex_barrier_hit",
+        }
+        if self.view_by == "Round" and n_rounds == 1:
+            fig = px.bar(**plot_args)
+            fig.update_xaxes(range=[0.5, 1.5])
+        else:
+            fig = px.line(**plot_args, markers=True)
+            max_value = plot_df[self.x_axis].max()
+            if pd.notna(max_value):
+                fig.update_xaxes(range=[1, int(max_value)])
         st.plotly_chart(fig, width="stretch")
 
         fig.update_layout(
