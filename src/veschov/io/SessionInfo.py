@@ -49,6 +49,7 @@ class SessionInfo:
         """Return combat rows for any of the provided attacker specs."""
         if not specs:
             return self.combat_df
+
         df = self.combat_df
         for column in ("attacker_name", "attacker_alliance", "attacker_ship"):
             if column not in df.columns:
