@@ -83,30 +83,35 @@ def detect_npc(players_df: pd.DataFrame | None) -> ShipSpecifier | None:
 def compute_shots_per_round(
     df: pd.DataFrame,
     shooter_spec: ShipSpecifier,
-) -> list[int]:
-    """Return the shots-per-round vector for the shooter spec."""
+) -> tuple[list[int], list[int]]:
+    """Return shots-per-round and round labels for the shooter spec."""
     if df.empty:
-        return []
+        return [], []
     attacker_column = resolve_column(df, ATTACKER_COLUMN_CANDIDATES)
     if attacker_column is None:
         logger.warning("Shots-per-round missing attacker column candidates.")
-        return []
+        return [], []
 
     shooter_mask = _build_spec_mask(df, shooter_spec, attacker_column)
     shooter_df = df.loc[shooter_mask]
     if shooter_df.empty:
-        return []
+        return [], []
 
     rounds = pd.to_numeric(shooter_df["round"], errors="coerce").dropna()
     if rounds.empty:
-        return []
+        return [], []
 
+    min_round = int(rounds.min())
     max_round = int(rounds.max())
-    if max_round < 0:
-        return []
+    if max_round < min_round:
+        return [], []
 
     round_counts = shooter_df.groupby("round").size().to_dict()
-    return [int(round_counts.get(round_value, 0)) for round_value in range(max_round + 1)]
+    round_labels = list(range(min_round, max_round + 1))
+    shots_per_round = [
+        int(round_counts.get(round_value, 0)) for round_value in round_labels
+    ]
+    return shots_per_round, round_labels
 
 
 def compute_0th_order_metrics(shots_per_round: Sequence[int]) -> dict[str, float]:
@@ -514,7 +519,10 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         if shooter_spec is None:
             return
 
-        shots_per_round = compute_shots_per_round(self.suppression_df, shooter_spec)
+        shots_per_round, round_labels = compute_shots_per_round(
+            self.suppression_df,
+            shooter_spec,
+        )
         st.subheader("Firing Suppression")
         st.caption(f"Shooter: {shooter_label}")
         if not shots_per_round:
@@ -561,14 +569,15 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
             _format_metric(first_metrics.get("nonzero_rounds"), precision=0),
         )
 
-        self._render_shots_sparkline(shots_per_round, first_metrics)
+        self._render_shots_sparkline(shots_per_round, round_labels, first_metrics)
 
     def _render_shots_sparkline(
         self,
         shots_per_round: Sequence[int],
+        round_labels: Sequence[int],
         first_metrics: dict[str, float | bool | None],
     ) -> None:
-        x_rounds = list(range(len(shots_per_round)))
+        x_rounds = list(round_labels)
         fig = go.Figure()
         fig.add_trace(
             go.Bar(
@@ -581,7 +590,9 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         slope = first_metrics.get("slope")
         intercept = first_metrics.get("intercept")
         if isinstance(slope, float) and isinstance(intercept, float):
-            fit_values = [slope * round_index + intercept for round_index in x_rounds]
+            fit_values = [
+                slope * round_index + intercept for round_index in range(len(x_rounds))
+            ]
             fig.add_trace(
                 go.Scatter(
                     x=x_rounds,
