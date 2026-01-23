@@ -44,13 +44,3 @@ def add_alias_columns(
         if source in updated.columns:
             updated[alias] = updated[source]
     return updated
-
-
-# def canonicalize_columns(df: pd.DataFrame, *, columns: Iterable[str]) -> pd.DataFrame:
-#     """Lowercase column names in-place for a provided list."""
-#     updated = df.copy()
-#     updated.attrs = df.attrs.copy()
-#     mapping = {column: column.lower() for column in columns if column in updated.columns}
-#     if mapping:
-#         updated = updated.rename(columns=mapping, inplace=False)
-#     return updated
