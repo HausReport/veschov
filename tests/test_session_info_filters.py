@@ -119,6 +119,32 @@ def test_filter_by_multiple_attackers_or_logic() -> None:
     assert filtered.shape[0] == 2
 
 
+def test_filter_by_targets() -> None:
+    session = _make_session_from_rows(
+        [
+            {
+                "event_type": "attack",
+                "target_name": "Alice",
+                "target_alliance": "TD",
+                "target_ship": "BORG CUBE",
+            },
+            {
+                "event_type": "attack",
+                "target_name": "Bob",
+                "target_alliance": "XYZ",
+                "target_ship": "KOS'KARII",
+            },
+        ]
+    )
+
+    filtered = session.get_combat_df_filtered_by_targets(
+        [ShipSpecifier(name="Alice", alliance=None, ship=None)]
+    )
+
+    assert set(filtered["target_name"]) == {"Alice"}
+    assert filtered.shape[0] == 1
+
+
 def test_below_deck_officers_from_fixture_1() -> None:
     # Uses real parsed fixture via helpers to ensure integration with officer extraction
     from tests.helpers import get_session_info
