@@ -33,12 +33,7 @@ from veschov.ui.chirality import Lens
 
 def apply_combat_lens(
         df: pd.DataFrame,
-        lens: Lens | None,
-        *,
-        attacker_column_candidates: Iterable[str] = ATTACKER_COLUMN_CANDIDATES,
-        target_column_candidates: Iterable[str] = TARGET_COLUMN_CANDIDATES,
-        include_nan_attackers: bool = False,
-        include_nan_targets: bool = False,
+        lens: Lens | None
 ) -> pd.DataFrame:
     """Filter combat data using a resolved combat lens.
 
@@ -65,14 +60,6 @@ def apply_combat_lens(
         df: Input dataframe containing combat events.
         lens: The resolved lens from :mod:`veschov.ui.chirality`. If ``None``, the
             dataframe is returned unmodified.
-        attacker_column_candidates: Column name candidates to use when resolving the
-            attacker column.
-        target_column_candidates: Column name candidates to use when resolving the
-            target column.
-        include_nan_attackers: Whether to include rows with missing attacker values
-            when applying attacker filtering.
-        include_nan_targets: Whether to include rows with missing target values when
-            applying target filtering.
 
     Returns:
         The filtered dataframe, constrained by the lens selection if possible.
@@ -83,8 +70,8 @@ def apply_combat_lens(
     session_info = st.session_state.get("session_info")
     filtered = df
 
-    attacker_column = resolve_column(filtered, attacker_column_candidates)
-    target_column = resolve_column(filtered, target_column_candidates)
+    attacker_column = resolve_column(filtered, ATTACKER_COLUMN_CANDIDATES)
+    target_column = resolve_column(filtered, TARGET_COLUMN_CANDIDATES)
 
     attacker_mask = pd.Series(True, index=filtered.index)
     attacker_specs = lens.attacker_specs
@@ -96,9 +83,6 @@ def apply_combat_lens(
         if attacker_names:
             attacker_mask = filtered[attacker_column].isin(attacker_names)
 
-    if include_nan_attackers and attacker_column:
-        attacker_mask |= filtered[attacker_column].isna()
-
     filtered = filtered.loc[attacker_mask]
 
     if target_column:
@@ -106,8 +90,6 @@ def apply_combat_lens(
         if target_names:
             target_series = filtered[target_column]
             target_mask = target_series.isin(target_names)
-            if include_nan_targets:
-                target_mask |= target_series.isna()
             filtered = filtered.loc[target_mask]
 
     return filtered
