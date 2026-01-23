@@ -1,9 +1,9 @@
-"""Streamlit UI for officer and forbidden tech proc analysis."""
+"""Shared helpers and base class for officer/tech proc reports."""
 
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional, override
+from typing import Iterable, Optional
 
 import pandas as pd
 import streamlit as st
@@ -219,17 +219,16 @@ def style_heatmap(df: pd.DataFrame, heat_cap: int) -> pd.io.formats.style.Styler
     return df.style.map(_style_cell).format("{:.0f}")
 
 
-class OfficersAndTechReport(AttackerAndTargetReport):
-    """Render the Officers & Tech procs report."""
+class ProcReportBase(AttackerAndTargetReport):
+    """Base report for officer/tech proc analysis."""
+
+    include_forbidden_tech: bool = True
 
     def get_under_title_text(self) -> Optional[str]:
         return None
 
     def get_under_chart_text(self) -> Optional[str]:
         return None
-
-    def get_log_title(self) -> str:
-        return "Officers & Tech Procs"
 
     def get_log_description(self) -> str:
         return "Upload a battle log to visualize officer and forbidden tech proc activity."
@@ -266,64 +265,24 @@ class OfficersAndTechReport(AttackerAndTargetReport):
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         return None
 
-    def display_tables(self, dfs: list[pd.DataFrame]) -> None:
-        display_df = dfs[0]
-        st.subheader("Controls")
-        col1, col2 = st.columns(2)
-        heat_cap = col1.slider("Heat Cap", min_value=1, max_value=20, value=5)
-        show_totals = col1.checkbox("Show Totals", value=True)
-        show_distinct = col1.checkbox("Show Distinct Fired", value=False)
-        include_forbidden_tech = col2.checkbox("Include Forbidden Tech", value=True)
-
-        if not isinstance(include_forbidden_tech, bool):
-            logger.warning(
-                "include_forbidden_tech expected bool but got %s", type(include_forbidden_tech)
-            )
-            include_forbidden_tech = bool(include_forbidden_tech)
-
-        proc_df = _get_proc_df(display_df, include_forbidden_tech)
+    def _get_proc_selection(
+            self,
+            display_df: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, tuple[str, ...]] | None:
+        proc_df = _get_proc_df(display_df, self.include_forbidden_tech)
         if proc_df.empty:
             st.info("No officer/tech proc rows found for this battle.")
-            return
+            return None
 
         owner_options = sorted(proc_df["owner"].dropna().unique().tolist())
-        selected_owners = owner_options
-        if len(owner_options) > 1:
-            selected_owners = st.multiselect("Owners", options=owner_options, default=owner_options)
-        if not selected_owners:
-            st.info("Select at least one owner to view proc activity.")
-            return
+        if not owner_options:
+            logger.warning("Proc rows found without owner values.")
+            st.info("No officer/tech proc owners found for this battle.")
+            return None
+        return proc_df, tuple(owner_options)
 
-        owner_filter = tuple(selected_owners)
-
-        matrix_df = build_proc_matrix(
-            display_df,
-            include_forbidden_tech,
-            show_totals,
-            show_distinct,
-            owner_filter,
-        )
-        if matrix_df.empty:
-            st.info("No officer/tech proc rows found for this battle.")
-            return
-
-        st.subheader("Proc Frequency by Round")
-        st.caption("Heatmap counts how often each officer/tech ability fired per round.")
-        st.dataframe(style_heatmap(matrix_df, heat_cap), width="stretch")
-
-        summary_df = build_proc_summary(display_df, include_forbidden_tech, owner_filter)
-        if summary_df.empty:
-            st.info("No officer/tech proc rows found for this battle.")
-            return
-
-        st.subheader("Proc Summary")
-        st.caption("Summary table aggregates total fires, active rounds, and first activation.")
-        st.dataframe(summary_df, width="stretch")
-
-    @override
     def get_debug_info(self, df: pd.DataFrame) -> None:
         return None
 
-    @override
     def render_debug_info(self, df: pd.DataFrame) -> None:
         pass

@@ -44,9 +44,14 @@ name = "Hits and Crits"
 icon = "🎯"
 
 [[pages]]
-path = "pages/6_Officers_and_Tech.py"
-name = "Officer & Tech Procs"
+path = "pages/6_Proc_Frequency_by_Round.py"
+name = "Proc Frequency by Round"
 icon = "🧑"
+
+[[pages]]
+path = "pages/7_Proc_Summary_for_Battle.py"
+name = "Proc Summary for Battle"
+icon = "📊"
 
 [[pages]]
 path = "pages/11_Builder.py"
@@ -57,4 +62,3 @@ icon = "📤"
 path = "pages/9_Settings.py"
 name = "Settings"
 icon = "⚙️"
-
