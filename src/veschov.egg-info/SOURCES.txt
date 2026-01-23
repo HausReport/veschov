@@ -21,8 +21,9 @@ src/veschov/pages/2_Apex_Barrier_Analysis.py
 src/veschov/pages/3_Combatant_Info.py
 src/veschov/pages/4_Damage_Flow_By_Round.py
 src/veschov/pages/5_Raw_Damage_Analysis.py
-src/veschov/pages/6_Officers_and_Tech.py
+src/veschov/pages/6_Proc_Frequency_by_Round.py
 src/veschov/pages/7_Damage_Flow_Sankey.py
+src/veschov/pages/7_Proc_Summary_for_Battle.py
 src/veschov/pages/8_Critical_Hit_Analysis.py
 src/veschov/pages/9_Settings.py
 src/veschov/pages/__init__.py
@@ -48,7 +49,9 @@ src/veschov/ui/object_reports/CombatantInfoReport.py
 src/veschov/ui/object_reports/CritHitReport.py
 src/veschov/ui/object_reports/DamageFlowByBattleReport.py
 src/veschov/ui/object_reports/DamageFlowByRoundReport.py
-src/veschov/ui/object_reports/OfficersAndTechReport.py
+src/veschov/ui/object_reports/ProcFrequencyByRoundReport.py
+src/veschov/ui/object_reports/ProcReportBase.py
+src/veschov/ui/object_reports/ProcSummaryForBattleReport.py
 src/veschov/ui/object_reports/RawDamageReport.py
 src/veschov/ui/object_reports/RoundOrShotsReport.py
 src/veschov/ui/object_reports/__init__.py
