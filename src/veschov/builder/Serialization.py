@@ -1,8 +1,10 @@
+"""Serialization helpers for builder state."""
+
 from typing import cast
 
 import streamlit as st
 
-from veschov.builder.CopyUrlButtons import BRIDGE_SLOTS, EVEN_SLOTS, DEFAULT_SUGGESTIONS
+from veschov.builder.Constants import BRIDGE_SLOTS, DEFAULT_SUGGESTIONS, EVEN_SLOTS
 
 
 def _validate_slots(values: object, expected_len: int) -> list[str | None] | None:

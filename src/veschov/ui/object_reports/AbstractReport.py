@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Optional
-
-import humanize
 import pandas as pd
 import streamlit as st
 
 from veschov.io.parser_stub import parse_battle_log
 from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_log_upload import render_sidebar_combat_log_upload
+from veschov.ui.components.number_format import format_number
 
 
 class AbstractReport(ABC):
@@ -138,15 +137,4 @@ class AbstractReport(ABC):
         return None
 
     def _format_large_number(self, value: object, number_format: str) -> str:
-        if pd.isna(value):
-            return "—"
-        numeric = pd.to_numeric(value, errors="coerce")
-        if pd.isna(numeric):
-            return str(value)
-        if abs(numeric) >= 1_000_000:
-            if number_format == "Human":
-                return humanize.intword(numeric)
-            return f"{numeric:,.0f}"
-        if float(numeric).is_integer():
-            return f"{int(numeric)}"
-        return str(value)
+        return format_number(value, number_format=number_format, humanize_format="%.1f")

@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 import re
 from datetime import datetime
 
-import humanize
 import pandas as pd
 import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo
 from veschov.io.ShipSpecifier import ShipSpecifier
+from veschov.ui.components.number_format import format_number
 
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
@@ -45,27 +45,7 @@ COMBATANT_STAT_FIELDS = (
 
 
 def _display_value(value: object, number_format: str = "Human") -> str:
-    if pd.isna(value):
-        return "—"
-    numeric_value = None
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        numeric_value = float(value)
-    else:
-        text = str(value).strip()
-        if text:
-            numeric = pd.to_numeric(text.replace(",", ""), errors="coerce")
-            if pd.notna(numeric):
-                numeric_value = float(numeric)
-        else:
-            return "—"
-    if numeric_value is not None:
-        if abs(numeric_value) >= 1_000_000 and number_format == "Human":
-            return humanize.intword(numeric_value, format="%.1f")
-        if numeric_value.is_integer():
-            return f"{int(numeric_value):,}"
-        return f"{numeric_value:,}"
-    text = str(value).strip()
-    return text or "—"
+    return format_number(value, number_format=number_format, humanize_format="%.1f")
 
 
 def _parse_numeric_value(value: object) -> float | None:

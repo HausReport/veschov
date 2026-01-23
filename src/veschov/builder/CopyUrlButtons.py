@@ -1,3 +1,4 @@
+"""Share/save controls for the builder state."""
 
 from __future__ import annotations
 
@@ -13,22 +14,28 @@ import streamlit as st
 from streamlit_copy_to_clipboard_button import copy_to_clipboard
 
 from veschov.builder.BuilderState import BuilderState
-from veschov.builder.Constants import PUBLIC_BASE_URL, STATE_VERSION, EVEN_SLOTS, BRIDGE_SLOTS, \
-    DEFAULT_SUGGESTIONS, LZMA_PREFIX
+from veschov.builder.Constants import (
+    BRIDGE_SLOTS,
+    DEFAULT_SUGGESTIONS,
+    EVEN_SLOTS,
+    LZMA_PREFIX,
+    PUBLIC_BASE_URL,
+    STATE_VERSION,
+)
 from veschov.builder.Serialization import _validate_slots
 
 logger = logging.getLogger(__name__)
 
 
-
-def copy_url_buttons():
+def copy_url_buttons() -> None:
+    """Render the save/share UI for the builder state."""
     #
     # Save/ share UI
     #
     submitted = False
-    share_url = None
-    discord_md = None
-    reddit_md = None
+    share_url: str | None = None
+    discord_md: str | None = None
+    reddit_md: str | None = None
 
     with st.form("state-share"):
         c1, c2, c3, c4 = st.columns(4)

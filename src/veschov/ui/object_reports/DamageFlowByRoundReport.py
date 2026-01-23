@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from typing import Optional, override
-
-import humanize
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -10,6 +8,7 @@ import streamlit as st
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
+from veschov.ui.components.number_format import format_number
 from veschov.ui.view_by import prepare_round_view
 
 SEGMENT_LABELS = {
@@ -30,22 +29,6 @@ HOVER_LABELS = {
     "battle_event": "Battle Event",
     "is_crit": "Critical Hit",
 }
-
-
-def _format_hover_value(value: object, number_format: str) -> str:
-    """Format hover values using the configured large-number preference."""
-    if pd.isna(value):
-        return "—"
-    if isinstance(value, bool):
-        return str(value)
-    numeric = pd.to_numeric(value, errors="coerce")
-    if pd.notna(numeric):
-        if abs(numeric) >= 1_000_000 and number_format == "Human":
-            return humanize.intword(numeric, format="%.1f")
-        if float(numeric).is_integer():
-            return f"{int(numeric):,}"
-        return f"{numeric:,}"
-    return str(value)
 
 
 class DamageFlowByRoundReport(RoundOrShotsReport):
@@ -145,14 +128,14 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
             for segment, color in SEGMENT_COLORS.items()
         }
         plot_df["amount_display"] = plot_df["amount"].apply(
-            lambda value: _format_hover_value(value, number_format)
+            lambda value: format_number(value, number_format=number_format, humanize_format="%.1f")
         )
         hover_display_columns: list[str] = []
         hover_display_labels: list[str] = []
         for column in self.hover_columns:
             display_column = f"{column}_display"
             plot_df[display_column] = plot_df[column].apply(
-                lambda value: _format_hover_value(value, number_format)
+                lambda value: format_number(value, number_format=number_format, humanize_format="%.1f")
             )
             hover_display_columns.append(display_column)
             hover_display_labels.append(HOVER_LABELS.get(column, column.replace("_", " ").title()))

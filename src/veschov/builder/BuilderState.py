@@ -1,3 +1,5 @@
+"""Typed definition for serialized builder state."""
+
 from typing import TypedDict
 
 
