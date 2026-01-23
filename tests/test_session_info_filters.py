@@ -76,8 +76,8 @@ def test_filter_by_attacker_name_only() -> None:
         ]
     )
 
-    filtered = session.get_combat_df_filtered_by_attacker(
-        ShipSpecifier(name="Alice", alliance=None, ship=None)
+    filtered = session.get_combat_df_filtered_by_attackers(
+        [ShipSpecifier(name="Alice", alliance=None, ship=None)]
     )
 
     assert set(filtered["attacker_name"]) == {"Alice"}
