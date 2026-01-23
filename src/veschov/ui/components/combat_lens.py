@@ -27,7 +27,7 @@ import pandas as pd
 import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo
-from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, TARGET_COLUMN_CANDIDATES, resolve_column
+from veschov.transforms.columns import TARGET_COLUMN_CANDIDATES, resolve_column
 from veschov.ui.chirality import Lens
 
 
@@ -44,10 +44,7 @@ def apply_combat_lens(
        * If `st.session_state["session_info"]` is a :class:`SessionInfo` and the lens
          includes `attacker_specs`, filter by the index set of combat rows that match
          those ship specifiers (this is the most authoritative match).
-       * Otherwise, try to resolve an attacker column and match against the name set
-         derived from the lens (`Lens.attacker_names()`), which uses spec names first
-         and falls back to the lens actor label.
-       * Optionally include rows where the attacker column is ``NaN``.
+       * Otherwise, leave attacker rows unfiltered.
     2. **Target filtering**:
        * Resolve a target column and filter by `Lens.target_names()`, again falling
          back from spec names to lens target labels.
@@ -70,7 +67,6 @@ def apply_combat_lens(
     session_info = st.session_state.get("session_info")
     filtered = df
 
-    attacker_column = resolve_column(filtered, ATTACKER_COLUMN_CANDIDATES)
     target_column = resolve_column(filtered, TARGET_COLUMN_CANDIDATES)
 
     attacker_mask = pd.Series(True, index=filtered.index)
@@ -78,10 +74,6 @@ def apply_combat_lens(
     if isinstance(session_info, SessionInfo) and attacker_specs:
         attacker_df = session_info.get_combat_df_filtered_by_attackers(attacker_specs)
         attacker_mask = filtered.index.isin(attacker_df.index)
-    elif attacker_column:
-        attacker_names = lens.attacker_names()
-        if attacker_names:
-            attacker_mask = filtered[attacker_column].isin(attacker_names)
 
     filtered = filtered.loc[attacker_mask]
 
