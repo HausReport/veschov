@@ -143,13 +143,14 @@ class RawDamageReport(RoundOrShotsReport):
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
-        fig = px.area(
-            long_df,
-            x=self.x_axis,
-            y="amount",
-            color="series_name",
-            title=f"{self.get_title_text()} — {self.battle_filename}",
-            category_orders={
+        n_rounds = long_df[self.x_axis].nunique()
+        plot_args = {
+            "data_frame": long_df,
+            "x": self.x_axis,
+            "y": "amount",
+            "color": "series_name",
+            "title": f"{self.get_title_text()} — {self.battle_filename}",
+            "category_orders": {
                 "series_name": [
                     "Non-crit Normal Damage",
                     "Crit Normal Damage",
@@ -157,7 +158,11 @@ class RawDamageReport(RoundOrShotsReport):
                     "Crit Isolytic Damage",
                 ]
             },
-        )
+        }
+        if self.view_by == "Round" and n_rounds == 1:
+            fig = px.bar(**plot_args, barmode="stack")
+        else:
+            fig = px.area(**plot_args)
         max_value = long_df[self.x_axis].max()
         if pd.notna(max_value):
             fig.update_xaxes(range=[1, int(max_value)])
