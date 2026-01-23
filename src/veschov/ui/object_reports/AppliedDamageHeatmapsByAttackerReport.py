@@ -120,7 +120,7 @@ def compute_0th_order_metrics(shots_per_round: Sequence[int]) -> dict[str, float
         return {}
     shot_values = np.asarray(shots_per_round, dtype=float)
     total_rounds = len(shot_values)
-    k_rounds = min(3, total_rounds)
+    k_rounds = min(2, total_rounds)
     baseline = float(np.mean(shot_values[:k_rounds]))
     observed_total = float(shot_values.sum())
     expected_total = baseline * total_rounds
