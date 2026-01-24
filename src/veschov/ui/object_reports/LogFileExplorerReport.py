@@ -114,6 +114,7 @@ class LogFileExplorerReport(AbstractReport):
             st.info(f"{label} data is not available.")
             return
         transposed = self._transpose_dataframe(df)
+        transposed = self._normalize_transposed_columns(transposed)
         display_df = self._format_transposed_dataframe(transposed)
         self._render_dataframe(
             display_df,
@@ -125,6 +126,14 @@ class LogFileExplorerReport(AbstractReport):
     def _transpose_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         df_t = df.copy().T.reset_index()
         return df_t.rename(columns={"index": "field"})
+
+    def _normalize_transposed_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        columns = [column if isinstance(column, str) else str(column) for column in df.columns]
+        if list(df.columns) == columns:
+            return df
+        normalized = df.copy()
+        normalized.columns = columns
+        return normalized
 
     def _format_transposed_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         formatted = df.copy()
