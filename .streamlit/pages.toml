@@ -13,6 +13,11 @@ path = "pages/2_Apex_Barrier_Analysis.py"
 name = "Apex Barrier Analysis"
 icon = "🛡️"
 
+[[pages]]
+path = "pages/2_Observed_Mitigation.py"
+name = "Observed Mitigation"
+icon = "🧮"
+
 
 [[pages]]
 name = "Flow"
