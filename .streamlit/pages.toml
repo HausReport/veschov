@@ -74,6 +74,12 @@ icon = "📜"
 path = "pages/3_Combatant_Info.py"
 name = "Combatant Info"
 icon = "⚔️"
+
+[[pages]]
+path = "pages/12_Log_File_Explorer.py"
+name = "Log File Explorer"
+icon = "🧾"
+
 [[pages]]
 path = "pages/11_Builder.py"
 name = "Share Build"
