@@ -8,7 +8,6 @@ import streamlit as st
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
-from veschov.ui.components.number_format import format_number
 from veschov.ui.view_by import prepare_round_view
 
 SEGMENT_LABELS = {
@@ -127,15 +126,17 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
             SEGMENT_LABELS.get(segment, segment): color
             for segment, color in SEGMENT_COLORS.items()
         }
-        plot_df["amount_display"] = plot_df["amount"].apply(
-            lambda value: format_number(value, number_format=number_format, humanize_format="%.1f")
+        plot_df["amount_display"] = self._format_large_number_series(
+            plot_df["amount"],
+            number_format,
         )
         hover_display_columns: list[str] = []
         hover_display_labels: list[str] = []
         for column in self.hover_columns:
             display_column = f"{column}_display"
-            plot_df[display_column] = plot_df[column].apply(
-                lambda value: format_number(value, number_format=number_format, humanize_format="%.1f")
+            plot_df[display_column] = self._format_large_number_series(
+                plot_df[column],
+                number_format,
             )
             hover_display_columns.append(display_column)
             hover_display_labels.append(HOVER_LABELS.get(column, column.replace("_", " ").title()))

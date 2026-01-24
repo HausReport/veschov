@@ -138,3 +138,11 @@ class AbstractReport(ABC):
 
     def _format_large_number(self, value: object, number_format: str) -> str:
         return format_number(value, number_format=number_format, humanize_format="%.1f")
+
+    def _format_large_number_series(
+            self,
+            series: pd.Series,
+            number_format: str,
+    ) -> pd.Series:
+        """Format a series of values with the configured large-number formatter."""
+        return series.map(lambda value: self._format_large_number(value, number_format))

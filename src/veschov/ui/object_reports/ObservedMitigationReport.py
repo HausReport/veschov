@@ -9,10 +9,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.ShipSpecifier import ShipSpecifier
 from veschov.ui.components.number_format import get_number_format
-from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
+from veschov.ui.object_reports.MultiAttackerAndTargetReport import MultiAttackerAndTargetReport
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
 
@@ -31,7 +29,7 @@ OPTIONAL_PREVIEW_COLUMNS = (
 )
 
 
-class ObservedMitigationReport(RoundOrShotsReport):
+class ObservedMitigationReport(MultiAttackerAndTargetReport):
     """Render observed mitigation per shot or round."""
 
     VIEW_BY_KEY = "observed_mitigation_view_by"
@@ -103,45 +101,6 @@ class ObservedMitigationReport(RoundOrShotsReport):
         shot_df["shot_index"] = shot_df["shot_index"].astype(int)
         return shot_df
 
-    def _build_attacker_key(self, df: pd.DataFrame) -> pd.DataFrame:
-        if "attacker_name" not in df.columns:
-            raise KeyError("attacker_name")
-        session_info = st.session_state.get("session_info")
-        outcome_lookup = self._build_outcome_lookup(
-            session_info if isinstance(session_info, SessionInfo) else None,
-            self.battle_df if isinstance(self.battle_df, pd.DataFrame) else None,
-        )
-        alliance_series = (
-            df["attacker_alliance"]
-            if "attacker_alliance" in df.columns
-            else pd.Series("", index=df.index)
-        )
-        ship_series = (
-            df["attacker_ship"]
-            if "attacker_ship" in df.columns
-            else pd.Series("", index=df.index)
-        )
-        if "attacker_alliance" not in df.columns:
-            logger.warning("Attacker alliance column missing; attacker labels omit alliance.")
-        if "attacker_ship" not in df.columns:
-            logger.warning("Attacker ship column missing; attacker labels omit ship.")
-        labels = [
-            self._format_ship_spec_label(
-                ShipSpecifier(
-                    name=name or None,
-                    alliance=alliance or None,
-                    ship=ship or None,
-                ),
-                outcome_lookup,
-            )
-            for name, alliance, ship in zip(
-                df["attacker_name"].fillna("").astype(str),
-                alliance_series.fillna("").astype(str),
-                ship_series.fillna("").astype(str),
-            )
-        ]
-        return df.assign(attacker_key=pd.Series(labels, index=df.index, dtype="string"))
-
     @staticmethod
     def _compute_observed_mitigation(
             mitigated: pd.Series,
@@ -152,13 +111,6 @@ class ObservedMitigationReport(RoundOrShotsReport):
 
     def _format_mitigation_percent(self, series: pd.Series) -> pd.Series:
         return series.mul(100)
-
-    def _format_large_number_series(
-            self,
-            series: pd.Series,
-            number_format: str,
-    ) -> pd.Series:
-        return series.map(lambda value: self._format_large_number(value, number_format))
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -296,6 +248,7 @@ class ObservedMitigationReport(RoundOrShotsReport):
             "y": "observed_mitigation_pct",
             "color": "attacker_key",
         }
+        plot_args.update(self._build_attacker_series_style(plot_df))
         hover_data = {column: True for column in hover_columns if column in plot_df.columns}
         hover_data["observed_mitigation_pct"] = False
         plot_args["hover_data"] = hover_data
