@@ -155,9 +155,10 @@ class LogFileExplorerReport(AbstractReport):
             hidden_columns: list[str],
             transposed: bool,
     ) -> None:
-        grid_options = self._build_grid_options(df, hidden_columns, transposed=transposed)
+        safe_df = self._strip_dataframe_attrs(df)
+        grid_options = self._build_grid_options(safe_df, hidden_columns, transposed=transposed)
         AgGrid(
-            df,
+            safe_df,
             gridOptions=grid_options,
             height=400,
             key=key,
@@ -212,6 +213,11 @@ class LogFileExplorerReport(AbstractReport):
             builder.configure_column(column, **column_def)
 
         return builder.build()
+
+    def _strip_dataframe_attrs(self, df: pd.DataFrame) -> pd.DataFrame:
+        safe_df = df.copy()
+        safe_df.attrs = {}
+        return safe_df
 
     def _is_datetime_column(self, series: pd.Series) -> bool:
         return pd.api.types.is_datetime64_any_dtype(series)
