@@ -4,7 +4,6 @@ import logging
 import math
 from typing import Optional, Sequence, override
 
-import humanize
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -504,12 +503,8 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     def _format_applied_damage_value(self, value: object) -> str:
         if value is None or pd.isna(value):
             return "—"
-        numeric_value = float(value)
-        if self.number_format == "Human" and abs(numeric_value) >= 1_000_000:
-            return humanize.intword(numeric_value, format="%.1f")
-        if numeric_value.is_integer():
-            return f"{int(numeric_value):,}"
-        return f"{numeric_value:,}"
+        number_format = self.number_format or "Human"
+        return self._format_large_number(value, number_format)
 
     def _display_firing_suppression_panel(self) -> None:
         if self.suppression_df is None or self.suppression_df.empty:
