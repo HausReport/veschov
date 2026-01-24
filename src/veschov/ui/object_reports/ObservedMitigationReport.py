@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Sequence, override
+from typing import Optional, override
 
 import pandas as pd
 import plotly.express as px
@@ -11,6 +11,7 @@ import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo
 from veschov.io.ShipSpecifier import ShipSpecifier
+from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
@@ -34,6 +35,7 @@ class ObservedMitigationReport(RoundOrShotsReport):
     """Render observed mitigation per shot or round."""
 
     VIEW_BY_KEY = "observed_mitigation_view_by"
+    MITIGATION_CAP = 71.2
 
     def __init__(self) -> None:
         super().__init__()
@@ -148,8 +150,15 @@ class ObservedMitigationReport(RoundOrShotsReport):
         ratio = mitigated.div(total)
         return ratio.clip(lower=0, upper=1)
 
-    def _build_hover_data(self, df: pd.DataFrame, columns: Sequence[str]) -> dict[str, bool]:
-        return {column: True for column in columns if column in df.columns}
+    def _format_mitigation_percent(self, series: pd.Series) -> pd.Series:
+        return series.mul(100)
+
+    def _format_large_number_series(
+            self,
+            series: pd.Series,
+            number_format: str,
+    ) -> pd.Series:
+        return series.map(lambda value: self._format_large_number(value, number_format))
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -242,23 +251,54 @@ class ObservedMitigationReport(RoundOrShotsReport):
         return [f"Observed Mitigation of Defender by {kind}"]
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
-        plot_df = dfs[0]
+        plot_df = dfs[0].copy()
+        number_format = self.number_format or get_number_format()
+        plot_df["observed_mitigation_pct"] = self._format_mitigation_percent(
+            plot_df["observed_mitigation"],
+        )
+        plot_df["observed_mitigation_display"] = plot_df["observed_mitigation_pct"].map(
+            lambda value: f"{value:.1f}%" if pd.notna(value) else "—",
+        )
+        for column in ("total_normal", "mitigated_normal", "sum_total", "sum_mitigated"):
+            if column in plot_df.columns:
+                plot_df[f"{column}_display"] = self._format_large_number_series(
+                    plot_df[column],
+                    number_format,
+                )
+        for column in (
+            "total_normal_display",
+            "mitigated_normal_display",
+            "sum_total_display",
+            "sum_mitigated_display",
+        ):
+            if column not in plot_df.columns:
+                plot_df[column] = "—"
+        if "round" in plot_df.columns:
+            plot_df["round_display"] = plot_df["round"].map(
+                lambda value: str(int(value)) if pd.notna(value) else "—",
+            )
+        else:
+            plot_df["round_display"] = "—"
+
         hover_columns = (
             "round",
-            "total_normal",
-            "mitigated_normal",
-            "sum_total",
-            "sum_mitigated",
-            "observed_mitigation",
+            "observed_mitigation_display",
+            "total_normal_display",
+            "mitigated_normal_display",
+            "sum_total_display",
+            "sum_mitigated_display",
             "attacker_key",
+            "round_display",
         )
         plot_args = {
             "data_frame": plot_df,
             "x": self.x_axis,
-            "y": "observed_mitigation",
+            "y": "observed_mitigation_pct",
             "color": "attacker_key",
-            "hover_data": self._build_hover_data(plot_df, hover_columns),
         }
+        hover_data = {column: True for column in hover_columns if column in plot_df.columns}
+        hover_data["observed_mitigation_pct"] = False
+        plot_args["hover_data"] = hover_data
         n_rounds = plot_df[self.x_axis].nunique()
         if self.view_by == "Round" and n_rounds == 1:
             fig = px.bar(**plot_args)
@@ -273,6 +313,52 @@ class ObservedMitigationReport(RoundOrShotsReport):
             xaxis_title=self.get_x_axis_text(),
             yaxis_title=self.get_y_axis_text(),
         )
+        fig.update_yaxes(range=[0, 100], tickformat=".1f", ticksuffix="%")
+        fig.add_hline(
+            y=self.MITIGATION_CAP,
+            line_color="red",
+            line_dash="dash",
+            line_width=2,
+            annotation_text="Normal Mitigation Cap.",
+            annotation_position="top left",
+            annotation_font_color="red",
+        )
+        if self.view_by == "Round":
+            fig.update_traces(
+                customdata=plot_df[
+                    [
+                        "attacker_key",
+                        "sum_total_display",
+                        "sum_mitigated_display",
+                    ]
+                ],
+                hovertemplate=(
+                    "Attacker: %{customdata[0]}<br>"
+                    f"{self.get_x_axis_text()}: %{{x}}<br>"
+                    "Observed Mitigation: %{y:.1f}%<br>"
+                    "Total Normal (Sum): %{customdata[1]}<br>"
+                    "Mitigated Normal (Sum): %{customdata[2]}<extra></extra>"
+                ),
+            )
+        else:
+            fig.update_traces(
+                customdata=plot_df[
+                    [
+                        "attacker_key",
+                        "total_normal_display",
+                        "mitigated_normal_display",
+                        "round_display",
+                    ]
+                ],
+                hovertemplate=(
+                    "Attacker: %{customdata[0]}<br>"
+                    f"{self.get_x_axis_text()}: %{{x}}<br>"
+                    "Observed Mitigation: %{y:.1f}%<br>"
+                    "Total Normal: %{customdata[1]}<br>"
+                    "Mitigated Normal: %{customdata[2]}<br>"
+                    "Round: %{customdata[3]}<extra></extra>"
+                ),
+            )
         st.plotly_chart(fig, width="stretch")
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
