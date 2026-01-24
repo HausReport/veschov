@@ -18,6 +18,11 @@ path = "pages/2_Observed_Mitigation.py"
 name = "Observed Mitigation"
 icon = "🧮"
 
+[[pages]]
+path = "pages/3_Observed_Shield_Mitigation.py"
+name = "Observed Shield Mitigation"
+icon = "🛡️"
+
 
 [[pages]]
 name = "Flow"
