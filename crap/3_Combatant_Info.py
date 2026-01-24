@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from veschov.ui.object_reports.CombatantInfoReport import render_player_info_report
+from crap.CombatantInfoReport import render_player_info_report
 import streamlit as st
 
 

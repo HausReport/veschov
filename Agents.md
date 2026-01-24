@@ -32,6 +32,10 @@
     - If so, add it to the "Codex Observations" section below.
     - You may use this section to record patterns, invariants, or assumptions, or problems discoveredgno
     - Do not repeat existing rules; add only genuinely new insights.
+11. Adjusting Python path to fix import error
+    - When running the app in streamlit in your environment, it will often fail to run due to a missing module caused by the Python path not including the src directory.  
+    - Setting PYTHONPATH=src before starting Streamlit should resolve this.
+
 
 ** Codex Observations **
 - New reports should subclass `AbstractReport` (or `AttackerAndTargetReport` / `RoundOrShotsReport`) and follow the render
