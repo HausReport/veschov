@@ -243,7 +243,7 @@ class ProcReportBase(AttackerAndTargetReport):
         return None
 
     def get_title_text(self) -> Optional[str]:
-        return None
+        return self.get_log_title()
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()

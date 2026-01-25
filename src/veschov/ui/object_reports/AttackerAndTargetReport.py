@@ -151,9 +151,38 @@ class AttackerAndTargetReport(AbstractReport):
             battle_df: pd.DataFrame | None,
     ) -> None:
         """Render the system/time/rounds banner for the report header."""
-        context_lines = self._get_system_time_and_rounds(players_df, battle_df)
-        if context_lines:
-            st.markdown("\n".join(f"* {context_line}" for context_line in context_lines))
+        context_items = self._get_system_time_and_rounds(players_df, battle_df)
+        if context_items:
+            pills = "".join(
+                f"<span class='veschov-context-pill'>{icon} {text}</span>"
+                for icon, text in context_items
+            )
+            st.markdown(
+                """
+<style>
+  .veschov-context-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .veschov-context-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+</style>
+""",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"<div class='veschov-context-pill-row'>{pills}</div>",
+                unsafe_allow_html=True,
+            )
         # if context_lines:
         #     context_text = " • ".join(context_lines)
         #     # FIXME: This, and about 10 lines down, is where system name, date, and time are written.
@@ -163,7 +192,11 @@ class AttackerAndTargetReport(AbstractReport):
         #         unsafe_allow_html=True,
         #     )
 
-    def _get_system_time_and_rounds(self, players_df: pd.DataFrame, battle_df: pd.DataFrame | None) -> list[str]:
+    def _get_system_time_and_rounds(
+            self,
+            players_df: pd.DataFrame,
+            battle_df: pd.DataFrame | None,
+    ) -> list[tuple[str, str]]:
         """Collect system name, timestamp, and round count from dataframes."""
 
         def resolve_metadata_value(
@@ -218,14 +251,14 @@ class AttackerAndTargetReport(AbstractReport):
             logger.warning("Players df location value missing for %s.", location_column)
         if timestamp_column and pd.isna(timestamp):
             logger.warning("Players df timestamp value missing for %s.", timestamp_column)
-        lines: list[str] = []
+        context_items: list[tuple[str, str]] = []
 
-        context_parts: list[str] = []
+        location_text: str | None = None
+        time_text: str | None = None
         if pd.notna(location):
             location_text = str(location).strip()
             if location_text and "system" not in location_text.lower():
                 location_text = f"{location_text} System"
-            context_parts.append(location_text)
         if pd.notna(timestamp):
             parsed = pd.to_datetime(timestamp, errors="coerce")
             if pd.notna(parsed):
@@ -235,11 +268,13 @@ class AttackerAndTargetReport(AbstractReport):
                 if parsed_dt.year != today_year:
                     date_part = f"{date_part} {parsed_dt:%Y}"
                 time_part = f"{parsed_dt:%H:%M}"
-                context_parts.append(f"{date_part} at {time_part}")
+                time_text = f"{date_part} {time_part}"
             else:
-                context_parts.append(str(timestamp))
-        for context_part in context_parts:
-            lines.append(context_part)
+                time_text = str(timestamp)
+        if time_text:
+            context_items.append(("🕒", time_text))
+        if location_text:
+            context_items.append(("📍", location_text))
         # if context_parts:
         #     lines.append(" ".join(context_parts))
 
@@ -258,8 +293,9 @@ class AttackerAndTargetReport(AbstractReport):
                             round_count,
                             max_round,
                         )
-                    lines.append(f"Battle Rounds: {round_count}")
-        return lines
+                    round_label = "Round" if round_count == 1 else "Rounds"
+                    context_items.append(("🧮", f"{round_count} {round_label} Battle"))
+        return context_items
 
     def render_combatants(
             self,
