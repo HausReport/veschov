@@ -209,6 +209,7 @@ class LogFileExplorerReport(AbstractReport):
             enableRangeSelection=True,
             sideBar=True,
             suppressColumnVirtualisation=False,
+            onGridReady=JsCode(self._build_autosize_on_ready()),
         )
         builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=25)
 
@@ -300,6 +301,16 @@ class LogFileExplorerReport(AbstractReport):
             }}
             return value;
         }}
+        """
+
+    def _build_autosize_on_ready(self) -> str:
+        return """
+        function(event) {
+            if (!event || !event.columnApi) {
+                return;
+            }
+            event.columnApi.autoSizeAllColumns();
+        }
         """
 
 
