@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, JsCode
 
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.chirality import Lens
@@ -181,7 +181,7 @@ class LogFileExplorerReport(AbstractReport):
             key=key,
             allow_unsafe_jscode=True,
             enable_enterprise_modules=True,
-            fit_columns_on_grid_load=True,
+            columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         )
 
     def _build_grid_options(
