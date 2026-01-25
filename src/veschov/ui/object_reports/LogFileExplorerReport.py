@@ -107,6 +107,7 @@ class LogFileExplorerReport(AbstractReport):
                 "Hyperthermic Stabilizer %",
                 "target_defeated",
                 "target_destroyed",
+                "accounting_delta"
             ],
             transposed=False,
         )
@@ -184,7 +185,7 @@ class LogFileExplorerReport(AbstractReport):
         AgGrid(
             safe_df,
             gridOptions=grid_options,
-            height=400,
+            height=900,
             key=key,
             allow_unsafe_jscode=True,
             enable_enterprise_modules=True,
@@ -203,6 +204,7 @@ class LogFileExplorerReport(AbstractReport):
             sortable=True,
             filter=True,
             resizable=True,
+            minWidth=120,
         )
         builder.configure_grid_options(
             enableRangeSelection=True,
@@ -210,7 +212,7 @@ class LogFileExplorerReport(AbstractReport):
             suppressColumnVirtualisation=False,
             onFirstDataRendered=JsCode(self._build_autosize_on_ready()),
         )
-        builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=25)
+        builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=75)
 
         if transposed:
             builder.configure_column("field", header_name="field", pinned="left")
@@ -301,22 +303,31 @@ class LogFileExplorerReport(AbstractReport):
             return value;
         }}
         """
-
     def _build_autosize_on_ready(self) -> str:
         return """
         function(event) {
-            if (!event || !event.columnApi) {
-                return;
-            }
-            const allColumns = event.columnApi.getAllColumns();
-            if (!allColumns || allColumns.length === 0) {
-                return;
-            }
-            setTimeout(() => {
-                event.columnApi.autoSizeColumns(allColumns);
-            }, 0);
+            if (!event || !event.columnApi || !event.api) return;
+    
+            const autosize = () => {
+                try {
+                    event.columnApi.autoSizeAllColumns(false); // false => include header
+                } catch (e) {
+                    // Don't sizeColumnsToFit() here; that causes the "all columns become slivers" failure mode.
+                }
+            };
+    
+            event.api.addEventListener('firstDataRendered', function() {
+                setTimeout(autosize, 200);
+                setTimeout(autosize, 600); // second pass helps with Streamlit layout settling
+            });
+    
+            event.api.addEventListener('gridSizeChanged', function() {
+                setTimeout(autosize, 150);
+            });
         }
         """
+
+
 
 
 def render_log_file_explorer_report() -> None:
