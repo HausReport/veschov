@@ -15,7 +15,7 @@ class AbstractReport(ABC):
     """Shared lifecycle for combat-log reports.
 
     Reports follow the same rendering pipeline:
-    1. Optional introductory Markdown under the title.
+    1. Header row with title, under-title Markdown, and optional metadata slot.
     2. Sidebar upload of a combat log, parsed into a dataframe.
     3. Header controls to establish context (e.g., lens selection).
     4. Derived dataframes for charts/tables.
@@ -25,13 +25,21 @@ class AbstractReport(ABC):
     Subclasses override the template methods to customize each step.
     """
     lens: Lens | None
+    meta_slot: st.delta_generator.DeltaGenerator | None
 
     def render(self) -> None:
         """Run the full report lifecycle using the template methods."""
-        utt = self.get_under_title_text()
-        # st.warning("This page is using the new system.")
-        if utt is not None:
-            st.markdown(utt, unsafe_allow_html=True)
+        self.meta_slot = None
+        left, right = st.columns([3, 1], vertical_alignment="top")
+        with left:
+            title_text = self.get_title_text()
+            if title_text is not None:
+                st.title(title_text)
+            utt = self.get_under_title_text()
+            if utt is not None:
+                st.markdown(utt, unsafe_allow_html=True)
+        with right:
+            self.meta_slot = st.container()
         df = self.add_log_uploader(
             title=self.get_log_title(),
             description=self.get_log_description(),
@@ -42,6 +50,7 @@ class AbstractReport(ABC):
         dfs = self.get_derived_dataframes(df, self.lens)
         if dfs is None:
             return
+        self.fill_meta_slot()
         self.display_above_plots(dfs)
         self.display_plots(dfs)
         self.display_under_chart()
@@ -77,6 +86,11 @@ class AbstractReport(ABC):
     def get_log_description(self) -> str:
         """Return the sidebar description for the combat log uploader."""
         return ""
+
+    @abstractmethod
+    def fill_meta_slot(self) -> None:
+        """Render optional header metadata in the right-hand slot."""
+        return None
 
     def add_log_uploader(self, *, title: str, description: str) -> Optional[pd.DataFrame]:
         """Render the log uploader and parse the battle log into a dataframe."""

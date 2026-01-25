@@ -123,11 +123,27 @@ class AttackerAndTargetReport(AbstractReport):
 
     def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
         """Render context metadata above the charts."""
+        if self.meta_slot is not None:
+            return None
         if isinstance(self.players_df, pd.DataFrame) and not self.players_df.empty:
             self._render_system_time_and_rounds(self.players_df, self.battle_df)
-        else:
+            return None
+        logger.warning("No player metadata found for system/time header.")
+        st.info("No player metadata found in this file.")
+        return None
+
+    def fill_meta_slot(self) -> None:
+        """Render system/time metadata in the header slot."""
+        if self.meta_slot is None:
+            logger.warning("Meta slot missing; unable to render system/time metadata.")
+            return None
+        with self.meta_slot:
+            if isinstance(self.players_df, pd.DataFrame) and not self.players_df.empty:
+                self._render_system_time_and_rounds(self.players_df, self.battle_df)
+                return None
             logger.warning("No player metadata found for system/time header.")
             st.info("No player metadata found in this file.")
+        return None
 
     def _render_system_time_and_rounds(
             self,

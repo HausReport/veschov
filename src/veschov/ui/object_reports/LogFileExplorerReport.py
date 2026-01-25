@@ -33,6 +33,14 @@ class LogFileExplorerReport(AbstractReport):
             "Players and fleets are transposed for readability."
         )
 
+    def fill_meta_slot(self) -> None:
+        if self.meta_slot is None:
+            logger.warning("Meta slot missing; unable to render placeholder metadata.")
+            return None
+        with self.meta_slot:
+            st.markdown("CHANGE THIS")
+        return None
+
     def get_under_chart_text(self) -> str | None:
         return None
 
@@ -82,7 +90,7 @@ class LogFileExplorerReport(AbstractReport):
         return None
 
     def get_title_text(self) -> str | None:
-        return None
+        return "Log File Explorer"
 
     def _render_battle_tab(self) -> None:
         if not isinstance(self._battle_df, pd.DataFrame):
