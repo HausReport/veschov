@@ -127,6 +127,14 @@ it together."</strong>
     def get_under_title_text(self) -> str | None:
         return None
 
+    def fill_meta_slot(self) -> None:
+        if self.meta_slot is None:
+            logger.warning("Meta slot missing; unable to render placeholder metadata.")
+            return None
+        with self.meta_slot:
+            st.markdown("CHANGE THIS")
+        return None
+
     def get_under_chart_text(self) -> str | None:
         return None
 
@@ -163,5 +171,4 @@ it together."</strong>
 
 st.set_page_config(page_title="veSchov: Illuminate the Battle.", layout="wide")
 HomeReport().render()
-
 

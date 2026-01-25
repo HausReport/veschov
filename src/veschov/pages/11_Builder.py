@@ -238,7 +238,7 @@ init_state()
 restore_state_from_query()
 _auto_seed_from_session()
 
-# st.title("Share or Save Your Build")
+st.title("Builder")
 
 # --- Holding text ---
 holding = st.session_state.holding
