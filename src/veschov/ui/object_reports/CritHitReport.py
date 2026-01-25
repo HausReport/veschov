@@ -11,6 +11,7 @@ import streamlit as st
 
 from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
+from veschov.ui.pretty_stats.Statistic import StatCol, Statistic, render_stats
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
 
@@ -31,7 +32,7 @@ class CritHitReport(RoundOrShotsReport):
         super().__init__()
         self.battle_filename = "Session battle data"
         self.x_axis = "shot_index"
-        self.summary_text = ""
+        self.summary_stats: list[Statistic] = []
 
     def get_x_axis_text(self) -> Optional[str]:
         return "Shot or Round Number"
@@ -88,12 +89,23 @@ class CritHitReport(RoundOrShotsReport):
         crit_shots = int(crit_flags.sum())
         crit_rate = crit_shots / total_shots if total_shots else 0.0
 
-        self.summary_text = "\n".join(
-            [
-                f"* **Overall critical hit chance:** {crit_shots}/{total_shots} ({crit_rate:.1%}).",
-                self._format_average_shots(shot_df),
-            ]
-        )
+        average_shots, average_help = self._get_average_shots_per_round(shot_df)
+        self.summary_stats = [
+            Statistic(
+                label="Overall critical hit chance",
+                value=f"{crit_shots}/{total_shots} ({crit_rate:.1%})",
+                col=StatCol.C1,
+                priority=1,
+                help="Ratio of critical hits to total attack hits for the selection.",
+            ),
+            Statistic(
+                label="Average shots/round",
+                value=average_shots,
+                col=StatCol.C1,
+                priority=2,
+                help=average_help,
+            ),
+        ]
         self.view_by = self._resolve_view_by()
         self.battle_filename = st.session_state.get("battle_filename") or "Session battle data"
 
@@ -154,8 +166,8 @@ class CritHitReport(RoundOrShotsReport):
 
     def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
         super().display_above_plots(dfs)
-        if self.summary_text:
-            st.markdown(self.summary_text)
+        if self.summary_stats:
+            render_stats(self.summary_stats, max_cols=1)
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]
@@ -207,14 +219,14 @@ class CritHitReport(RoundOrShotsReport):
         return None
 
     @staticmethod
-    def _format_average_shots(shot_df: pd.DataFrame) -> str:
+    def _get_average_shots_per_round(shot_df: pd.DataFrame) -> tuple[str, str]:
         if "round" not in shot_df.columns:
-            return "* **Average shots/round**: N/A (round data missing)."
+            return "N/A", "Round data missing."
         round_series = coerce_numeric(shot_df["round"])
         valid_rounds = shot_df.loc[round_series.notna()].copy()
         if valid_rounds.empty:
-            return "* **Average shots/round**: N/A (round data missing)."
+            return "N/A", "Round data missing."
         valid_rounds = valid_rounds.assign(round=round_series.loc[round_series.notna()].astype(int))
         counts = valid_rounds.groupby("round").size()
         average = counts.mean()
-        return f"* **Average shots/round**: {average:.2f}."
+        return f"{average:.2f}", "Average number of shots taken per round for this selection."
