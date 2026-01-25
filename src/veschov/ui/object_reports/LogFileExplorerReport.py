@@ -16,6 +16,35 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMAT = "%d %b %Y %H:%M"
 NULL_DISPLAY = "—"
+BATTLE_HIDDEN_COLUMNS = {
+    "target_is_armada",
+    "attacker_is_armada",
+    "Hyperthermic Decay %",
+    "Hyperthermic Stabilizer %",
+    "target_defeated",
+    "target_destroyed",
+    "accounting_delta",
+}
+BATTLE_COLUMN_GROUPS: list[tuple[str, list[str]]] = [
+    ("Event", ["round", "battle_event", "event_type", "shot_index"]),
+    ("Attacker", ["attacker_name", "attacker_ship", "attacker_alliance"]),
+    ("Target", ["target_name", "target_ship", "target_alliance"]),
+    ("Normal Damage", ["total_normal", "mitigated_normal", "normal_remain"]),
+    ("Isolytic Damage", ["total_iso", "mitigated_iso", "iso_remain"]),
+    ("Combined Damage", ["remain_before_apex"]),
+    (
+        "Apex Barrier",
+        [
+            "damage_before_apex",
+            "apex_r",
+            "apex_barrier_hit",
+            "mitigated_apex",
+            "damage_after_apex",
+        ],
+    ),
+    ("Final Damage", ["applied_damage", "shield_damage", "hull_damage"]),
+    ("Procs", ["ability_type", "ability_name", "ability_owner_name"]),
+]
 
 
 class LogFileExplorerReport(AbstractReport):
@@ -97,18 +126,12 @@ class LogFileExplorerReport(AbstractReport):
             logger.warning("Log File Explorer missing battle_df.")
             st.info("Battle data is not available.")
             return
+        column_defs = self._build_battle_column_defs(self._battle_df)
         self._render_dataframe(
             self._battle_df,
             key="logexplorer_battle",
-            hidden_columns=[
-                "target_is_armada",
-                "attacker_is_armada",
-                "Hyperthermic Decay %",
-                "Hyperthermic Stabilizer %",
-                "target_defeated",
-                "target_destroyed",
-                "accounting_delta"
-            ],
+            column_defs=column_defs,
+            hidden_columns=sorted(BATTLE_HIDDEN_COLUMNS),
             transposed=False,
         )
 
@@ -120,6 +143,7 @@ class LogFileExplorerReport(AbstractReport):
         self._render_dataframe(
             self._loot_df,
             key="logexplorer_loot",
+            column_defs=None,
             hidden_columns=[],
             transposed=False,
         )
@@ -135,6 +159,7 @@ class LogFileExplorerReport(AbstractReport):
         self._render_dataframe(
             display_df,
             key=key,
+            column_defs=None,
             hidden_columns=[],
             transposed=True,
         )
@@ -177,11 +202,14 @@ class LogFileExplorerReport(AbstractReport):
             df: pd.DataFrame,
             *,
             key: str,
+            column_defs: list[dict[str, object]] | None,
             hidden_columns: list[str],
             transposed: bool,
     ) -> None:
         safe_df = self._strip_dataframe_attrs(df)
         grid_options = self._build_grid_options(safe_df, hidden_columns, transposed=transposed)
+        if column_defs is not None:
+            grid_options["columnDefs"] = column_defs
         AgGrid(
             safe_df,
             gridOptions=grid_options,
@@ -239,6 +267,47 @@ class LogFileExplorerReport(AbstractReport):
             builder.configure_column(column, **column_def)
 
         return builder.build()
+
+    def _build_battle_column_defs(self, df: pd.DataFrame) -> list[dict[str, object]]:
+        """Return grouped battle column definitions in a deterministic order."""
+        if df.empty and not list(df.columns):
+            return []
+        used_columns: set[str] = set()
+        grouped_defs: list[dict[str, object]] = []
+        for group_name, columns in BATTLE_COLUMN_GROUPS:
+            children = [
+                self._build_battle_column_def(df, column)
+                for column in columns
+                if column in df.columns
+            ]
+            if children:
+                grouped_defs.append({"headerName": group_name, "children": children})
+                used_columns.update(column["field"] for column in children)
+        other_children = [
+            self._build_battle_column_def(df, column)
+            for column in df.columns
+            if column not in used_columns
+        ]
+        if other_children:
+            grouped_defs.append({"headerName": "Other", "children": other_children})
+        return grouped_defs
+
+    def _build_battle_column_def(self, df: pd.DataFrame, column: str) -> dict[str, object]:
+        column_def: dict[str, object] = {"field": column}
+        if column in BATTLE_HIDDEN_COLUMNS:
+            column_def["hide"] = True
+
+        series = df[column]
+        if self._is_datetime_column(series):
+            column_def["valueFormatter"] = JsCode(self._build_datetime_formatter())
+        elif self._is_bool_column(series):
+            column_def["cellRenderer"] = "agCheckboxCellRenderer"
+            column_def["filter"] = "agSetColumnFilter"
+        elif self._is_numeric_column(series):
+            column_def["valueFormatter"] = JsCode(self._build_numeric_formatter())
+        else:
+            column_def["valueFormatter"] = JsCode(self._build_generic_value_formatter())
+        return column_def
 
     def _strip_dataframe_attrs(self, df: pd.DataFrame) -> pd.DataFrame:
         safe_df = df.copy()
@@ -303,6 +372,7 @@ class LogFileExplorerReport(AbstractReport):
             return value;
         }}
         """
+
     def _build_autosize_on_ready(self) -> str:
         return """
         function(event) {
