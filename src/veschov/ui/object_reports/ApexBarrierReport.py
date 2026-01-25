@@ -11,6 +11,7 @@ import plotly.express as px
 import streamlit as st
 
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
+from veschov.ui.pretty_stats.Statistic import Statistic
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
 
@@ -54,6 +55,20 @@ class ApexBarrierReport(RoundOrShotsReport):
 
     def get_under_chart_text(self) -> Optional[str]:
         return "Use the view selector to switch between shot-level values and round-level averages."
+
+    def get_descriptive_statistics(self) -> list[Statistic]:
+        formatted_total = (
+            self._format_large_number(self.total_mitigation, self.number_format)
+            if self.total_mitigation is not None
+            else "—"
+        )
+        return [
+            Statistic(
+                label="Total Apex Barrier Damage Mitigation",
+                value=formatted_total,
+                help="Sum of mitigated Apex Barrier damage for the filtered selection.",
+            )
+        ]
 
     def get_log_title(self) -> str:
         return "Apex Barrier Analysis"
@@ -190,13 +205,6 @@ class ApexBarrierReport(RoundOrShotsReport):
             xaxis_title=self.get_x_axis_text(),
             yaxis_title=self.get_y_axis_text(),
         )
-
-        formatted_total = (
-            self._format_large_number(self.total_mitigation, self.number_format)
-            if self.total_mitigation is not None
-            else "—"
-        )
-        st.markdown(f"**Total Apex Barrier Damage Mitigation:** {formatted_total}")
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         shot_df = dfs[1]

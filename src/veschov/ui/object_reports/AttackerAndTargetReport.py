@@ -14,6 +14,7 @@ from veschov.ui.chirality import Lens, resolve_lens
 from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.rosters.AttackerTargetStateManager import serialize_spec, AttackerTargetStateManager
+from veschov.ui.pretty_stats.Statistic import Statistic
 
 SerializedShipSpec = tuple[str, str, str]
 
@@ -123,6 +124,7 @@ class AttackerAndTargetReport(AbstractReport):
 
     def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
         """Render context metadata above the charts."""
+        super().display_above_plots(dfs)
         if self.meta_slot is not None:
             return None
         if isinstance(self.players_df, pd.DataFrame) and not self.players_df.empty:
@@ -144,6 +146,10 @@ class AttackerAndTargetReport(AbstractReport):
             logger.warning("No player metadata found for system/time header.")
             st.info("No player metadata found in this file.")
         return None
+
+    def get_descriptive_statistics(self) -> list[Statistic]:
+        """Return descriptive statistics for the report."""
+        return []
 
     def _render_system_time_and_rounds(
             self,

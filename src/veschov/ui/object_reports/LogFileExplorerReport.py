@@ -11,6 +11,7 @@ from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, JsCode
 
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.chirality import Lens
+from veschov.ui.pretty_stats.Statistic import Statistic
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,10 @@ class LogFileExplorerReport(AbstractReport):
 
     def get_under_chart_text(self) -> str | None:
         return None
+
+    def get_descriptive_statistics(self) -> list[Statistic]:
+        """Log file explorer does not expose descriptive statistics."""
+        return []
 
     def get_log_title(self) -> str:
         return "Log File Explorer"
