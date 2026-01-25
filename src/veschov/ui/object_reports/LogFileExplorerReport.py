@@ -188,7 +188,6 @@ class LogFileExplorerReport(AbstractReport):
             key=key,
             allow_unsafe_jscode=True,
             enable_enterprise_modules=True,
-            columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         )
 
     def _build_grid_options(
@@ -209,7 +208,7 @@ class LogFileExplorerReport(AbstractReport):
             enableRangeSelection=True,
             sideBar=True,
             suppressColumnVirtualisation=False,
-            onGridReady=JsCode(self._build_autosize_on_ready()),
+            onFirstDataRendered=JsCode(self._build_autosize_on_ready()),
         )
         builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=25)
 
@@ -309,7 +308,13 @@ class LogFileExplorerReport(AbstractReport):
             if (!event || !event.columnApi) {
                 return;
             }
-            event.columnApi.autoSizeAllColumns();
+            const allColumns = event.columnApi.getAllColumns();
+            if (!allColumns || allColumns.length === 0) {
+                return;
+            }
+            setTimeout(() => {
+                event.columnApi.autoSizeColumns(allColumns);
+            }, 0);
         }
         """
 
