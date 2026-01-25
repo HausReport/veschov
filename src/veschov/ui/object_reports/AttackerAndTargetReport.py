@@ -293,7 +293,7 @@ class AttackerAndTargetReport(AbstractReport):
                             round_count,
                             max_round,
                         )
-                    round_label = "Round" if round_count == 1 else "Rounds"
+                    round_label = "Round" # if round_count == 1 else "Rounds"
                     context_items.append(("🧮", f"{round_count} {round_label} Battle"))
         return context_items
 
