@@ -11,7 +11,7 @@ import streamlit as st
 
 from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
-from veschov.ui.pretty_stats.Statistic import StatCol, Statistic, render_stats
+from veschov.ui.pretty_stats.Statistic import StatCol, Statistic
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
 
@@ -55,6 +55,10 @@ class CritHitReport(RoundOrShotsReport):
             return "Stacked areas show how many critical- and non-critical hits landed each round, with crits highlighted."
         else:
             return "This odd view shows each hit, bright red for criticals and darker red for non-criticals."
+
+    def get_descriptive_statistics(self) -> list[Statistic]:
+        """Return summary statistics for the critical hit report."""
+        return list(self.summary_stats)
 
     def get_log_title(self) -> str:
         kind = self._resolve_view_by().title()
@@ -163,11 +167,6 @@ class CritHitReport(RoundOrShotsReport):
     def get_plot_titles(self) -> list[str]:
         kind = self._resolve_view_by().title()
         return [f"Effective Apex Barrier of Attacker by {kind}"]
-
-    def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
-        super().display_above_plots(dfs)
-        if self.summary_stats:
-            render_stats(self.summary_stats, max_cols=1)
 
     def display_plots(self, dfs: list[pd.DataFrame]) -> None:
         long_df = dfs[0]

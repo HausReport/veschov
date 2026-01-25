@@ -14,6 +14,7 @@ from veschov.io.parser_stub import parse_battle_log
 from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_log_upload import render_sidebar_combat_log_upload
 from veschov.ui.components.number_format import format_number
+from veschov.ui.pretty_stats.Statistic import Statistic, render_stats
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +72,9 @@ class AbstractReport(ABC):
 
     def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
         """Render optional summary text or metadata above the plot area."""
+        descriptive_stats = self.get_descriptive_statistics()
+        if descriptive_stats:
+            render_stats(descriptive_stats)
         return None
 
     def display_under_chart(self) -> None:
@@ -88,6 +92,11 @@ class AbstractReport(ABC):
     def get_under_chart_text(self) -> Optional[str]:
         """Return optional Markdown shown beneath the chart section."""
         return None
+
+    @abstractmethod
+    def get_descriptive_statistics(self) -> list[Statistic]:
+        """Return descriptive statistics to render above the plot area."""
+        return []
 
     @abstractmethod
     def get_log_title(self) -> str:
