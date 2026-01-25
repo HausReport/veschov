@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, JsCode
 
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.chirality import Lens
