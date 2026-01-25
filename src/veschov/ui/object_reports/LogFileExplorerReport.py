@@ -100,7 +100,14 @@ class LogFileExplorerReport(AbstractReport):
         self._render_dataframe(
             self._battle_df,
             key="logexplorer_battle",
-            hidden_columns=[],
+            hidden_columns=[
+                "target_is_armada",
+                "attacker_is_armada",
+                "Hyperthermic Decay %",
+                "Hyperthermic Stabilizer %",
+                "target_defeated",
+                "target_destroyed",
+            ],
             transposed=False,
         )
 
