@@ -100,7 +100,14 @@ class LogFileExplorerReport(AbstractReport):
         self._render_dataframe(
             self._battle_df,
             key="logexplorer_battle",
-            hidden_columns=[],
+            hidden_columns=[
+                "target_is_armada",
+                "attacker_is_armada",
+                "Hyperthermic Decay %",
+                "Hyperthermic Stabilizer %",
+                "target_defeated",
+                "target_destroyed",
+            ],
             transposed=False,
         )
 
@@ -181,7 +188,6 @@ class LogFileExplorerReport(AbstractReport):
             key=key,
             allow_unsafe_jscode=True,
             enable_enterprise_modules=True,
-            fit_columns_on_grid_load=True,
         )
 
     def _build_grid_options(
@@ -202,6 +208,7 @@ class LogFileExplorerReport(AbstractReport):
             enableRangeSelection=True,
             sideBar=True,
             suppressColumnVirtualisation=False,
+            onFirstDataRendered=JsCode(self._build_autosize_on_ready()),
         )
         builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=25)
 
@@ -293,6 +300,22 @@ class LogFileExplorerReport(AbstractReport):
             }}
             return value;
         }}
+        """
+
+    def _build_autosize_on_ready(self) -> str:
+        return """
+        function(event) {
+            if (!event || !event.columnApi) {
+                return;
+            }
+            const allColumns = event.columnApi.getAllColumns();
+            if (!allColumns || allColumns.length === 0) {
+                return;
+            }
+            setTimeout(() => {
+                event.columnApi.autoSizeColumns(allColumns);
+            }, 0);
+        }
         """
 
 
