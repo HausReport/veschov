@@ -61,6 +61,11 @@ name = "Hits and Crits"
 icon = "🎯"
 
 [[pages]]
+path = "pages/8a_Crit_Chance_Trends.py"
+name = "Crit Chance Trends"
+icon = "📈"
+
+[[pages]]
 name = "Officers and Tech"
 is_section = true
 icon = "📜"
