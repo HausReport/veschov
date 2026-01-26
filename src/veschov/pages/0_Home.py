@@ -13,12 +13,16 @@ from veschov.io.SessionInfo import SessionInfo
 from veschov.io.parser_stub import parse_battle_log
 from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.AbstractReport import AbstractReport
+from veschov.ui.pretty_stats.Statistic import Statistic
 
 logger = logging.getLogger(__name__)
 
 
 class HomeReport(AbstractReport):
     """Render the home page content and preload a sample log."""
+
+    def get_descriptive_statistics(self) -> list[Statistic]:
+        return []
 
     def __init__(self) -> None:
         self._repo_root = Path(__file__).resolve().parents[3]

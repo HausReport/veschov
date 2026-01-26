@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import Optional
 
 import streamlit as st
+import html
 
 
 # ----------------------------
@@ -103,45 +104,51 @@ def _layout_stats(stats: list[Statistic], *, max_cols: int = 4) -> dict[int, lis
 
     return cols_map
 
-
 # ----------------------------
 # Rendering
 # ----------------------------
+def render_stat_row_linktip(s: Statistic) -> None:
+    prefix = f"{_HINT_EMOJI.get(s.hint, '')} " if s.hint else ""
+    if s.help:
+        # style="color:#1f77b4; text-decoration:underline; cursor:help;">
+        label_html = f"""{prefix}<span title="{html.escape(s.help, quote=True)}"
+                           style="cursor:help;">
+                           {html.escape(s.label)}
+                         </span>"""
+        st.markdown(f"{label_html}: {html.escape(s.value)}", unsafe_allow_html=True)
+    else:
+        st.markdown(f"{prefix}**{s.label}:** {s.value}")
 
-def _render_stat_row(
-    s: Statistic,
-    key: str,
-    *,
-    label_w: float = 0.55,
-    value_w: float = 0.37,
-    spacer_w: float = 0.03,
-    icon_w: float = 0.05,
-) -> None:
-    a, b, sp, c = st.columns(
-        [label_w, value_w, spacer_w, icon_w],
-        vertical_alignment="center",
-    )
-
-    with a:
-        prefix = f"{_HINT_EMOJI.get(s.hint, '')} " if s.hint else ""
-        st.markdown(f"{prefix}**{s.label}**")
-
-    with b:
-        st.markdown(
-            f"<span style='white-space:nowrap'>{s.value}</span>",
-            unsafe_allow_html=True,
-        )
-
-    with sp:
-        st.write("")  # intentional padding/gutter
-
-    with c:
-        if s.help:
-            info_tooltip(s.help, key= key)
-            # with st.popover("ℹ️", use_container_width=False):
-            #    st.write(s.help)
-        else:
-            st.write("")
+# def _render_stat_row(
+#     s: Statistic,
+#     key: str,
+#     *,
+#     label_w: float = 0.55,
+#     value_w: float = 0.37,
+#     spacer_w: float = 0.03,
+#     icon_w: float = 0.05,
+# ) -> None:
+#     content_w = label_w + value_w + spacer_w
+#     left, right = st.columns([content_w, icon_w], vertical_alignment="center")
+#
+#     with st.container(horizontal=True):
+#     # with left:
+#         prefix = f"{_HINT_EMOJI.get(s.hint, '')} " if s.hint else ""
+#         # label + value inline -> no “spread”
+#         st.markdown(f"{prefix}**{s.label}:** {s.value}")
+#
+#         # with right:
+#         if s.help:
+#             # tiny tooltip icon; disabled keeps it from looking too “clickable”
+#             st.button(
+#                 "ℹ️",
+#                 key = key,
+#                 help=s.help,
+#                 disabled=True,
+#                 use_container_width=False,
+#             )
+#         else:
+#             st.write("")
 
 def info_tooltip(help_text: str, key: str) -> None:
     st.button("ℹ️", key=key, help=help_text, disabled=True)
@@ -173,7 +180,7 @@ def render_stats(
                 st.caption(f"Stats {col_idx}")
             for s in cols_map[col_idx]:
                 key = f"stat_{i}_{col_idx}_{s}"
-                _render_stat_row(s, label_w=label_w, value_w=value_w, icon_w=icon_w, key=key)
+                render_stat_row_linktip(s) #, label_w=label_w, value_w=value_w, icon_w=icon_w)
 
 
 # ----------------------------
