@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from abc import abstractmethod, ABC
+from abc import ABC
 from datetime import datetime
 from typing import Sequence, Set, TypedDict
 
@@ -14,7 +14,6 @@ from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.rosters.AttackerTargetStateManager import serialize_spec, AttackerTargetStateManager
-from veschov.ui.pretty_stats.Statistic import Statistic
 
 SerializedShipSpec = tuple[str, str, str]
 
@@ -190,14 +189,6 @@ class AttackerAndTargetReport(AbstractReport, ABC):
                 f"<div class='veschov-context-pill-row'>{pills}</div>",
                 unsafe_allow_html=True,
             )
-        # if context_lines:
-        #     context_text = " • ".join(context_lines)
-        #     # FIXME: This, and about 10 lines down, is where system name, date, and time are written.
-        #     st.markdown(
-        #         "<div style='text-align:center; font-size:1.05rem; font-weight:600;'>"
-        #         f"{context_text}</div>",
-        #         unsafe_allow_html=True,
-        #     )
 
     def _get_system_time_and_rounds(
             self,
@@ -303,38 +294,6 @@ class AttackerAndTargetReport(AbstractReport, ABC):
                     round_label = "Round"  # if round_count == 1 else "Rounds"
                     context_items.append(("🧮", f"{round_count} {round_label} Battle"))
         return context_items
-
-    def render_combatants(
-            self,
-            session_info: SessionInfo | Set[ShipSpecifier] | None,
-            battle_df: pd.DataFrame | None,
-    ) -> None:
-        """Render a two-column list of player and NPC combatants."""
-        if not isinstance(session_info, SessionInfo) and isinstance(battle_df, pd.DataFrame):
-            session_info = SessionInfo(battle_df)
-
-        combatant_specs = self._normalize_specs(session_info)
-        if not combatant_specs:
-            logger.warning("No combatant specs available to render combatants list.")
-            st.info("No combatant data found in this file.")
-            return
-
-        players_specs = [
-            spec for spec in combatant_specs if spec.normalized_alliance()
-        ]
-        npc_specs = [
-            spec for spec in combatant_specs if not spec.normalized_alliance()
-        ]
-
-        outcome_lookup = {}
-        if isinstance(session_info, SessionInfo):
-            outcome_lookup = session_info.build_outcome_lookup()
-
-        list_cols = st.columns(2)
-        with list_cols[0]:
-            self._render_combatant_list("Players", players_specs, outcome_lookup)
-        with list_cols[1]:
-            self._render_combatant_list("NPC", npc_specs, outcome_lookup)
 
     def _render_combatant_list(
             self,
@@ -685,29 +644,6 @@ class AttackerAndTargetReport(AbstractReport, ABC):
         logger.warning("Outcome lookup unavailable: missing session info and battle df.")
         return {}
 
-    # @staticmethod
-    # def _outcome_emoji(outcome: object) -> str:
-    #     """Convert an outcome value into a display emoji."""
-    #     return SessionInfo.outcome_emoji(outcome)
-
-    # @staticmethod
-    # def _format_combatant_label(
-    #         self,
-    #         row: pd.Series,
-    #         name_lookup: dict[str, str],
-    #         ship_lookup: dict[tuple[str, str], str],
-    # ) -> str:
-    #     """Build a display label for a combatant row."""
-    #     name = ShipSpecifier.normalize_text(row.get("Player Name"))
-    #     ship = ShipSpecifier.normalize_text(row.get("Ship Name"))
-    #     alliance = ship_lookup.get((name, ship)) or name_lookup.get(name, "")
-    #     label = name or "Unknown"
-    #     if alliance:
-    #         label = f"{label} [{alliance}]"
-    #     if ship and ship != name:
-    #         label = f"{label} — {ship}"
-    #     return label
-    #
     def _format_ship_spec_label(
             self,
             spec: ShipSpecifier,
