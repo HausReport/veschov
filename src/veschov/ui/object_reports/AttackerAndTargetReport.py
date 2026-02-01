@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from datetime import datetime
 from typing import Sequence, Set, TypedDict
 
@@ -45,7 +45,7 @@ AttackerTargetState = AttackerTargetStatePayload
 logger = logging.getLogger(__name__)
 
 
-class AttackerAndTargetReport(AbstractReport):
+class AttackerAndTargetReport(AbstractReport, ABC):
     """Base report that adds attacker/target selection and lens filtering.
 
     This report adds a consistent header experience for combat logs:

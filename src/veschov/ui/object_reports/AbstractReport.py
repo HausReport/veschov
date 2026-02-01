@@ -80,15 +80,6 @@ class AbstractReport(ABC):
         self.display_tables(dfs)
         self.render_debug_info(dfs)
 
-    # @property
-    # def under_title_text(self) -> Optional[str]:
-    #     return self.under_title_text
-    #
-    # @property
-    # def under_chart_text(self) -> Optional[str]:
-    #     """Return optional Markdown shown beneath the chart section."""
-    #     return self.under_chart_text
-
     def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
         """Render optional summary text or metadata above the plot area."""
         descriptive_stats = self.get_descriptive_statistics()
@@ -145,12 +136,10 @@ class AbstractReport(ABC):
         """Render the main charts for the report."""
         pass
 
-    @abstractmethod
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         """Render any supporting tables beneath the charts."""
         pass
 
-    @abstractmethod
     def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
         """Render optional debug output used during report development."""
         pass

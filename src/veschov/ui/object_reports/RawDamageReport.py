@@ -161,7 +161,3 @@ class RawDamageReport(RoundOrShotsReport):
                 if "round" in shot_df.columns:
                     preview_cols.append("round")
                 st.dataframe(shot_df.loc[:, preview_cols], width="stretch")
-
-    @override
-    def render_debug_info(self, df: pd.DataFrame) -> None:
-        return None

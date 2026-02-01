@@ -442,9 +442,6 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         )
         st.plotly_chart(fig, width="stretch")
 
-    def display_tables(self, dfs: list[pd.DataFrame]) -> None:
-        self.render_debug_info(dfs)
-
     def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
         totals_df = dfs[1]
         debug_df = dfs[2]

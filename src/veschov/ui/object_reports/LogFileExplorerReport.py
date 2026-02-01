@@ -103,9 +103,6 @@ class LogFileExplorerReport(AbstractReport):
         with tabs[3]:
             self._render_loot_tab()
 
-    def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
-        return None
-
     def _render_battle_tab(self) -> None:
         if not isinstance(self._battle_df, pd.DataFrame):
             logger.warning("Log File Explorer missing battle_df.")

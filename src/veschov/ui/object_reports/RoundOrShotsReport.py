@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import ABC
+
 import streamlit as st
 
 from veschov.ui.object_reports.AbstractReport import AbstractReport
@@ -7,7 +9,7 @@ from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetR
 from veschov.ui.view_by import VIEW_BY_OPTIONS, select_view_by
 
 
-class RoundOrShotsReport(AttackerAndTargetReport):
+class RoundOrShotsReport(AttackerAndTargetReport, ABC):
     """Report base that adds a round/shots view selector to the chart header.
 
     Subclasses use ``self.view_by`` to decide whether the x-axis represents

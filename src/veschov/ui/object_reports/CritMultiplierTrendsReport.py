@@ -25,6 +25,7 @@ class CritMultiplierTrendsReport(RoundOrShotsReport):
     Renders a report analyzing the magnitude of Critical Hits (The Multiplier)
     over the course of a battle.
     """
+    VIEW_BY_KEY = "crit_multiplier_trends_view_by"
     under_title_text = "This report analyzes your **Damage Multiplier**—the ratio of Crit Damage to "
     "standard hits. It helps you see if your crits are consistently hitting "
     "their theoretical maximum or if 'Mini-Crits' are dragging down your DPS."
@@ -35,14 +36,6 @@ class CritMultiplierTrendsReport(RoundOrShotsReport):
     y_axis_text = "y-axis-text"
     title_text = "Crit Multiplier & Power Trends"
     lens_key = f"key_crit_multiplier_{AbstractReport.key_suffix}"
-
-    def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
-        pass
-
-    def display_tables(self, dfs: list[pd.DataFrame]) -> None:
-        pass
-
-    VIEW_BY_KEY = "crit_multiplier_trends_view_by"
     Z_SCORE = 1.96  # 95% Confidence
 
     def __init__(self) -> None:
@@ -100,40 +93,6 @@ class CritMultiplierTrendsReport(RoundOrShotsReport):
 
         shot_view_df = self._build_multiplier_shot_df(shot_df)
         return [shot_view_df, shot_df] if shot_view_df is not None else None
-
-    # @override
-    # def get_derived_dataframes(self, df: pd.DataFrame, lens=None) -> Optional[list[pd.DataFrame]]:
-    #     """Process raw logs into Multiplier-specific data points."""
-    #     # 1. Standardize and Clean
-    #     typ = df["event_type"].astype("string").str.strip().str.lower()
-    #     total_normal = df["total_normal"].fillna(0)
-    #     total_iso = df["total_iso"].fillna(0)
-    #
-    #     # Filter for actual attack events with damage
-    #     attack_mask = typ.eq("attack") & ((total_normal + total_iso) > 0)
-    #     working_df = df.loc[attack_mask].copy()
-    #     working_df = self.apply_combat_lens(working_df, lens)
-    #
-    #     working_df['is_crit'] = working_df['is_crit'].fillna(False).astype(bool)
-    #
-    #     # 2. Establish the Baseline (Expected Base Damage)
-    #     # We calculate a cumulative average of non-crits to find the 'Standard Hit'
-    #     nc_mask = ~working_df['is_crit'] & (working_df['total_normal'] > 0)
-    #     working_df['nc_val'] = np.where(nc_mask, working_df['total_normal'], np.nan)
-    #     working_df['expected_base'] = working_df['nc_val'].expanding().mean().ffill().bfill()
-    #
-    #     # 3. Calculate the Multiplier for every Crit
-    #     working_df['multiplier'] = np.where(
-    #         working_df['is_crit'],
-    #         working_df['total_normal'] / working_df['expected_base'],
-    #         np.nan
-    #     )
-    #
-    #     # 4. Handle View Toggling (Shot vs Round)
-    #     self.view_by = self._resolve_view_by()
-    #     if self.view_by == "Round":
-    #         return [self._build_multiplier_round_df(working_df)]
-    #     return [self._build_multiplier_shot_df(working_df)]
 
     def _build_multiplier_shot_df(self, df: pd.DataFrame) -> pd.DataFrame:
         """Global Shot View: Shows every crit's impact."""

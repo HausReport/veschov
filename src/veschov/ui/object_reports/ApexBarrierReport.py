@@ -35,7 +35,7 @@ class ApexBarrierReport(RoundOrShotsReport):
     under_chart_text = "Use the view selector to switch between shot-level values and round-level averages."
     x_axis_text = "Shot or Round Number"
     y_axis_text = "Apex Barrier Hit"
-    title_text = "Apex Barrier per Shot"
+    title_text = "Apex Barrier Analysis"
     lens_key = f"apex_barrier_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
@@ -188,6 +188,7 @@ class ApexBarrierReport(RoundOrShotsReport):
             yaxis_title=self.y_axis_text,
         )
 
+    @override
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         shot_df = dfs[1]
         show_table = st.checkbox("Show raw table", value=False)
@@ -199,7 +200,3 @@ class ApexBarrierReport(RoundOrShotsReport):
             preview_cols = list(dict.fromkeys(preview_cols))
             st.caption("Preview of shot-level Apex values and optional combat log metadata.")
             st.dataframe(shot_df.loc[:, preview_cols].head(200), width="stretch")
-
-    @override
-    def render_debug_info(self, df: pd.DataFrame) -> None:
-        return None

@@ -360,7 +360,3 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
         preview_cols = list(dict.fromkeys(preview_cols))
         st.caption("Preview of shot-level shield mitigation values and optional combat log metadata.")
         st.dataframe(table_df.loc[:, preview_cols].head(200), width="stretch")
-
-    @override
-    def render_debug_info(self, df: pd.DataFrame) -> None:
-        return None

@@ -104,6 +104,7 @@ class CritChanceTrendsReport(RoundOrShotsReport):
             fig = self._build_shot_plot(shot_view_df)
         st.plotly_chart(fig, width="stretch")
 
+    @override
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         show_table = st.checkbox("Show raw table", value=False)
         if not show_table:
@@ -116,10 +117,6 @@ class CritChanceTrendsReport(RoundOrShotsReport):
 
         st.caption("Raw rows include cumulative crit counts and confidence intervals per shot.")
         st.dataframe(dfs[0], width="stretch")
-
-    @override
-    def render_debug_info(self, df: pd.DataFrame) -> None:
-        return None
 
     def _build_shot_df(self, shot_df: pd.DataFrame) -> pd.DataFrame | None:
         if "round" not in shot_df.columns or "shot_index" not in shot_df.columns:

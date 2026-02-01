@@ -11,7 +11,7 @@ icon = "📜"
 [[pages]]
 path = "pages/2_Apex_Barrier_Analysis.py"
 name = "Apex Barrier Analysis"
-icon = "🛡️"
+icon = "🅰️"
 
 [[pages]]
 path = "pages/2_Observed_Mitigation.py"
@@ -43,7 +43,7 @@ icon = "🌊"
 [[pages]]
 name = "Offense"
 is_section = true
-icon = "📜"
+icon = "🥊"
 
 [[pages]]
 path = "pages/10_Attacker_Shot_Heatmaps.py"

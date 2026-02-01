@@ -229,7 +229,7 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     under_title_text = "Applied Damage Heatmaps show per-attacker damage applied by shot index within each round."
     x_axis_text = "Round"
     y_axis_text = "Shot # (within round)"
-    title = "Applied Damage Heatmaps"
+    title_text = "Shot Heatmaps"
     lens_key = f"applied_damage_heatmaps_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
@@ -432,13 +432,6 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
             )
             st.plotly_chart(fig, width="stretch")
             attacker_index += 1
-
-    def display_tables(self, dfs: list[pd.DataFrame]) -> None:
-        return None
-
-    @override
-    def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
-        return None
 
     def _build_attacker_mask(self, df: pd.DataFrame, attacker_column: str) -> pd.Series:
         mask = pd.Series(False, index=df.index)

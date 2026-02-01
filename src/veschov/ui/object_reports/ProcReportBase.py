@@ -261,9 +261,3 @@ class ProcReportBase(AttackerAndTargetReport):
             st.info("No officer/tech proc owners found for this battle.")
             return None
         return proc_df, tuple(owner_options)
-
-    def get_debug_info(self, df: pd.DataFrame) -> None:
-        return None
-
-    def render_debug_info(self, df: pd.DataFrame) -> None:
-        pass
