@@ -5,14 +5,13 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.ProcReportBase import ProcReportBase, build_proc_summary
 
 
 class ProcSummaryForBattleReport(ProcReportBase):
     """Render the proc summary for battle report."""
-
-    def get_log_title(self) -> str:
-        return "Proc Summary for Battle"
+    lens_key = f"proc_freq_battle_{AbstractReport.key_suffix}"
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         display_df = dfs[0]

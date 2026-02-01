@@ -7,10 +7,10 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, JsCode
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
-from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.chirality import Lens
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.pretty_stats.Statistic import Statistic
 
 logger = logging.getLogger(__name__)
@@ -50,18 +50,16 @@ BATTLE_COLUMN_GROUPS: list[tuple[str, list[str]]] = [
 
 class LogFileExplorerReport(AbstractReport):
     """Render the Log File Explorer report."""
+    under_title_text = "Explore the parsed battle log tables in an Excel-style, read-only grid. "
+    "Players and fleets are transposed for readability."
+    title_text = "Log File Explorer"
+    # lens_key = f"log_explorer_{super().key_suffix}"
 
     def __init__(self) -> None:
         self._battle_df: pd.DataFrame | None = None
         self._players_df: pd.DataFrame | None = None
         self._fleets_df: pd.DataFrame | None = None
         self._loot_df: pd.DataFrame | None = None
-
-    def get_under_title_text(self) -> str | None:
-        return (
-            "Explore the parsed battle log tables in an Excel-style, read-only grid. "
-            "Players and fleets are transposed for readability."
-        )
 
     def fill_meta_slot(self) -> None:
         if self.meta_slot is None:
@@ -71,18 +69,9 @@ class LogFileExplorerReport(AbstractReport):
             st.markdown("CHANGE THIS")
         return None
 
-    def get_under_chart_text(self) -> str | None:
-        return None
-
     def get_descriptive_statistics(self) -> list[Statistic]:
         """Log file explorer does not expose descriptive statistics."""
         return []
-
-    def get_log_title(self) -> str:
-        return "Log File Explorer"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to explore the parsed tables."
 
     def render_header(self, df: pd.DataFrame) -> Lens | None:
         return None
@@ -116,15 +105,6 @@ class LogFileExplorerReport(AbstractReport):
 
     def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
         return None
-
-    def get_x_axis_text(self) -> str | None:
-        return None
-
-    def get_y_axis_text(self) -> str | None:
-        return None
-
-    def get_title_text(self) -> str | None:
-        return "Log File Explorer"
 
     def _render_battle_tab(self) -> None:
         if not isinstance(self._battle_df, pd.DataFrame):
@@ -401,8 +381,6 @@ class LogFileExplorerReport(AbstractReport):
             });
         }
         """
-
-
 
 
 def render_log_file_explorer_report() -> None:

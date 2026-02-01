@@ -10,6 +10,7 @@ import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo
 from veschov.io.ShipSpecifier import ShipSpecifier
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class MultiAttackerAndTargetReport(RoundOrShotsReport):
     """Base report with helpers for multi-attacker series charts."""
+    lens_key = f"abstract_multi_attacker_{AbstractReport.key_suffix}"
 
     def _build_attacker_key(
             self,

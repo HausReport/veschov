@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from veschov.ui.chirality import Lens
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.pretty_stats.Statistic import Statistic
 from veschov.ui.view_by import prepare_round_view
@@ -26,31 +27,23 @@ CI_FILL_COLOR = "rgba(31, 119, 180, 0.15)"
 
 class CritChanceTrendsReport(RoundOrShotsReport):
     """Render the critical chance trend report."""
-
+    under_title_text = "Crit Chance Trends shows cumulative crit chance over time, with a smoothed "
+    "trend and Wilson confidence bounds."
     VIEW_BY_KEY = "crit_chance_trends_view_by"
     Z_SCORE = 1.96
+    x_axis_text = "Shot or Round Number"
+    y_axis_text = "Critical Hit Chance"
+    title_text = "Crit Chance Trends"
+    lens_key = f"crit_chance_trends_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
         super().__init__()
         self.battle_filename = "Session battle data"
         self.x_axis = "shot_index_global"
 
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Shot or Round Number"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Critical Hit Chance"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Crit Chance Trends"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            "Crit Chance Trends shows cumulative crit chance over time, with a smoothed "
-            "trend and Wilson confidence bounds."
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
+    @override
+    @property
+    def under_chart_text(self) -> Optional[str]:
         kind = self._resolve_view_by().title()
         if kind == "Round":
             return (
@@ -65,14 +58,6 @@ class CritChanceTrendsReport(RoundOrShotsReport):
     def get_descriptive_statistics(self) -> list[Statistic]:
         return []
 
-    def get_log_title(self) -> str:
-        return "Crit Chance Trends"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to visualize crit chance trends over shots or rounds."
-
-    def get_lens_key(self) -> str:
-        return "crit_chance_trends"
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens: Lens | None) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -256,7 +241,7 @@ class CritChanceTrendsReport(RoundOrShotsReport):
         )
 
         fig.update_layout(
-            title=f"{self.get_title_text()} — {self.battle_filename}",
+            title=f"{self.title_text} — {self.battle_filename}",
             xaxis_title="Global Shot Index",
             yaxis_title="Crit Chance (%)",
             legend_title_text="",
@@ -324,7 +309,7 @@ class CritChanceTrendsReport(RoundOrShotsReport):
         )
 
         fig.update_layout(
-            title=f"{self.get_title_text()} — {self.battle_filename}",
+            title=f"{self.title_text} — {self.battle_filename}",
             xaxis_title="Round",
             yaxis_title="Crit Chance (%)",
             legend_title_text="",
@@ -367,9 +352,9 @@ class CritChanceTrendsReport(RoundOrShotsReport):
             denom = 1.0 + (z ** 2) / n
             center = (p + (z ** 2) / (2.0 * n)) / denom
             margin = (
-                z
-                * np.sqrt((p * (1.0 - p) / n) + (z ** 2) / (4.0 * n ** 2))
-                / denom
+                    z
+                    * np.sqrt((p * (1.0 - p) / n) + (z ** 2) / (4.0 * n ** 2))
+                    / denom
             )
         lower = np.where(n > 0, center - margin, 0.0)
         upper = np.where(n > 0, center + margin, 0.0)

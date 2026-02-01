@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Optional, override
 
-import humanize
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.pretty_stats.Statistic import Statistic
 from veschov.ui.view_by import prepare_round_view
@@ -25,10 +25,18 @@ OPTIONAL_PREVIEW_COLUMNS = (
     "Weapon",
 )
 
+
 class ApexBarrierReport(RoundOrShotsReport):
     """Render the Apex Barrier report."""
-
     VIEW_BY_KEY = "apex_barrier_view_by"
+    under_title_text = """Shows effective Apex Barrier for every hit the target takes.  This is useful if, for example, you're using Annorax.  
+               Values are calculated from combat log mitigation fields and correlate to portion of each hit absorbed by the barrier.  To
+               see your Annorax effect, make sure you're in the 'Target' column, and click 'View by shot index.'"""
+    under_chart_text = "Use the view selector to switch between shot-level values and round-level averages."
+    x_axis_text = "Shot or Round Number"
+    y_axis_text = "Apex Barrier Hit"
+    title_text = "Apex Barrier per Shot"
+    lens_key = f"apex_barrier_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
         super().__init__()
@@ -36,25 +44,6 @@ class ApexBarrierReport(RoundOrShotsReport):
         self.number_format = "Human"
         self.total_mitigation: float | None = None
         self.x_axis = "shot_index"
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Shot or Round Number"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Apex Barrier Hit"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Apex Barrier per Shot"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            """Shows effective Apex Barrier for every hit the target takes.  This is useful if, for example, you're using Annorax.  
-               Values are calculated from combat log mitigation fields and correlate to portion of each hit absorbed by the barrier.  To
-               see your Annorax effect, make sure you're in the 'Target' column, and click 'View by shot index.'"""
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return "Use the view selector to switch between shot-level values and round-level averages."
 
     def get_descriptive_statistics(self) -> list[Statistic]:
         formatted_total = (
@@ -70,14 +59,6 @@ class ApexBarrierReport(RoundOrShotsReport):
             )
         ]
 
-    def get_log_title(self) -> str:
-        return "Apex Barrier Analysis"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to estimate Apex Barrier per hit."
-
-    def get_lens_key(self) -> str:
-        return "apex_barrier"
 
     def _total_apex_barrier_mitigation(
             self,
@@ -202,8 +183,9 @@ class ApexBarrierReport(RoundOrShotsReport):
 
         fig.update_layout(
             # title = self.get_plot_titles()[attacker_index],
-            xaxis_title=self.get_x_axis_text(),
-            yaxis_title=self.get_y_axis_text(),
+            # title= self.p
+            xaxis_title=self.x_axis_text,
+            yaxis_title=self.y_axis_text,
         )
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:

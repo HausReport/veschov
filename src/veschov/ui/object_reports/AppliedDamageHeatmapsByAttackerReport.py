@@ -16,6 +16,7 @@ from veschov.transforms.columns import (
     resolve_column,
 )
 from veschov.ui.components.number_format import get_number_format
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.AttackerAndTargetReport import AttackerAndTargetReport
 from veschov.utils.series import coerce_numeric
 
@@ -80,8 +81,8 @@ def detect_npc(players_df: pd.DataFrame | None) -> ShipSpecifier | None:
 
 
 def compute_shots_per_round(
-    df: pd.DataFrame,
-    shooter_spec: ShipSpecifier,
+        df: pd.DataFrame,
+        shooter_spec: ShipSpecifier,
 ) -> tuple[list[int], list[int]]:
     """Return shots-per-round and round labels for the shooter spec."""
     if df.empty:
@@ -137,7 +138,7 @@ def compute_0th_order_metrics(shots_per_round: Sequence[int]) -> dict[str, float
 
 
 def compute_1st_order_metrics(
-    shots_per_round: Sequence[int],
+        shots_per_round: Sequence[int],
 ) -> dict[str, float | bool | None]:
     """Compute slope metrics and detection confidence for suppression trends."""
     if not (shots_per_round and len(shots_per_round) >= 2):
@@ -201,9 +202,9 @@ def t_critical_95(degrees_freedom: int) -> float:
 
 
 def _build_spec_mask(
-    df: pd.DataFrame,
-    spec: ShipSpecifier,
-    attacker_column: str,
+        df: pd.DataFrame,
+        spec: ShipSpecifier,
+        attacker_column: str,
 ) -> pd.Series:
     """Return a dataframe mask for rows matching a ship spec."""
     mask = pd.Series(True, index=df.index)
@@ -222,8 +223,14 @@ def _format_metric(value: float | None, *, precision: int = 2) -> str:
         return "N/A"
     return f"{value:.{precision}f}"
 
+
 class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
     """Render per-attacker applied damage heatmaps by round and shot index."""
+    under_title_text = "Applied Damage Heatmaps show per-attacker damage applied by shot index within each round."
+    x_axis_text = "Round"
+    y_axis_text = "Shot # (within round)"
+    title = "Applied Damage Heatmaps"
+    lens_key = f"applied_damage_heatmaps_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
         super().__init__()
@@ -237,32 +244,6 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         self.suppression_df: pd.DataFrame | None = None
         self.attacker_column: str | None = None
         self.target_column: str | None = None
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Round"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Shot # (within round)"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Applied Damage Heatmaps"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            "Applied Damage Heatmaps show per-attacker damage applied by shot index within each round."
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return None
-
-    def get_log_title(self) -> str:
-        return "Applied Damage Heatmaps"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to visualize applied damage by round and shot index."
-
-    def get_lens_key(self) -> str:
-        return "applied_damage_heatmaps"
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -445,8 +426,8 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
             )
             fig.update_layout(
                 # title = self.get_plot_titles()[attacker_index],
-                xaxis_title=self.get_x_axis_text(),
-                yaxis_title=self.get_y_axis_text(),
+                xaxis_title=self.x_axis_text,
+                yaxis_title=self.y_axis_text,
                 yaxis_autorange="reversed",
             )
             st.plotly_chart(fig, width="stretch")
@@ -567,10 +548,10 @@ class AppliedDamageHeatmapsByAttackerReport(AttackerAndTargetReport):
         self._render_shots_sparkline(shots_per_round, round_labels, first_metrics)
 
     def _render_shots_sparkline(
-        self,
-        shots_per_round: Sequence[int],
-        round_labels: Sequence[int],
-        first_metrics: dict[str, float | bool | None],
+            self,
+            shots_per_round: Sequence[int],
+            round_labels: Sequence[int],
+            first_metrics: dict[str, float | bool | None],
     ) -> None:
         x_rounds = list(round_labels)
         fig = go.Figure()

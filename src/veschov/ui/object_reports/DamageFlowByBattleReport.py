@@ -9,6 +9,7 @@ import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, get_series, resolve_column
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.AttackerAndTargetReport import (
     AttackerAndTargetReport,
     SerializedShipSpec,
@@ -20,6 +21,11 @@ logger = logging.getLogger(__name__)
 
 class DamageFlowByBattleReport(AttackerAndTargetReport):
     """Render the damage flow Sankey report for an entire battle."""
+    under_title_text = "Damage Flow by Battle aggregates the entire combat log to show how "
+    "isolytic/regular damage moves through mitigation and Apex into shield vs hull."
+    under_chart_text = "All links represent summed totals across the selected battle log."
+    title_text = "Damage Flow by Battle"
+    lens_key = f"sankey_{AbstractReport.key_suffix}"
 
     ATTACKER_NODE_COLOR = "#66b3b3"
     ATTACKER_LABEL_COLOR = "#2a9d8f"
@@ -35,33 +41,6 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
         self.apex_mitigated_total = 0.0
         self.apex_absorbed_derived = 0.0
         self.debug_row_counts: dict[str, int] = {}
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return None
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return None
-
-    def get_title_text(self) -> Optional[str]:
-        return "Damage Flow by Battle"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            "Damage Flow by Battle aggregates the entire combat log to show how "
-            "isolytic/regular damage moves through mitigation and Apex into shield vs hull."
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return "All links represent summed totals across the selected battle log."
-
-    def get_log_title(self) -> str:
-        return "Damage Flow by Battle"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to visualize damage flow (iso/base × crit/non-crit)."
-
-    def get_lens_key(self) -> str:
-        return "damage_flow_sankey"
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -469,7 +448,7 @@ class DamageFlowByBattleReport(AttackerAndTargetReport):
     def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
         totals_df = dfs[1]
         debug_df = dfs[2]
-        with st.expander("Totals & Checks", expanded=True):
+        with st.expander("Totals & Checks", expanded=False):
             st.caption("Metrics reconcile raw totals, mitigation, and applied damage for sanity checks.")
             st.dataframe(totals_df, width="stretch")
             st.write(

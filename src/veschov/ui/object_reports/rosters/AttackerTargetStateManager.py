@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 import streamlit as st
 
 from veschov.io.ShipSpecifier import ShipSpecifier
-from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
 from veschov.ui.components import widget_state
+from veschov.ui.object_reports.rosters.AttackerTargetSelection import AttackerTargetSelection
 
 if TYPE_CHECKING:
     from veschov.ui.object_reports.AttackerAndTargetReport import SerializedShipSpec, AttackerTargetState

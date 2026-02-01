@@ -9,8 +9,8 @@ import pandas as pd
 import streamlit as st
 
 from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
-from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.chirality import Lens, resolve_lens
+from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.rosters.AttackerTargetStateManager import serialize_spec, AttackerTargetStateManager
@@ -60,6 +60,7 @@ class AttackerAndTargetReport(AbstractReport):
     number_format: str | None = None
     players_df: pd.DataFrame | None = None
     battle_df: pd.DataFrame | None = None
+    lens_key: str = f"attacker_target_report_abstract_{AbstractReport.key_suffix}"
 
     def render_combat_log_header(
             self,
@@ -299,7 +300,7 @@ class AttackerAndTargetReport(AbstractReport):
                             round_count,
                             max_round,
                         )
-                    round_label = "Round" # if round_count == 1 else "Rounds"
+                    round_label = "Round"  # if round_count == 1 else "Rounds"
                     context_items.append(("🧮", f"{round_count} {round_label} Battle"))
         return context_items
 
@@ -371,11 +372,6 @@ class AttackerAndTargetReport(AbstractReport):
             skip_target_filter_for_procs=skip_target_filter_for_procs,
         )
 
-    @abstractmethod
-    def get_lens_key(self) -> str:
-        """Return the lens key used to resolve lens metadata for this report."""
-        pass
-
     def render_header(self, df: pd.DataFrame) -> Lens | None:
         """Render the combat-log header and persist the number format."""
         players_df = df.attrs.get("players_df")
@@ -386,7 +382,7 @@ class AttackerAndTargetReport(AbstractReport):
             players_df,
             fleets_df,
             df,
-            lens_key=self.get_lens_key(),
+            lens_key=self.lens_key,
         )
         self.number_format = number_format
         return lens
@@ -591,7 +587,7 @@ class AttackerAndTargetReport(AbstractReport):
             with selector_swap:
                 st.markdown("<div class='attacker-target-swap'>", unsafe_allow_html=True)
                 st.button(
-                    "↔️️\nSwap", # 🔄↔
+                    "↔️️\nSwap",  # 🔄↔
                     help="Swap attacker/target selections.",
                     key="swap_attacker_target_specs",
                     on_click=manager.swap,

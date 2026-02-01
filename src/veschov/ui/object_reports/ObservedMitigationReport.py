@@ -10,6 +10,7 @@ import plotly.express as px
 import streamlit as st
 
 from veschov.ui.components.number_format import get_number_format
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.MultiAttackerAndTargetReport import MultiAttackerAndTargetReport
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
@@ -34,39 +35,19 @@ class ObservedMitigationReport(MultiAttackerAndTargetReport):
 
     VIEW_BY_KEY = "observed_mitigation_view_by"
     MITIGATION_CAP = 71.2
+    under_title_text = "Shows observed normal-lane mitigation per hit using mitigated_normal / total_normal. "
+    "Round view is damage-weighted across all hits in the round."
+    under_chart_text = "Use the view selector to switch between shot-level values and round-level averages."
+    x_axis_text = "Shot or Round Number"
+    y_axis_text = "Observed Mitigation (Normal Lane)"
+    title_text = "Observed Mitigation"
+    lens_key = f"observed_mitigation_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
         super().__init__()
         self.battle_filename = "Session battle data"
         self.number_format = "Human"
         self.x_axis = "shot_index"
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Shot or Round Number"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Observed Mitigation (Normal Lane)"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Observed Mitigation per Shot"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            "Shows observed normal-lane mitigation per hit using mitigated_normal / total_normal. "
-            "Round view is damage-weighted across all hits in the round."
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return "Use the view selector to switch between shot-level values and round-level averages."
-
-    def get_log_title(self) -> str:
-        return "Observed Mitigation Analysis"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to inspect observed normal-lane mitigation."
-
-    def get_lens_key(self) -> str:
-        return "observed_mitigation"
 
     def _coerce_mitigation_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         if "total_normal" not in df.columns:
@@ -218,10 +199,10 @@ class ObservedMitigationReport(MultiAttackerAndTargetReport):
                     number_format,
                 )
         for column in (
-            "total_normal_display",
-            "mitigated_normal_display",
-            "sum_total_display",
-            "sum_mitigated_display",
+                "total_normal_display",
+                "mitigated_normal_display",
+                "sum_total_display",
+                "sum_mitigated_display",
         ):
             if column not in plot_df.columns:
                 plot_df[column] = "—"
@@ -263,8 +244,8 @@ class ObservedMitigationReport(MultiAttackerAndTargetReport):
             if pd.notna(max_value):
                 fig.update_xaxes(range=[1, int(max_value)])
         fig.update_layout(
-            xaxis_title=self.get_x_axis_text(),
-            yaxis_title=self.get_y_axis_text(),
+            xaxis_title=self.x_axis_text,
+            yaxis_title=self.y_axis_text,
         )
         fig.update_yaxes(range=[0, 100], tickformat=".1f", ticksuffix="%")
         fig.add_hline(
@@ -287,7 +268,7 @@ class ObservedMitigationReport(MultiAttackerAndTargetReport):
                 ],
                 hovertemplate=(
                     "Attacker: %{customdata[0]}<br>"
-                    f"{self.get_x_axis_text()}: %{{x}}<br>"
+                    f"{self.x_axis_text}: %{{x}}<br>"
                     "Observed Mitigation: %{y:.1f}%<br>"
                     "Total Normal (Sum): %{customdata[1]}<br>"
                     "Mitigated Normal (Sum): %{customdata[2]}<extra></extra>"
@@ -305,7 +286,7 @@ class ObservedMitigationReport(MultiAttackerAndTargetReport):
                 ],
                 hovertemplate=(
                     "Attacker: %{customdata[0]}<br>"
-                    f"{self.get_x_axis_text()}: %{{x}}<br>"
+                    f"{self.x_axis_text}: %{{x}}<br>"
                     "Observed Mitigation: %{y:.1f}%<br>"
                     "Total Normal: %{customdata[1]}<br>"
                     "Mitigated Normal: %{customdata[2]}<br>"

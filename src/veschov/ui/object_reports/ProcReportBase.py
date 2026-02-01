@@ -224,26 +224,7 @@ class ProcReportBase(AttackerAndTargetReport):
 
     include_forbidden_tech: bool = True
 
-    def get_under_title_text(self) -> Optional[str]:
-        return None
 
-    def get_under_chart_text(self) -> Optional[str]:
-        return None
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to visualize officer and forbidden tech proc activity."
-
-    def get_lens_key(self) -> str:
-        return "officers_tech"
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return None
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return None
-
-    def get_title_text(self) -> Optional[str]:
-        return self.get_log_title()
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()

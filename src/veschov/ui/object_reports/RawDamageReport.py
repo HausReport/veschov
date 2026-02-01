@@ -10,6 +10,7 @@ import plotly.express as px
 import streamlit as st
 
 from veschov.ui.chirality import Lens
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
 
@@ -18,42 +19,19 @@ logger = logging.getLogger(__name__)
 
 class RawDamageReport(RoundOrShotsReport):
     """Render the raw damage (pre-mitigation) report."""
-
     VIEW_BY_KEY = "raw_damage_view_by"
+    under_title_text = "Raw Damage by Type shows pre-mitigation totals (Normal vs Isolytic), "
+    "split by whether the hit was critical."
+    under_chart_text = "Stacks show how much raw damage was logged for each damage type and crit state."
+    x_axis_text = "Shot or Round Number"
+    y_axis_text = "Raw Damage"
+    title_text = "Raw Damage by Type"
+    lens_key = f"raw_damage_rept_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
         super().__init__()
         self.battle_filename = "Session battle data"
         self.x_axis = "shot_index"
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Shot or Round Number"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Raw Damage"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Raw Damage by Type"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            "Raw Damage by Type shows pre-mitigation totals (Normal vs Isolytic), "
-            "split by whether the hit was critical."
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return (
-            "Stacks show how much raw damage was logged for each damage type and crit state."
-        )
-
-    def get_log_title(self) -> str:
-        return "Raw Damage by Type"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to visualize raw damage (normal vs isolytic, crit vs non-crit)."
-
-    def get_lens_key(self) -> str:
-        return "raw_damage"
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens: Lens | None) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -149,7 +127,7 @@ class RawDamageReport(RoundOrShotsReport):
             "x": self.x_axis,
             "y": "amount",
             "color": "series_name",
-            "title": f"{self.get_title_text()} — {self.battle_filename}",
+            "title": f"{self.title_text} — {self.battle_filename}",
             "category_orders": {
                 "series_name": [
                     "Non-crit Normal Damage",

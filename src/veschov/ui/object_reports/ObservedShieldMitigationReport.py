@@ -10,6 +10,7 @@ import plotly.express as px
 import streamlit as st
 
 from veschov.ui.components.number_format import get_number_format
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.MultiAttackerAndTargetReport import MultiAttackerAndTargetReport
 from veschov.ui.view_by import prepare_round_view
 from veschov.utils.series import coerce_numeric
@@ -34,39 +35,19 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
 
     VIEW_BY_KEY = "observed_shield_mitigation_view_by"
     SHIELD_MITIGATION_BASELINE = 84.0
+    title_text = "Observed Shield Mitigation"
+    under_title_text = "Shows observed shield mitigation per hit using shield_damage / applied_damage. "
+    "Round view is damage-weighted across all hits in the round."
+    under_chart_text = "Use the view selector to switch between shot-level values and round-level averages."
+    x_axis_text = "Shot or Round Number"
+    y_axis_text = "Observed Shield Mitigation"
+    lens_key = f"observed_shield_mitigation_{AbstractReport.key_suffix}"
 
     def __init__(self) -> None:
         super().__init__()
         self.battle_filename = "Session battle data"
         self.number_format = "Human"
         self.x_axis = "shot_index"
-
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Shot or Round Number"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Observed Shield Mitigation"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Observed Shield Mitigation per Shot"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return (
-            "Shows observed shield mitigation per hit using shield_damage / applied_damage. "
-            "Round view is damage-weighted across all hits in the round."
-        )
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return "Use the view selector to switch between shot-level values and round-level averages."
-
-    def get_log_title(self) -> str:
-        return "Observed Shield Mitigation Analysis"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to inspect observed shield mitigation."
-
-    def get_lens_key(self) -> str:
-        return "observed_shield_mitigation"
 
     def _coerce_shield_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         required = ("applied_damage", "shield_damage", "hull_damage")
@@ -229,12 +210,12 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
             lambda value: f"{value:.1f}%" if pd.notna(value) else "—",
         )
         for column in (
-            "applied_damage",
-            "shield_damage",
-            "hull_damage",
-            "sum_applied_damage",
-            "sum_shield_damage",
-            "sum_hull_damage",
+                "applied_damage",
+                "shield_damage",
+                "hull_damage",
+                "sum_applied_damage",
+                "sum_shield_damage",
+                "sum_hull_damage",
         ):
             if column in plot_df.columns:
                 plot_df[f"{column}_display"] = self._format_large_number_series(
@@ -242,12 +223,12 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
                     number_format,
                 )
         for column in (
-            "applied_damage_display",
-            "shield_damage_display",
-            "hull_damage_display",
-            "sum_applied_damage_display",
-            "sum_shield_damage_display",
-            "sum_hull_damage_display",
+                "applied_damage_display",
+                "shield_damage_display",
+                "hull_damage_display",
+                "sum_applied_damage_display",
+                "sum_shield_damage_display",
+                "sum_hull_damage_display",
         ):
             if column not in plot_df.columns:
                 plot_df[column] = "—"
@@ -291,8 +272,8 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
             if pd.notna(max_value):
                 fig.update_xaxes(range=[1, int(max_value)])
         fig.update_layout(
-            xaxis_title=self.get_x_axis_text(),
-            yaxis_title=self.get_y_axis_text(),
+            xaxis_title=self.x_axis_text,
+            yaxis_title=self.y_axis_text,
         )
         fig.update_yaxes(range=[0, 100], tickformat=".0f", ticksuffix="%")
         fig.add_hline(
@@ -316,7 +297,7 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
                 ],
                 hovertemplate=(
                     "Attacker: %{customdata[0]}<br>"
-                    f"{self.get_x_axis_text()}: %{{x}}<br>"
+                    f"{self.x_axis_text}: %{{x}}<br>"
                     "Observed Shield Mitigation: %{y:.1f}%<br>"
                     "Applied Damage (Sum): %{customdata[1]}<br>"
                     "Shield Damage (Sum): %{customdata[2]}<br>"
@@ -336,7 +317,7 @@ class ObservedShieldMitigationReport(MultiAttackerAndTargetReport):
                 ],
                 hovertemplate=(
                     "Attacker: %{customdata[0]}<br>"
-                    f"{self.get_x_axis_text()}: %{{x}}<br>"
+                    f"{self.x_axis_text}: %{{x}}<br>"
                     "Observed Shield Mitigation: %{y:.1f}%<br>"
                     "Applied Damage: %{customdata[1]}<br>"
                     "Shield Damage: %{customdata[2]}<br>"

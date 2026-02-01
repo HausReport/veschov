@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from functools import lru_cache
-import logging
 from pathlib import Path
 from typing import Optional
+
 import pandas as pd
 import streamlit as st
 import toml
@@ -39,23 +40,32 @@ class AbstractReport(ABC):
     """
     lens: Lens | None
     meta_slot: st.delta_generator.DeltaGenerator | None
+    under_title_text: str | None = "Under_title_text"
+    under_chart_text: str | None = None
+    x_axis_text: str = "x-axis text"
+    y_axis_text: str = "y-axis text"
+    title_text: str = "Title_text"
+    log_title: str = "Upload Combat Log"
+    log_description: str = "Use this widget to upload and analyze your own combat logs."
+    key_suffix = "_key"
+    lens_key = f"abstract_{key_suffix}"
 
     def render(self) -> None:
         """Run the full report lifecycle using the template methods."""
         self.meta_slot = None
         left, right = st.columns([3, 1], vertical_alignment="top")
         with left:
-            title_text = self._prepend_page_icon(self.get_title_text())
+            title_text = self._prepend_page_icon(self.title_text)
             if title_text is not None:
                 st.title(title_text)
-            utt = self.get_under_title_text()
+            utt = self.under_title_text
             if utt is not None:
                 st.markdown(utt, unsafe_allow_html=True)
         with right:
             self.meta_slot = st.container()
         df = self.add_log_uploader(
-            title=self.get_log_title(),
-            description=self.get_log_description(),
+            title=self.log_title,
+            description=self.log_description,
         )
         if df is None:
             return
@@ -70,6 +80,15 @@ class AbstractReport(ABC):
         self.display_tables(dfs)
         self.render_debug_info(dfs)
 
+    # @property
+    # def under_title_text(self) -> Optional[str]:
+    #     return self.under_title_text
+    #
+    # @property
+    # def under_chart_text(self) -> Optional[str]:
+    #     """Return optional Markdown shown beneath the chart section."""
+    #     return self.under_chart_text
+
     def display_above_plots(self, dfs: list[pd.DataFrame]) -> None:
         """Render optional summary text or metadata above the plot area."""
         descriptive_stats = self.get_descriptive_statistics()
@@ -79,34 +98,14 @@ class AbstractReport(ABC):
 
     def display_under_chart(self) -> None:
         """Render optional descriptive text beneath the main chart."""
-        utt = self.get_under_chart_text()
+        utt = self.under_chart_text
         if utt is not None:
             st.markdown(utt, unsafe_allow_html=True)
-
-    @abstractmethod
-    def get_under_title_text(self) -> Optional[str]:
-        """Return optional Markdown shown beneath the page title."""
-        return None
-
-    @abstractmethod
-    def get_under_chart_text(self) -> Optional[str]:
-        """Return optional Markdown shown beneath the chart section."""
-        return None
 
     @abstractmethod
     def get_descriptive_statistics(self) -> list[Statistic]:
         """Return descriptive statistics to render above the plot area."""
         return []
-
-    @abstractmethod
-    def get_log_title(self) -> str:
-        """Return the sidebar title for the combat log uploader."""
-        return ""
-
-    @abstractmethod
-    def get_log_description(self) -> str:
-        """Return the sidebar description for the combat log uploader."""
-        return ""
 
     @abstractmethod
     def fill_meta_slot(self) -> None:
@@ -155,21 +154,6 @@ class AbstractReport(ABC):
     def render_debug_info(self, dfs: list[pd.DataFrame]) -> None:
         """Render optional debug output used during report development."""
         pass
-
-    @abstractmethod
-    def get_x_axis_text(self) -> Optional[str]:
-        """Return optional x-axis label text for charts."""
-        return None
-
-    @abstractmethod
-    def get_y_axis_text(self) -> Optional[str]:
-        """Return optional y-axis label text for charts."""
-        return None
-
-    @abstractmethod
-    def get_title_text(self) -> Optional[str]:
-        """Return the main title text for the report page."""
-        return None
 
     def _format_large_number(self, value: object, number_format: str) -> str:
         return format_number(value, number_format=number_format, humanize_format="%.1f")

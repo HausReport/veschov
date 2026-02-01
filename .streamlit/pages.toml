@@ -31,7 +31,7 @@ icon = "📜"
 
 [[pages]]
 path = "pages/4_Damage_Flow_By_Round.py"
-name = "Damage Flow by Round"
+name = "Damage Flow by Shot or Round"
 icon = "🔀"
 
 [[pages]]
@@ -56,13 +56,13 @@ name = "Raw Damage by Type"
 icon = "💥"
 
 [[pages]]
-path = "pages/8_Critical_Hit_Analysis.py"
-name = "Hits and Crits"
+path = "pages/8a_Crit_Chance_Trends.py"
+name = "Crit Chance Trends"
 icon = "🎯"
 
 [[pages]]
-path = "pages/8a_Crit_Chance_Trends.py"
-name = "Crit Chance Trends"
+path = "pages/8b_Crit_Damage_Trends.py"
+name = "Crit Damage Trends"
 icon = "📈"
 
 [[pages]]

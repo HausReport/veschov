@@ -5,14 +5,13 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.ProcReportBase import ProcReportBase, build_proc_matrix, style_heatmap
 
 
 class ProcFrequencyByRoundReport(ProcReportBase):
     """Render the proc frequency by round report."""
-
-    def get_log_title(self) -> str:
-        return "Proc Frequency by Round"
+    lens_key = f"proc_freq_round_{AbstractReport.key_suffix}"
 
     def display_tables(self, dfs: list[pd.DataFrame]) -> None:
         display_df = dfs[0]

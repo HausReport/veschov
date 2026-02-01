@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from typing import Optional, override
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 from veschov.ui.damage_flow_by_round import _coerce_pool_damage, _normalize_round, _build_damage_mask, \
     _resolve_hover_columns, _build_long_df, SEGMENT_COLORS, SEGMENT_ORDER, OPTIONAL_PREVIEW_COLUMNS
+from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 from veschov.ui.view_by import prepare_round_view
 
@@ -32,33 +34,16 @@ HOVER_LABELS = {
 
 class DamageFlowByRoundReport(RoundOrShotsReport):
     VIEW_BY_KEY = "damage_flow_by_round_view_by"
+    title_text = "Damage Flow by Shot or Round"
+    under_title_text = """This report shows where damage 'ends up' - whether it lands on the hull, the shields, or  
+    is blocked by normal mitigation (shields, dodge, and armor), by isolytic defense, or by Apex Barrier."""
+    under_chart_text = """This chart shows how total damage was distributed to the selected target(s).  The blue layer shows danage to the target's
+    shield, the red layer to their hull, and the green layers represent damage absorbed by standard mitigation (shield, dodge, and armor), isolytic
+    defense, and apex barrier."""
+    x_axis_text = "Shot or Round Number"
+    y_axis_text = "Damage"
+    lens_key = f"damage_by_round_{AbstractReport.key_suffix}"
 
-    def get_x_axis_text(self) -> Optional[str]:
-        return "Shot or Round Number"
-
-    def get_y_axis_text(self) -> Optional[str]:
-        return "Damage"
-
-    def get_title_text(self) -> Optional[str]:
-        return "Damage Flow by Shot or Round Number"
-
-    def get_under_title_text(self) -> Optional[str]:
-        return """This report shows where damage 'ends up' - whether it lands on the hull, the shields, or  
-        is blocked by normal mitigation (shields, dodge, and armor), by isolytic defense, or by Apex Barrier."""
-
-    def get_under_chart_text(self) -> Optional[str]:
-        return """This chart shows how total damage was distributed to the selected target(s).  The blue layer shows danage to the target's
-        shield, the red layer to their hull, and the green layers represent damage absorbed by standard mitigation (shield, dodge, and armor), isolytic
-        defense, and apex barrier."""
-
-    def get_log_title(self) -> str:
-        return "Damage Flow by Round"
-
-    def get_log_description(self) -> str:
-        return "Upload a battle log to visualize post-mitigation damage applied to shields and hull."
-
-    def get_lens_key(self) -> str:
-        return "actual_damage"
 
     def get_derived_dataframes(self, df: pd.DataFrame, lens) -> Optional[list[pd.DataFrame]]:
         display_df = df.copy()
@@ -142,7 +127,7 @@ class DamageFlowByRoundReport(RoundOrShotsReport):
             hover_display_labels.append(HOVER_LABELS.get(column, column.replace("_", " ").title()))
 
         custom_data_columns = ["amount_display", *hover_display_columns]
-        x_label = self.get_x_axis_text() or self.x_axis.replace("_", " ").title()
+        x_label = self.x_axis_text or self.x_axis.replace("_", " ").title()
         hover_lines = [
             f"{x_label}: %{{x}}",
             f"{LEGEND_TITLE}: %{{fullData.name}}",
