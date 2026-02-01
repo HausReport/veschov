@@ -14,6 +14,7 @@ from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.components.number_format import get_number_format
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.rosters.AttackerTargetStateManager import serialize_spec, AttackerTargetStateManager
+from veschov.ui.pretty_stats.Statistic import Statistic
 
 SerializedShipSpec = tuple[str, str, str]
 
@@ -313,9 +314,6 @@ class AttackerAndTargetReport(AbstractReport, ABC):
             lines.append(f"- {label}")
         st.markdown("\n".join(lines))
 
-        # ########################################################################################################
-        # ########################################################################################################
-        # ########################################################################################################
 
     def apply_combat_lens(
             self,
