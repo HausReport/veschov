@@ -1,6 +1,10 @@
 streamlit>=1.52
-pandas>=2.2
-plotly>=5.20
+streamlit-extras>=0.6.0
 st-pages>=1.0.1
+streamlit-copy-to-clipboard-button>=1.0
+streamlit-aggrid>=1.2.1
+pandas>=2.2
+pandera>=0.28.1
+plotly>=5.20
 humanize>=4.15.0
 toml>=0.10.2
