@@ -12,8 +12,8 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.ShipSpecifier import ShipSpecifier
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.ShipSpecifier import ShipSpecifier
 from veschov.ui.components.number_format import format_number
 
 from veschov.transforms.columns import (

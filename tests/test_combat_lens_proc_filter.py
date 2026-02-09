@@ -2,8 +2,8 @@ import pytest
 import streamlit as st
 
 from tests.helpers import get_battle_log
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.ShipSpecifier import ShipSpecifier
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.ShipSpecifier import ShipSpecifier
 from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_lens import apply_combat_lens
 

@@ -30,7 +30,7 @@ BATTLE_COLUMN_GROUPS: list[tuple[str, list[str]]] = [
     ("Event", ["round", "battle_event", "event_type", "shot_index"]),
     ("Attacker", ["attacker_name", "attacker_ship", "attacker_alliance"]),
     ("Target", ["target_name", "target_ship", "target_alliance"]),
-    ("Normal Damage", ["total_normal", "mitigated_normal", "normal_remain"]),
+    ("Normal Damage", ["is_crit", "total_normal", "mitigated_normal", "normal_remain"]),
     ("Isolytic Damage", ["total_iso", "mitigated_iso", "iso_remain"]),
     ("Combined Damage", ["remain_before_apex"]),
     (

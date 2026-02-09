@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 from dataclasses import dataclass
 from typing import Iterable, Sequence
 
-from veschov.io.ShipSpecifier import ShipSpecifier
+from stfc_parser.ShipSpecifier import ShipSpecifier
 
 
 def _spec_names(specs: Iterable[ShipSpecifier]) -> set[str]:

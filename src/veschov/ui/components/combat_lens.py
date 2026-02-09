@@ -26,7 +26,7 @@ from typing import Iterable
 import pandas as pd
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
+from stfc_parser.SessionInfo import SessionInfo
 from veschov.ui.chirality import Lens
 
 PROC_EVENT_TYPES = {"officer", "forbiddentechability"}

@@ -1,5 +1,5 @@
 from helpers import get_session_info
-from veschov.io.ShipSpecifier import ShipSpecifier
+from stfc_parser.ShipSpecifier import ShipSpecifier
 import pytest
 
 CASES = [

@@ -9,7 +9,7 @@ from typing import Callable, Iterable
 import pandas as pd
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
+from stfc_parser.SessionInfo import SessionInfo
 
 logger = logging.getLogger(__name__)
 

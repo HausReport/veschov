@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from stfc_parser.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
     TARGET_COLUMN_CANDIDATES,

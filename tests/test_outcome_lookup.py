@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tests import helpers
-from veschov.io.SessionInfo import SessionInfo
+from stfc_parser.SessionInfo import SessionInfo
 
 
 def _outcome_for_name(

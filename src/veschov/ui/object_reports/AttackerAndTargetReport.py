@@ -8,7 +8,7 @@ from typing import Sequence, Set, TypedDict
 import pandas as pd
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo, ShipSpecifier
+from stfc_parser.SessionInfo import SessionInfo, ShipSpecifier
 from veschov.ui.chirality import Lens, resolve_lens
 from veschov.ui.components.combat_lens import apply_combat_lens
 from veschov.ui.components.number_format import get_number_format

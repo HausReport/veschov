@@ -9,8 +9,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.parser_stub import parse_battle_log
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.parser_stub import parse_battle_log
 from veschov.ui.chirality import Lens
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.pretty_stats.Statistic import Statistic

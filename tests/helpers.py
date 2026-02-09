@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.parser_stub import parse_battle_log
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.parser_stub import parse_battle_log
 
 def get_battle_log(fname) -> pd.DataFrame:
     path = Path(__file__).resolve().parent / "logs" / fname

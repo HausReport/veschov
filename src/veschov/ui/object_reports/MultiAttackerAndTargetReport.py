@@ -8,8 +8,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.ShipSpecifier import ShipSpecifier
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.ShipSpecifier import ShipSpecifier
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.RoundOrShotsReport import RoundOrShotsReport
 

@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from veschov.io.SessionInfo import SessionInfo
-from veschov.io.ShipSpecifier import ShipSpecifier
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.ShipSpecifier import ShipSpecifier
 
 
 def _make_session_from_rows(rows: list[dict]) -> SessionInfo:

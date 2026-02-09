@@ -1,0 +1,10 @@
+streamlit
+streamlit-extras
+st-pages
+streamlit-aggrid
+pandas
+pandera
+plotly
+humanize
+toml
+git+https://github.com/HausReport/stfc-parser.git

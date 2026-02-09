@@ -11,7 +11,7 @@ import streamlit as st
 import toml
 from streamlit.runtime.scriptrunner_utils import script_run_context
 
-from veschov.io.parser_stub import parse_battle_log
+from stfc_parser.parser_stub import parse_battle_log
 from veschov.ui.chirality import Lens
 from veschov.ui.components.combat_log_upload import render_sidebar_combat_log_upload
 from veschov.ui.components.number_format import format_number
