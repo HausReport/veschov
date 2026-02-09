@@ -1,7 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project]
 name = "veschov"
 version = "0.1.4"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13,<=3.14"
 dependencies = [
   "streamlit>=1.52",
   "streamlit-extras>=0.7",
@@ -18,24 +25,6 @@ dependencies = [
 [tool.pdoc]
 output_directory = "docs"
 exclude = []
-
-[tool.poetry]
-name = "veschov"
-version = "0.1.4"
-packages = [{ include = "veschov", from = "src" }]
-
-[tool.poetry.dependencies]
-python = ">=3.13,<3.14"
-streamlit = ">=1.52"
-streamlit-extras = ">=0.7"
-st-pages = ">=1.0.1"
-streamlit-copy-to-clipboard-button = ">=1.0"
-streamlit-aggrid = ">=1.2.1"
-pandas = ">=2.2"
-pandera = ">=0.28.1"
-plotly = ">=5.20"
-humanize = ">=4.15.0"
-toml = ">=0.10.2"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
