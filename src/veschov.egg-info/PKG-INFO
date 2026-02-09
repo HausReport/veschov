@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: veschov
-Version: 0.1.4
+Version: 0.1.5
 Requires-Python: <=3.14.2,>=3.13
 License-File: LICENSE
 Requires-Dist: streamlit>=1.52
