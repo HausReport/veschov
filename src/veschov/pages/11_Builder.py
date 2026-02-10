@@ -6,12 +6,12 @@ from pathlib import Path
 from typing import Callable, Iterable, TypedDict, cast
 
 import streamlit as st
+from stfc_parser.SessionInfo import SessionInfo
+from stfc_parser.ShipSpecifier import ShipSpecifier
 
 from veschov.builder.Constants import EVEN_SLOTS, BRIDGE_SLOTS
 from veschov.builder.CopyUrlButtons import _get_state_query_param, restore_state_from_query, copy_url_buttons
 from veschov.builder.Serialization import init_state
-from stfc_parser.SessionInfo import SessionInfo
-from stfc_parser.ShipSpecifier import ShipSpecifier
 
 logger = logging.getLogger(__name__)
 

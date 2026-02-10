@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import Optional, Sequence, override
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
 from stfc_parser.SessionInfo import SessionInfo, ShipSpecifier
+
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
     TARGET_COLUMN_CANDIDATES,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+from stfc_parser.ShipSpecifier import ShipSpecifier
 
 from veschov.ui.object_reports.AppliedDamageHeatmapsByAttackerReport import (
     compute_0th_order_metrics,
@@ -9,7 +10,6 @@ from veschov.ui.object_reports.AppliedDamageHeatmapsByAttackerReport import (
     compute_shots_per_round,
     t_critical_95,
 )
-from stfc_parser.ShipSpecifier import ShipSpecifier
 
 
 def test_firing_suppression_metrics_sample_vector() -> None:

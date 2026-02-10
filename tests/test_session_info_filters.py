@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 
 from stfc_parser.SessionInfo import SessionInfo
 from stfc_parser.ShipSpecifier import ShipSpecifier

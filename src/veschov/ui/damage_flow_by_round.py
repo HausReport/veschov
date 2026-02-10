@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 from typing import Iterable
+
 import pandas as pd
+
 from veschov.transforms.columns import (
     ATTACKER_COLUMN_CANDIDATES,
     TARGET_COLUMN_CANDIDATES,

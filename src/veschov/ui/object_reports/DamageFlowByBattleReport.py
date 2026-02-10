@@ -6,8 +6,8 @@ from typing import Optional, override
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
 from stfc_parser.SessionInfo import SessionInfo, ShipSpecifier
+
 from veschov.transforms.columns import ATTACKER_COLUMN_CANDIDATES, get_series, resolve_column
 from veschov.ui.object_reports.AbstractReport import AbstractReport
 from veschov.ui.object_reports.AttackerAndTargetReport import (

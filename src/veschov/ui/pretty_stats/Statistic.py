@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import html
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from collections import defaultdict
 from typing import Optional
 
 import streamlit as st
-import html
 
 
 # ----------------------------

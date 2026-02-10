@@ -1,6 +1,7 @@
-from helpers import get_session_info
-from stfc_parser.ShipSpecifier import ShipSpecifier
 import pytest
+from stfc_parser.ShipSpecifier import ShipSpecifier
+
+from helpers import get_session_info
 
 CASES = [
     (

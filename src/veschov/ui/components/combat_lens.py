@@ -21,8 +21,6 @@ Usage patterns:
 * When `Lens` is ``None`` (no selection), the function returns the input unchanged.
 """
 
-from typing import Iterable
-
 import pandas as pd
 import streamlit as st
 
